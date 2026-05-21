@@ -1,0 +1,21 @@
+
+# TODO:
+ - write man pages
+ - write tests
+ - add all the usual package stuff
+   - README.Rmd
+   - pkdown site
+   - codecov
+   - citation info
+ - add plot.SPMD(), could be a flowchart maybe
+ - write actual stuff into summary.SPMD()
+ - write a small vignette
+ - create a package logo
+
+# further features
+ - allow adjustment for time-dependent confounders
+ - maybe add gamma estimator
+ - maybe add fixed effects Poisson model estimator
+ - add more robust options for generating a pairs="one" type pairing
+ - check if the way risk_period is handled is good (e.g. <=, >= etc),
+   maybe add option for it
