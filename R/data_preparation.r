@@ -2,11 +2,14 @@
 ## performs all data preparation tasks, including matching, to get
 ## the final dataset needed for further analysis
 get_full_data <- function(data, start, stop, id, exposure, outcome,
-                          pairs, n_pairs, risk_period) {
+                          pairs, n_pairs, risk_period, remove_noevents,
+                          include_exp_time) {
 
   # small preparations
   data <- prepare_start_stop(data=data, start=start, stop=stop, id=id,
-                             exposure=exposure, outcome=outcome)
+                             exposure=exposure, outcome=outcome,
+                             remove_unexposed=TRUE,
+                             remove_noevents=remove_noevents)
 
   # all exposure / event times
   d_exp <- get_exposure_times(data)
@@ -19,9 +22,12 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
 
   # add outcome event count to it
   d_matches <- add_event_count(dt_index=d_matches, dt_events=d_events,
-                               risk_period=risk_period)
+                               risk_period=risk_period,
+                               include_exp_time=include_exp_time)
 
-  return(d_matches)
+  out <- list(d_matches=d_matches, data=data, d_exp=d_exp, d_events=d_events)
+
+  return(out)
 }
 
 ## extract exposure times for all given individuals from start-stop data
@@ -155,7 +161,8 @@ matches2counts <- function(data) {
 #' @importFrom data.table :=
 #' @importFrom data.table .I
 #' @importFrom data.table .EACHI
-add_event_count <- function(dt_index, dt_events, risk_period) {
+add_event_count <- function(dt_index, dt_events, risk_period,
+                            include_exp_time=FALSE) {
 
   dt_index <- copy(dt_index)
 
@@ -169,16 +176,29 @@ add_event_count <- function(dt_index, dt_events, risk_period) {
   setkey(dt_events, .id, .time)
 
   # count matching events per row
-  out <- dt_events[
-    dt_index,
-    on = .(
-      .id,
-      .time > .time,
-      .time <= end_time
-    ),
-    .(n_events = .N),
-    by = .EACHI
-  ]
+  if (include_exp_time) {
+    out <- dt_events[
+      dt_index,
+      on = .(
+        .id,
+        .time >= .time,
+        .time <= end_time
+      ),
+      .(n_events = .N),
+      by = .EACHI
+    ]
+  } else {
+    out <- dt_events[
+      dt_index,
+      on = .(
+        .id,
+        .time > .time,
+        .time <= end_time
+      ),
+      .(n_events = .N),
+      by = .EACHI
+    ]
+  }
 
   # attach counts
   dt_index[, .n_events := out$n_events]

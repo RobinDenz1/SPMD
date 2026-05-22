@@ -19,13 +19,14 @@ match_pairs <- function(data, pairs, risk_period, n_pairs=NULL) {
 
 ## check if two individuals are a valid pairing, e.g. they are not the
 ## same individual and their risk-periods do not overlap
-# TODO: this also excludes the last day of risk period from being used
+# TODO: this does not work with multiple exposures!
 is_valid_match <- function(.id, .id2, .time, .time2, risk_period) {
   !(.id==.id2 | abs(.time - .time2) <= risk_period)
 }
 
 ## generates all possible (and valid) pairings of individuals
 #' @importFrom data.table :=
+#' @importFrom data.table .N
 #' @importFrom data.table setnames
 generate_all_pairs <- function(data, risk_period) {
 
@@ -89,7 +90,8 @@ generate_one_pairing <- function(data, risk_period) {
                              risk_period=risk_period)
 
   if (!all(is_valid)) {
-    stop("Matching failed.", call.=FALSE)
+    stop("Matching failed. Use random matches (pairs='random') or",
+         " all matches (pairs='all') instead.", call.=FALSE)
   }
 
   d_pairs[, .id_pair := seq_len(.N)]
