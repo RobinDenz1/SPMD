@@ -5,6 +5,8 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
                           pairs, n_pairs, risk_period, remove_noevents,
                           include_exp_time) {
 
+  .time <- .max_t <- NULL
+
   # small preparations
   data <- prepare_start_stop(data=data, start=start, stop=stop, id=id,
                              exposure=exposure, outcome=outcome,
@@ -14,6 +16,10 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
   # all exposure / event times
   d_exp <- get_exposure_times(data)
   d_events <- get_event_times(data)
+
+  # remove those were we cannot observe the entire risk period
+  n_exposed <- length(unique(d_exp$.id))
+  d_exp <- subset(d_exp, .time <= .max_t - risk_period)[, c(".id", ".time")]
 
   # perform matching
   d_matches <- match_pairs(data=d_exp, pairs=pairs, risk_period=risk_period,
@@ -25,7 +31,8 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
                                risk_period=risk_period,
                                include_exp_time=include_exp_time)
 
-  out <- list(d_matches=d_matches, data=data, d_exp=d_exp, d_events=d_events)
+  out <- list(d_matches=d_matches, data=data, d_exp=d_exp, d_events=d_events,
+              n_exposed=n_exposed)
 
   return(out)
 }
@@ -36,8 +43,10 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
 #' @importFrom data.table shift
 get_exposure_times <- function(data) {
 
+  .A_shift <- .A <- .id <- NULL
+
   data[, .A_shift := shift(.A, type="lag", fill=0), by=.id]
-  d_exp <- data[.A==TRUE & .A_shift==FALSE][, c(".id", ".start")]
+  d_exp <- data[.A==TRUE & .A_shift==FALSE][, c(".id", ".start", ".max_t")]
   setnames(d_exp, old=".start", new=".time")
 
   return(d_exp)
@@ -46,6 +55,8 @@ get_exposure_times <- function(data) {
 ## extract event times for all given individuals from start-stop data
 #' @importFrom data.table setnames
 get_event_times <- function(data) {
+
+  .Y <- NULL
 
   d_events <- data[.Y==TRUE][, c(".id", ".stop")]
   setnames(d_events, old=".stop", new=".time")
@@ -85,6 +96,9 @@ preprocess_treat <- function(treat) {
 prepare_start_stop <- function(data, start, stop, id, exposure, outcome,
                                remove_unexposed=TRUE, remove_noevents=TRUE) {
 
+  .A <- .Y <- .id <- .start <- .max_t <- .stop <- .exposed <-
+    .has_event <- NULL
+
   data <- as.data.table(data)
 
   # rename important columns
@@ -97,6 +111,9 @@ prepare_start_stop <- function(data, start, stop, id, exposure, outcome,
 
   # sort by .id and .start
   setkey(data, .id, .start)
+
+  # calculate maximum observation time per person
+  data[, .max_t := max(.stop), by=.id]
 
   if (remove_unexposed) {
     data[, .exposed := sum(.A) > 0, by=.id]
@@ -119,6 +136,8 @@ prepare_start_stop <- function(data, start, stop, id, exposure, outcome,
 #' @importFrom data.table copy
 #' @importFrom data.table :=
 expand_pair_matches <- function(data) {
+
+  .A <- .time <- .time2 <- .id_pair <- .group <- NULL
 
   data[, .A := TRUE]
 
@@ -163,6 +182,8 @@ matches2counts <- function(data) {
 #' @importFrom data.table .EACHI
 add_event_count <- function(dt_index, dt_events, risk_period,
                             include_exp_time=FALSE) {
+
+  row_id <- end_time <- .time <- .id <- . <- .n_events <- NULL
 
   dt_index <- copy(dt_index)
 

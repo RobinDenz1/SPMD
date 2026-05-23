@@ -8,13 +8,10 @@
    - codecov
    - citation info
  - add plot.SPMD(), could be a flowchart maybe
- - write actual stuff into summary.SPMD()
  - write a small vignette
  - create a package logo
  
 # FIX
-- should not use individuals as exposed / controls if they are censored so soon that
-  their risk_period could not be observed!
 - update is_valid_match() function to also check if other risk periods of an individual create no issues when used as control
 
 # further features

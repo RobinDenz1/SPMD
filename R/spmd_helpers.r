@@ -10,8 +10,11 @@ calculate_total_time <- function(times, risk_duration) {
 ## for each individual
 get_times_used <- function(d_matches, data, risk_period) {
 
+  .id <- .time <- . <- .start <- .stop <- .max_possible_t <- .max_t <-
+    .min_t <- .used_prop <- .time_used <- NULL
+
   # unique start times per person
-  d_times <- unique(out$d_matches, by=c(".id", ".time"))
+  d_times <- unique(d_matches, by=c(".id", ".time"))
   setkey(d_times, .id, .time)
 
   # total duration used per person
@@ -28,4 +31,40 @@ get_times_used <- function(d_matches, data, risk_period) {
   d_dur[, .used_prop := .time_used / .max_possible_t]
 
   return(d_dur)
+}
+
+## input checks for the sym_pair_matching() function
+check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
+                              estimator, include_exp_time) {
+
+  if (!is.data.frame(data)) {
+    stop("'data' must be a data.frame like object (tibbles, data.table, etc.).",
+         call.=FALSE)
+  } else  if (!(length(id)==1 && is.character(id) && id %in% colnames(data))) {
+    stop("'id' must be a single character string, identifying a valid",
+         " column in 'data'.", call.=FALSE)
+  } else if (!(length(risk_period)==1 && is.numeric(risk_period) &&
+               risk_period > 0)) {
+    stop("'risk_period' must be a single positive number.", call.=FALSE)
+  } else if (!(length(pairs)==1 && is.character(pairs) &&
+               pairs %in% c("one", "all", "random"))) {
+    stop("'pairs' must be either 'one', 'all' or 'random'.", call.=FALSE)
+  } else if (!(is.null(n_pairs) || (length(n_pairs)==1 && is.numeric(n_pairs) &&
+                                    n_pairs >= 1))) {
+    stop("'n_pairs' must be either NULL or a positive integer.", call.=FALSE)
+  } else if (pairs=="random" && is.null(n_pairs)) {
+    stop("'n_pairs' must be specified when pairs='random'.", call.=FALSE)
+  } else if (!(length(estimator)==1 && is.character(estimator) &&
+               estimator %in% c("none", "moments", "glmm"))) {
+    stop("'estimator' must be either 'none', 'moments' or 'glmm'.",
+         call.=FALSE)
+  } else if (!(length(include_exp_time)==1 && is.logical(include_exp_time))) {
+    stop("'include_exp_time' must be either TRUE or FALSE.", call.=FALSE)
+  }
+
+  for (i in seq_len(4)) {
+    if (!formula[[i]] %in% colnames(data)) {
+      stop("Column '", formula[[i]], "' not found in 'data'.", call.=FALSE)
+    }
+  }
 }

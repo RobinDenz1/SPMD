@@ -8,6 +8,10 @@ sym_pair_matching <- function(formula, data, id, risk_period, pairs="one",
   # get info from formula
   form_parsed <- parse_surv_form(formula)
 
+  check_inputs_spmd(formula=form_parsed, data=data, id=id,
+                    risk_period=risk_period, pairs=pairs, n_pairs=n_pairs,
+                    estimator=estimator, include_exp_time=include_exp_time)
+
   # create matched dataset
   l_data <- get_full_data(data=data,
                           id=id,
@@ -55,10 +59,13 @@ sym_pair_matching <- function(formula, data, id, risk_period, pairs="one",
   ## calculate some further statistics
   # some numbers describing the sample sizes used
   n_total <- length(unique(data$.id))
-  n_exposed <- length(unique(l_data$d_exp$.id))
+  n_exposed <- l_data$n_exposed
+  n_exposed_time <- length(unique(l_data$d_exp$.id))
   n_has_event <- length(unique(l_data$d_events$.id))
   n_exposed_and_event <- length(intersect(l_data$d_exp$.id,
                                           l_data$d_events$.id))
+  n_exposures <- nrow(l_data$d_exp)
+  n_events <- nrow(l_data$d_events)
 
   # amount of observation time used from included individuals
   d_time_used <- get_times_used(d_matches=l_data$d_matches,
@@ -68,9 +75,11 @@ sym_pair_matching <- function(formula, data, id, risk_period, pairs="one",
   # add to output
   out$d_time_used <- d_time_used
   out$sizes <- list(n_total=n_total, n_exposed=n_exposed,
+                    n_exposed_time=n_exposed_time,
+                    n_exposures=n_exposures,
+                    n_events=n_events,
                     n_has_event=n_has_event,
                     n_exposed_and_event=n_exposed_and_event)
-
   return(out)
 }
 
@@ -110,13 +119,13 @@ summary.SPMD <- function(object, ...) {
   }
 
   cat("  Formula:", format(object$inputs$formula), "\n")
-  cat("  Risk-Period:", object$input$risk_period, "\n\n")
-  cat("  No. Individuals in data =", object$sizes$n_total, "\n")
-  cat("  No. Exposed Individuals =", object$sizes$n_exposed, "\n")
-  cat("  No. Exposed with Event(s) =", object$sizes$n_exposed_and_event, "\n")
+  cat("  Risk period:", object$input$risk_period, "\n\n")
+  cat("  No. individuals in data =", object$sizes$n_total, "\n")
+  cat("  No. exposed individuals =", object$sizes$n_exposed, "\n")
+  cat("  No. exposed with event(s) =", object$sizes$n_exposed_and_event, "\n")
   cat(" ", max(object$d_matches$.id_pair), "symmetric pairs were created\n")
   cat("  ", round((sum(object$d_time_used$.time_used) /
-                  sum(object$d_time_used$.max_possible_t))*100, 3), "%",
+                  sum(object$d_time_used$.max_possible_t))*100, 2), "%",
       " of the included observation time was used\n\n", sep="")
 
   if (object$inputs$estimator=="none") {

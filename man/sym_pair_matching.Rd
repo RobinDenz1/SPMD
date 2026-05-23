@@ -61,6 +61,8 @@ Returns a \code{SPMD} object, containing the following objects:
   \item{\code{d_counts}: If \code{estimator="moments"}, a \code{data.table} containing the four event counts per matched pair.}
   \item{\code{l_sums}: If \code{estimator="moments"}, a \code{list} containing the two sums used in the estimator.}
   \item{\code{model}: If \code{estimator="glmm"}, an object of class \code{merMod}, which is the generalized linear model used to calculate the estimate.}
+  \item{\code{d_time_used}: A \code{data.table} containing the amount of observation time used for each individual included in the matching process.}
+  \item{\code{sizes}: A \code{list} containing various numbers describing the used sample sizes.}
 }
 }
 \seealso{
@@ -70,5 +72,14 @@ Returns a \code{SPMD} object, containing the following objects:
 TODO
 }
 \examples{
-#TODO
+set.seed(42)
+
+# simulate example data
+data <- sim_example_data(n=500)
+
+# apply pair matching using all possible pairs and the
+# estimating equations based estimator
+out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+                         risk_period=40, pairs="all", estimator="moments")
+summary(out)
 }

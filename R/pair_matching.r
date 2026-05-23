@@ -27,8 +27,11 @@ is_valid_match <- function(.id, .id2, .time, .time2, risk_period) {
 ## generates all possible (and valid) pairings of individuals
 #' @importFrom data.table :=
 #' @importFrom data.table .N
+#' @importFrom data.table .I
 #' @importFrom data.table setnames
 generate_all_pairs <- function(data, risk_period) {
+
+  .idx <- . <- .id <- .id2 <- .time <- .time2 <- .id_pair <- NULL
 
   data[, .idx := .I]
 
@@ -72,6 +75,8 @@ generate_random_pairs <- function(data, risk_period, n_pairs) {
 #' @importFrom data.table .N
 #' @importFrom data.table :=
 generate_one_pairing <- function(data, risk_period) {
+
+  .time <- .id_pair <- NULL
 
   # sort by time
   setorder(data, .time)

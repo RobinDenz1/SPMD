@@ -14,10 +14,10 @@ URL: https://github.com/RobinDenz1/SPMD,
 BugReports: https://github.com/RobinDenz1/SPMD/issues
 Imports:
 	data.table (>= 1.15.0),
-	survival,
 	lme4,
-	rlang
+	simDAG
 Suggests:
+	survival,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0),
