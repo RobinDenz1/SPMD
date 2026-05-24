@@ -40,6 +40,9 @@ check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
   if (!is.data.frame(data)) {
     stop("'data' must be a data.frame like object (tibbles, data.table, etc.).",
          call.=FALSE)
+  } else if (nrow(data) < 2) {
+    stop("'data' must contain at least 2 rows (for valid results, much more).",
+         call.=FALSE)
   } else  if (!(length(id)==1 && is.character(id) && id %in% colnames(data))) {
     stop("'id' must be a single character string, identifying a valid",
          " column in 'data'.", call.=FALSE)

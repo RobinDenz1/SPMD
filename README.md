@@ -1,0 +1,121 @@
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+<!-- badges: start -->
+
+[![Project Status: WIP - Initial development is in progress, but there
+has not yet been a stable, usable release suitable for the
+public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+[![](https://www.r-pkg.org/badges/version/SPMD?color=green)](https://cran.r-project.org/package=SPMD)
+[![](http://cranlogs.r-pkg.org/badges/grand-total/SPMD?color=blue)](https://cran.r-project.org/package=SPMD)
+[![R-CMD-check](https://github.com/RobinDenz1/SPMD/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/RobinDenz1/SPMD/actions/workflows/R-CMD-check.yaml)
+[![Codecov test
+coverage](https://codecov.io/gh/RobinDenz1/SPMD/graph/badge.svg)](https://app.codecov.io/gh/RobinDenz1/SPMD)
+<!-- badges: end -->
+
+# SPMD
+
+Author: Robin Denz
+
+## Description
+
+`SPMD` is a small R Package implementing the ***S**ymmetric **P**air
+**M**atching **D**esign*. Briefly, it is a self-controlled method that
+allows estimation of the causal effect of a possible re-current binary
+exposure on a possible re-current event. It is similar in spirit to the
+famous self-controlled case series (SCCS) design in the sense that it is
+bi-directional, using both time before and after exposures as controls
+(irrespective of events). However, unlike the SCCS method, it not only
+automatically adjusts for time-invariant confounders, but also
+automatically adjusts for all time-effects, without requiring any
+assumptions on the functional form of these time effects.
+
+It does so by creating pairs of individuals, in which each individual
+acts as a control for the other individual at their respective exposure
+time. It can be shown that under mild assumptions of multiplicative
+effects and no interactions, both individual-level effects and time
+effects cancel out perfectly. For more details, please consult the
+associated paper.
+
+## Installation
+
+This package is not finished. It is still under active development, so
+breaking changes may occur at any time without warning. The
+developmental version may be installed from github using the `remotes`
+R-Package:
+
+``` r
+library(remotes)
+
+remotes::install_github("RobinDenz1/SPMD")
+```
+
+## Bug Reports and Feature Requests
+
+If you encounter any bugs or have any specific feature requests, please
+file an [Issue](https://github.com/RobinDenz1/SPMD/issues).
+
+## Examples
+
+Suppose we have data that looks like this:
+
+``` r
+library(data.table)
+library(SPMD)
+
+set.seed(1234)
+data <- sim_example_data(n=500)
+head(data)
+#> Key: <.id, start>
+#>      .id start  stop          X      A      Y
+#>    <int> <num> <num>      <num> <lgcl> <lgcl>
+#> 1:     1     0   249 -1.2070657  FALSE  FALSE
+#> 2:     1   249   289 -1.2070657   TRUE  FALSE
+#> 3:     1   289  1000 -1.2070657  FALSE  FALSE
+#> 4:     2     0   221  0.2774292  FALSE  FALSE
+#> 5:     2   221   261  0.2774292   TRUE  FALSE
+#> 6:     2   261   623  0.2774292  FALSE   TRUE
+```
+
+This is a simple simulated dataset. Here, `A` is the time-dependent
+exposure and `Y` is the outcome. The probability for both exposure and
+outcome are time-dependent, thus making time itself a sort of
+confounder. In addition, `X` is a time-fixed confounder. Suppose though,
+that `X` was unmeasured. If we want to estimate the causal effect of `A`
+on `Y` adjusting for both, we could use:
+
+``` r
+spmd <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
+                          id=".id", risk_period=40, pairs="all",
+                          estimator="moments")
+summary(spmd)
+#> Symmetric Pair Matching using an estimating equation based estimator
+#>   Formula: Surv(start, stop, Y) ~ A 
+#>   Risk period: 40 
+#> 
+#>   No. individuals in data = 500 
+#>   No. exposed individuals = 339 
+#>   No. exposed with event(s) = 337 
+#>   48345 symmetric pairs were created
+#>   94.82% of the included observation time was used
+#> 
+#> Final estimate: 2.505 
+#> 
+#> Estimated using: exp(0.5 * log(1908/304))
+```
+
+The true effect is 2.5 (see `?sim_example_data`), so the estimate is
+actually very close.
+
+## Citation
+
+If you use this package, please cite the associated article:
+
+PUT PAPER HERE
+
+## License
+
+© 2026 Robin Denz
+
+The contents of this repository are distributed under the GNU General
+Public License. You can find the full text of this License in this
+github repository. Alternatively, see <http://www.gnu.org/licenses/>.

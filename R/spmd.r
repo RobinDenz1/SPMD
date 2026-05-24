@@ -5,6 +5,8 @@ sym_pair_matching <- function(formula, data, id, risk_period, pairs="one",
                               n_pairs=NULL, estimator="moments",
                               include_exp_time=TRUE, ...) {
 
+  requireNamespace("data.table", quietly=TRUE)
+
   # get info from formula
   form_parsed <- parse_surv_form(formula)
 

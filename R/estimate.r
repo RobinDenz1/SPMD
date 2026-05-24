@@ -16,11 +16,13 @@ estimate_moments <- function(data) {
 ## appropriate random effects
 estimate_glmm <- function(data, ...) {
 
+  requireNamespace("lme4", quietly=TRUE)
+
   # fit mixed model
   model <- lme4::glmer(
     .n_events ~ factor(.group) + (1 | .id_pair:.group),
     data = data,
-    family = poisson,
+    family = "poisson",
     ...
   )
 

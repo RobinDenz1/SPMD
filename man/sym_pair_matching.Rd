@@ -66,7 +66,7 @@ Returns a \code{SPMD} object, containing the following objects:
 }
 }
 \seealso{
-\code{\link{print.SPMD}}, \code{\link{summary.SPMD}}, \code{\link{plot.SPMD}}
+\code{\link{summary.SPMD}}, \code{\link{plot.SPMD}}
 }
 \references{
 TODO

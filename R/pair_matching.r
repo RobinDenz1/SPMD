@@ -33,6 +33,15 @@ generate_all_pairs <- function(data, risk_period) {
 
   .idx <- . <- .id <- .id2 <- .time <- .time2 <- .id_pair <- NULL
 
+  # check if there might be too many matches
+  n_possible <- (nrow(data) * (nrow(data) - 1)) / 2
+  if (n_possible > 10000000) {
+    warning("The amount of possible matches (although not all of them",
+            " are going to be valid) is > 10 million (around ~ ",
+            n_possible, "). This may be infeasible. Consider using",
+            " pairs='random' instead.", call.=FALSE, immediate.=TRUE)
+  }
+
   data[, .idx := .I]
 
   # self-join keeping only i < j to avoid duplicates
@@ -90,11 +99,11 @@ generate_one_pairing <- function(data, risk_period) {
   d_pairs <- cbind(d_1, d_2)
 
   # check if all are valid
-  is_valid <- is_valid_match(.id=d_pairs$.id, .id2=d_pairs$id2,
+  is_valid <- is_valid_match(.id=d_pairs$.id, .id2=d_pairs$.id2,
                              .time=d_pairs$.time, .time2=d_pairs$.time2,
                              risk_period=risk_period)
 
-  if (!all(is_valid)) {
+  if (!all(is_valid==TRUE)) {
     stop("Matching failed. Use random matches (pairs='random') or",
          " all matches (pairs='all') instead.", call.=FALSE)
   }

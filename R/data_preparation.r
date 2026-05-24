@@ -17,19 +17,44 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
   d_exp <- get_exposure_times(data)
   d_events <- get_event_times(data)
 
+  if (nrow(d_exp)==0) {
+    stop("There are no exposure instances in the supplied 'data'.",
+         " Estimation is thus impossible.", call.=FALSE)
+  } else if (nrow(d_events)==0) {
+    stop("There are no events in the supplied 'data'. Estimation",
+         " is thus impossible.", call.=FALSE)
+  }
+
   # remove those were we cannot observe the entire risk period
   n_exposed <- length(unique(d_exp$.id))
   d_exp <- subset(d_exp, .time <= .max_t - risk_period)[, c(".id", ".time")]
 
+  if (nrow(d_exp)==0) {
+    stop("After removing exposure instances with insufficient follow-up",
+         " (risk_period must be fully observed), no exposure instances",
+         " remain. Estimation is thus impossible.", call.=FALSE)
+  }
+
   # perform matching
   d_matches <- match_pairs(data=d_exp, pairs=pairs, risk_period=risk_period,
                            n_pairs=n_pairs)
+
+  if (nrow(d_matches)==0) {
+    stop("Could not create any valid matches.", call.=FALSE)
+  }
+
   d_matches <- expand_pair_matches(d_matches)
 
   # add outcome event count to it
   d_matches <- add_event_count(dt_index=d_matches, dt_events=d_events,
                                risk_period=risk_period,
                                include_exp_time=include_exp_time)
+
+  if (sum(d_matches$.n_events)==0) {
+    stop("There were no events in the risk_period of any of the individuals",
+         " included in the matched data (control and exposure periods).",
+         " Estimation is thus impossible.", call.=FALSE)
+  }
 
   out <- list(d_matches=d_matches, data=data, d_exp=d_exp, d_events=d_events,
               n_exposed=n_exposed)
@@ -93,6 +118,7 @@ preprocess_treat <- function(treat) {
 #' @importFrom data.table setnames
 #' @importFrom data.table :=
 #' @importFrom data.table fifelse
+#' @importFrom data.table na.omit.data.table
 prepare_start_stop <- function(data, start, stop, id, exposure, outcome,
                                remove_unexposed=TRUE, remove_noevents=TRUE) {
 
@@ -104,6 +130,15 @@ prepare_start_stop <- function(data, start, stop, id, exposure, outcome,
   # rename important columns
   setnames(data, old=c(start, stop, id, exposure, outcome),
            new=c(".start", ".stop", ".id", ".A", ".Y"))
+
+  # remove missing values
+  if (anyNA(data[, c(".id", ".start", ".stop", ".A", ".Y")])) {
+    warning("Missing values in the 'id', time, exposure or outcome detected.",
+            " Rows with such missings will be removed from further",
+            " analysis.", call.=FALSE)
+    data <- na.omit.data.table(data,
+                               cols=c(".id", ".start", ".stop", ".A", ".Y"))
+  }
 
   # coerce exposure / outcome to logical from whatever its input was
   data[, .A := preprocess_treat(.A)]
@@ -153,7 +188,7 @@ expand_pair_matches <- function(data) {
 
   # assign all needed ids
   setkey(data, .id_pair, .time, .A)
-  data[, .group := rep(c(1,2,3,4), nrow(data)/4)]
+  data[, .group := rep(c(1, 2, 3, 4), nrow(data)/4)]
   setkey(data, .id_pair, .group)
 
   return(data)
@@ -163,6 +198,8 @@ expand_pair_matches <- function(data) {
 ## each matched pair
 #' @importFrom data.table data.table
 matches2counts <- function(data) {
+
+  .group <- .n_events <- NULL
 
   data <- data.table(
     .id_pair = data$.id_pair,

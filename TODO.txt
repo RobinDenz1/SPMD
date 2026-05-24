@@ -3,7 +3,6 @@
  - finish man pages
  - write tests
  - add all the usual package stuff
-   - README.Rmd
    - pkdown site
    - codecov
    - citation info
@@ -13,11 +12,11 @@
  
 # FIX
 - update is_valid_match() function to also check if other risk periods of an individual create no issues when used as control
+- find a way to generate random matches without first generating all matches
 
 # further features
+ - allow estimation of confidence intervals
  - allow adjustment for time-dependent confounders
  - maybe add gamma estimator
  - maybe add fixed effects Poisson model estimator
  - add more robust options for generating a pairs="one" type pairing
- - check if the way risk_period is handled is good (e.g. <=, >= etc),
-   maybe add option for it
