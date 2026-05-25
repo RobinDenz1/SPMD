@@ -3,7 +3,8 @@
 #' @export
 sym_pair_matching <- function(formula, data, id, risk_period, pairs="one",
                               n_pairs=NULL, estimator="moments",
-                              include_exp_time=TRUE, ...) {
+                              include_exp_time=TRUE, bootstrap=FALSE,
+                              n_boot=1000, conf_level=0.95, ...) {
 
   requireNamespace("data.table", quietly=TRUE)
 
@@ -12,7 +13,8 @@ sym_pair_matching <- function(formula, data, id, risk_period, pairs="one",
 
   check_inputs_spmd(formula=form_parsed, data=data, id=id,
                     risk_period=risk_period, pairs=pairs, n_pairs=n_pairs,
-                    estimator=estimator, include_exp_time=include_exp_time)
+                    estimator=estimator, include_exp_time=include_exp_time,
+                    bootstrap=bootstrap, n_boot=n_boot, conf_level=conf_level)
 
   # create matched dataset
   l_data <- get_full_data(data=data,
@@ -33,16 +35,22 @@ sym_pair_matching <- function(formula, data, id, risk_period, pairs="one",
                           n_pairs=n_pairs,
                           estimator=estimator,
                           risk_period=risk_period,
-                          formula=formula))
+                          formula=formula,
+                          bootstrap=bootstrap,
+                          n_boot=n_boot,
+                          conf_level=conf_level))
   class(out) <- "SPMD"
 
   # analyse data
   if (estimator=="moments") {
 
-    l_est <- estimate_moments(data=l_data$d_matches)
+    l_est <- estimate_moments(data=l_data$d_matches, bootstrap=bootstrap,
+                              n_boot=n_boot, conf_level=conf_level)
 
     # add to output
     out$est <- l_est$est
+    out$ci <- l_est$ci
+    out$se <- l_est$se
     out$d_counts <- l_est$d_counts
     out$l_sums <- l_est$l_sums
     out$model <- NULL
@@ -66,7 +74,7 @@ sym_pair_matching <- function(formula, data, id, risk_period, pairs="one",
   n_has_event <- length(unique(l_data$d_events$.id))
   n_exposed_and_event <- length(intersect(l_data$d_exp$.id,
                                           l_data$d_events$.id))
-  n_exposures <- nrow(l_data$d_exp)
+  n_exposures <- l_data$n_exposures
   n_events <- nrow(l_data$d_events)
 
   # amount of observation time used from included individuals
@@ -124,7 +132,9 @@ summary.SPMD <- function(object, ...) {
   cat("  Risk period:", object$input$risk_period, "\n\n")
   cat("  No. individuals in data =", object$sizes$n_total, "\n")
   cat("  No. exposed individuals =", object$sizes$n_exposed, "\n")
-  cat("  No. exposed with event(s) =", object$sizes$n_exposed_and_event, "\n")
+  cat("  No. unique exposure times =", object$sizes$n_exposures, "\n")
+  cat("  No. exposed individuals with event(s) =",
+      object$sizes$n_exposed_and_event, "\n")
   cat(" ", max(object$d_matches$.id_pair), "symmetric pairs were created\n")
   cat("  ", round((sum(object$d_time_used$.time_used) /
                   sum(object$d_time_used$.max_possible_t))*100, 2), "%",
@@ -133,12 +143,24 @@ summary.SPMD <- function(object, ...) {
   if (object$inputs$estimator=="none") {
     cat("No estimation was done.\n")
   } else {
-    cat("Final estimate:", round(object$est, 3), "\n\n")
+    cat("Final estimate:", round(object$est, 3), "\n")
+  }
+
+  if (!is.null(object$ci)) {
+    cat(object$inputs$conf_level * 100, "% CI: [",
+        round(object$ci[1], 3), "; ", round(object$ci[2], 3), "]\n\n", sep="")
+  } else {
+    cat("\n")
   }
 
   if (object$inputs$estimator=="moments") {
     cat("Estimated using: exp(0.5 * log(",
         object$l_sums$X2_X4, "/", object$l_sums$X1_X3, "))\n",
         sep="")
+  }
+
+  if (!is.null(object$ci)) {
+    cat("Bootstrap CI based on", object$inputs$n_boot,
+        "bootstrap replications\n")
   }
 }

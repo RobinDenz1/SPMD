@@ -35,7 +35,8 @@ get_times_used <- function(d_matches, data, risk_period) {
 
 ## input checks for the sym_pair_matching() function
 check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
-                              estimator, include_exp_time) {
+                              estimator, include_exp_time, bootstrap,
+                              n_boot, conf_level) {
 
   if (!is.data.frame(data)) {
     stop("'data' must be a data.frame like object (tibbles, data.table, etc.).",
@@ -63,6 +64,14 @@ check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
          call.=FALSE)
   } else if (!(length(include_exp_time)==1 && is.logical(include_exp_time))) {
     stop("'include_exp_time' must be either TRUE or FALSE.", call.=FALSE)
+  } else if (!(length(bootstrap)==1 && is.logical(bootstrap))) {
+    stop("'bootstrap' must be either TRUE or FALSE.", call.=FALSE)
+  } else if (!(length(n_boot)==1 && is.numeric(n_boot) && n_boot > 0 &&
+               round(n_boot)==n_boot)) {
+    stop("'n_boot' must be a single integer > 0.", call.=FALSE)
+  } else if (!(length(conf_level)==1 && is.numeric(conf_level) &&
+               conf_level > 0 && conf_level < 1)) {
+    stop("'conf_level' must be a single number < 1 and > 0.", call.=FALSE)
   }
 
   for (i in seq_len(4)) {

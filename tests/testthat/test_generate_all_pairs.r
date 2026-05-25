@@ -33,7 +33,7 @@ test_that("warning with very large amount of possible matches", {
   expect_warning(generate_all_pairs(d_exp, risk_period=40),
                  paste0("The amount of possible matches (although not all ",
                         "of them are going to be valid) is > 10 million ",
-                        "(around ~ 10253656. This may be infeasible. ",
+                        "(around ~ 10253656). This may be infeasible. ",
                         "Consider using pairs='random' instead."),
                  fixed=TRUE)
 })

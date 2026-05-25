@@ -27,6 +27,7 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
 
   # remove those were we cannot observe the entire risk period
   n_exposed <- length(unique(d_exp$.id))
+  n_exposures <- nrow(d_exp)
   d_exp <- subset(d_exp, .time <= .max_t - risk_period)[, c(".id", ".time")]
 
   if (nrow(d_exp)==0) {
@@ -57,7 +58,7 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
   }
 
   out <- list(d_matches=d_matches, data=data, d_exp=d_exp, d_events=d_events,
-              n_exposed=n_exposed)
+              n_exposed=n_exposed, n_exposures=n_exposures)
 
   return(out)
 }
@@ -118,7 +119,6 @@ preprocess_treat <- function(treat) {
 #' @importFrom data.table setnames
 #' @importFrom data.table :=
 #' @importFrom data.table fifelse
-#' @importFrom data.table na.omit.data.table
 prepare_start_stop <- function(data, start, stop, id, exposure, outcome,
                                remove_unexposed=TRUE, remove_noevents=TRUE) {
 
@@ -136,8 +136,7 @@ prepare_start_stop <- function(data, start, stop, id, exposure, outcome,
     warning("Missing values in the 'id', time, exposure or outcome detected.",
             " Rows with such missings will be removed from further",
             " analysis.", call.=FALSE)
-    data <- na.omit.data.table(data,
-                               cols=c(".id", ".start", ".stop", ".A", ".Y"))
+    data <- stats::na.omit(data, cols=c(".id", ".start", ".stop", ".A", ".Y"))
   }
 
   # coerce exposure / outcome to logical from whatever its input was
@@ -197,17 +196,27 @@ expand_pair_matches <- function(data) {
 ## get a data.table containing four columns of event counts for
 ## each matched pair
 #' @importFrom data.table data.table
-matches2counts <- function(data) {
+matches2counts <- function(data, bootstrap) {
 
   .group <- .n_events <- NULL
 
-  data <- data.table(
-    .id_pair = data$.id_pair,
-    X1 = data[.group==1]$.n_events,
-    X2 = data[.group==2]$.n_events,
-    X3 = data[.group==3]$.n_events,
-    X4 = data[.group==4]$.n_events
-  )
+  if (bootstrap) {
+    data <- data.table(
+      .id1 = data[.group==1]$.id,
+      .id2 = data[.group==2]$.id,
+      X1 = data[.group==1]$.n_events,
+      X2 = data[.group==2]$.n_events,
+      X3 = data[.group==3]$.n_events,
+      X4 = data[.group==4]$.n_events
+    )
+  } else {
+    data <- data.table(
+      X1 = data[.group==1]$.n_events,
+      X2 = data[.group==2]$.n_events,
+      X3 = data[.group==3]$.n_events,
+      X4 = data[.group==4]$.n_events
+    )
+  }
 
   return(data)
 }

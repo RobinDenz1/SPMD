@@ -10,7 +10,8 @@ This function can be used to perform symmetric pair matching, which is a self-co
 \usage{
 sym_pair_matching(formula, data, id, risk_period, pairs="one",
                   n_pairs=NULL, estimator="moments",
-                  include_exp_time=TRUE, ...)
+                  include_exp_time=TRUE, bootstrap=FALSE,
+                  n_boot=1000, conf_level=0.95, ...)
 }
 \arguments{
   \item{formula}{
@@ -36,6 +37,15 @@ A single character string specifying which estimator should be used. If \code{"m
   }
   \item{include_exp_time}{
 Either \code{TRUE} or \code{FALSE}, specifying whether events that occur exactly at the time of exposure should be counted as events in the \code{risk_period} or not. If \code{TRUE}, those events are counted, if \code{FALSE} they are not. Note that events that occur exactly at \code{exposure_time + risk_period} are always counted.
+  }
+  \item{bootstrap}{
+Either \code{TRUE} or \code{FALSE}, specifying whether bootstrapping should be performed to estimate confidence intervals. The bootstrapping is done on an individual level, before forming pairs, so that all parts of the analysis are included. This is necessary for correct estimation, but it might lead to long computation times. Especially when using \code{pairs="all"} or \code{pairs="random"} with a large \code{n_pairs} value, it might take a long time.
+  }
+  \item{n_boot}{
+A single positive integer, specifying the number of bootstrap replications that should be done for confidence interval estimation. Ignored if \code{bootstrap=FALSE}.
+  }
+  \item{conf_level}{
+A single number between 0 and 1, specifying the confidence level that should be used for the confidence interval estimation. Ignored if \code{bootstrap=FALSE}.
   }
   \item{...}{
 Further arguments passed to \code{\link[lme4]{glmer}} when using \code{estimator="glmm"}, ignored otherwise.
