@@ -2,7 +2,7 @@
 \alias{sym_pair_matching}
 
 \title{
-Symmetric Pair Matching for Causal Inference
+Symmetric Pair Matching Design for Causal Inference
 }
 \description{
 This function can be used to perform symmetric pair matching, which is a self-controlled method that uses symmetric pairings to directly adjust for both time-invariant confounders and time effects. For more information, see details and the associated article and vignette.
@@ -10,8 +10,9 @@ This function can be used to perform symmetric pair matching, which is a self-co
 \usage{
 sym_pair_matching(formula, data, id, risk_period, pairs="one",
                   n_pairs=NULL, estimator="moments",
-                  include_exp_time=TRUE, bootstrap=FALSE,
-                  n_boot=1000, conf_level=0.95, ...)
+                  bounds="[)", bootstrap=FALSE,
+                  n_boot=1000, conf_level=0.95, n_cores=1,
+                  progressbar=TRUE, ...)
 }
 \arguments{
   \item{formula}{
@@ -35,8 +36,8 @@ A single positive number, specifying how many random matches should be created w
   \item{estimator}{
 A single character string specifying which estimator should be used. If \code{"moments"} (default) the estimating equations based estimator described in the main paper is used. If \code{"glmm"}, a generalized linear model from the Poisson family with a specific random effects structure (\code{(1 | .id_pair:.group)}) is used instead. May also be set to \code{"none"} to only return the matched dataset, without performing any estimation. See details.
   }
-  \item{include_exp_time}{
-Either \code{TRUE} or \code{FALSE}, specifying whether events that occur exactly at the time of exposure should be counted as events in the \code{risk_period} or not. If \code{TRUE}, those events are counted, if \code{FALSE} they are not. Note that events that occur exactly at \code{exposure_time + risk_period} are always counted.
+  \item{bounds}{
+A single character string with two characters, specifying the bounds on the definition of the \code{risk_period}. Allowed values are \code{"()", "[)", "(]"} and \code{"[]"}. Curved parenthesis indicate open intervals, square parenthesis indicate closed intervals. So for example, using the default of \code{"[)"} events that occur at the exact time of exposure are counted as having occured in the risk-period, but events that occur on exactly \code{exposure_time + risk_period} are not.
   }
   \item{bootstrap}{
 Either \code{TRUE} or \code{FALSE}, specifying whether bootstrapping should be performed to estimate confidence intervals. The bootstrapping is done on an individual level, before forming pairs, so that all parts of the analysis are included. This is necessary for correct estimation, but it might lead to long computation times. Especially when using \code{pairs="all"} or \code{pairs="random"} with a large \code{n_pairs} value, it might take a long time.
@@ -46,6 +47,12 @@ A single positive integer, specifying the number of bootstrap replications that 
   }
   \item{conf_level}{
 A single number between 0 and 1, specifying the confidence level that should be used for the confidence interval estimation. Ignored if \code{bootstrap=FALSE}.
+  }
+  \item{n_cores}{
+A single integer, specifying the number of processing cores that should be used for bootstrapping when \code{bootstrap=TRUE} (ignored otherwise).
+  }
+  \item{progressbar}{
+Either \code{TRUE} or \code{FALSE}, specifying whether a progressbar should be shown when \code{bootstrap=TRUE}. This currently only works if \code{n_cores > 1}.
   }
   \item{...}{
 Further arguments passed to \code{\link[lme4]{glmer}} when using \code{estimator="glmm"}, ignored otherwise.
@@ -76,7 +83,7 @@ Returns a \code{SPMD} object, containing the following objects:
 }
 }
 \seealso{
-\code{\link{summary.SPMD}}, \code{\link{plot.SPMD}}
+\code{\link{summary.SPMD}}
 }
 \references{
 TODO

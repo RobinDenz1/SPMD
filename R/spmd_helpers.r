@@ -33,10 +33,114 @@ get_times_used <- function(d_matches, data, risk_period) {
   return(d_dur)
 }
 
+## a single iteration of a full bootstrap procedure
+one_boot_iter <- function(ids, d_exp, d_events, pairs, n_pairs, risk_period,
+                          bounds, estimator, ...) {
+
+  # get bootstrap sample
+  ids_i <- sample(x=ids, size=length(ids), replace=TRUE)
+  d_exp_i <- d_exp[data.table(.id=ids_i), on=".id"]
+
+  # perform matching
+  d_matches_i <- match_pairs(data=d_exp_i, pairs=pairs, risk_period=risk_period,
+                             n_pairs=n_pairs)
+
+  if (nrow(d_matches_i)==0) {
+    return(NA)
+  }
+
+  d_matches_i <- expand_pair_matches(d_matches_i)
+
+  # add outcome event count to it
+  d_matches_i <- add_event_count(dt_index=d_matches_i, dt_events=d_events,
+                                 risk_period=risk_period,
+                                 bounds=bounds)
+
+  if (sum(d_matches_i$.n_events)==0) {
+    return(NA)
+  }
+
+  # apply estimator
+  if (estimator=="moments") {
+    est <- estimate_moments(data=d_matches_i, bootstrap=FALSE,
+                            n_boot=1000, conf_level=0.95)$est
+  } else if (estimator=="glmm") {
+    est <- tryCatch({estimate_glmm(data=d_matches_i, ...)$est},
+                    error=function(e){return(NA)})
+  }
+
+  return(est)
+}
+
+## carries out full bootstrapping on the entire procedure
+#' @importFrom data.table setDTthreads
+perform_bootstrapping <- function(d_exp, d_events, estimator, pairs, n_pairs,
+                                  risk_period, bounds, n_boot,
+                                  n_cores, progressbar, ...) {
+  # includable ids
+  ids <- unique(d_exp$.id)
+
+  # using a single core
+  if (n_cores==1) {
+    out <- numeric(n_boot)
+    for (i in seq_len(n_boot)) {
+      out[i] <- one_boot_iter(ids=ids, d_exp=d_exp, d_events=d_events,
+                              pairs=pairs, n_pairs=n_pairs,
+                              risk_period=risk_period,
+                              bounds=bounds,
+                              estimator=estimator, ...)
+    }
+    # using multiple processing cores
+  } else {
+
+    requireNamespace("parallel", quietly=TRUE)
+    requireNamespace("doRNG", quietly=TRUE)
+    requireNamespace("doSNOW", quietly=TRUE)
+    requireNamespace("foreach", quietly=TRUE)
+
+    `%dorng%` <- doRNG::`%dorng%`
+
+    # setup clusters
+    cl <- parallel::makeCluster(n_cores, outfile="")
+    doSNOW::registerDoSNOW(cl)
+    pkgs <- c("data.table", "survival", "SPMD", "lme4")
+
+    glob_funs <- ls(envir=.GlobalEnv)[vapply(ls(envir=.GlobalEnv), function(obj)
+      "function"==class(eval(parse(text=obj)))[1], FUN.VALUE=logical(1))]
+
+    # progressbar
+    if (progressbar) {
+      pb <- utils::txtProgressBar(max=n_boot, style=3)
+      progress <- function(n) {utils::setTxtProgressBar(pb, n)}
+      opts <- list(progress=progress)
+    } else {
+      opts <- NULL
+    }
+
+    # run loop in parallel
+    out <- foreach::foreach(i=seq_len(n_boot), .packages=pkgs,
+                            .export=glob_funs, .options.snow=opts) %dorng% {
+      setDTthreads(1)
+
+      one_boot_iter <- utils::getFromNamespace("one_boot_iter", "SPMD")
+
+      one_boot_iter(ids=ids, d_exp=d_exp, d_events=d_events, pairs=pairs,
+                    n_pairs=n_pairs, risk_period=risk_period,
+                    bounds=bounds, estimator=estimator,
+                    ...)
+    }
+    on.exit(close(pb))
+    on.exit(parallel::stopCluster(cl))
+
+    out <- unlist(out)
+  }
+  return(out)
+}
+
 ## input checks for the sym_pair_matching() function
 check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
-                              estimator, include_exp_time, bootstrap,
-                              n_boot, conf_level) {
+                              estimator, bootstrap, n_boot, conf_level,
+                              bounds) {
 
   if (!is.data.frame(data)) {
     stop("'data' must be a data.frame like object (tibbles, data.table, etc.).",
@@ -62,8 +166,6 @@ check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
                estimator %in% c("none", "moments", "glmm"))) {
     stop("'estimator' must be either 'none', 'moments' or 'glmm'.",
          call.=FALSE)
-  } else if (!(length(include_exp_time)==1 && is.logical(include_exp_time))) {
-    stop("'include_exp_time' must be either TRUE or FALSE.", call.=FALSE)
   } else if (!(length(bootstrap)==1 && is.logical(bootstrap))) {
     stop("'bootstrap' must be either TRUE or FALSE.", call.=FALSE)
   } else if (!(length(n_boot)==1 && is.numeric(n_boot) && n_boot > 0 &&
@@ -72,6 +174,9 @@ check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
   } else if (!(length(conf_level)==1 && is.numeric(conf_level) &&
                conf_level > 0 && conf_level < 1)) {
     stop("'conf_level' must be a single number < 1 and > 0.", call.=FALSE)
+  } else if (!(length(bounds)==1 && is.character(bounds) &&
+               bounds %in% c("()", "(]", "[)", "[]"))) {
+    stop("'bounds' must be one of '()', '(]', '[)', or '[]'.", call.=FALSE)
   }
 
   for (i in seq_len(4)) {

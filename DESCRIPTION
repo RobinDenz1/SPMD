@@ -1,5 +1,5 @@
 Package: SPMD
-Title: Symmetric Time Pair Matching for Causal Inference
+Title: Symmetric Pair Matching Design for Causal Inference
 Version: 0.1.0
 Authors@R: 
     person("Robin", "Denz", , "robin.denz@rub.de", role = c("aut", "cre"))

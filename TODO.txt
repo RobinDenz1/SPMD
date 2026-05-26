@@ -15,7 +15,6 @@
 - find a way to generate random matches without first generating all matches
 
 # further features
- - allow estimation of confidence intervals
  - allow adjustment for time-dependent confounders
  - maybe add gamma estimator
  - maybe add fixed effects Poisson model estimator

@@ -1,14 +1,15 @@
 
 ## implements the main estimator build using estimating equations
 estimate_moments <- function(data, bootstrap=FALSE, n_boot=1000,
-                             conf_level=0.95) {
+                             conf_level=0.95, n_cores=1, progressbar=TRUE) {
 
   d_counts <- matches2counts(data, bootstrap=bootstrap)
 
   # faster bootstrap for pairs="all" only
   if (bootstrap) {
 
-    boot <- get_boot_moments(d_counts=d_counts, data=data, n_boot=n_boot)
+    boot <- get_boot_moments(d_counts=d_counts, data=data, n_boot=n_boot,
+                             n_cores=n_cores, progressbar=progressbar)
     se <- stats::sd(boot, na.rm=TRUE)
     ci <- stats::quantile(
       x=boot, probs=c((1-conf_level)/2, conf_level+((1-conf_level)/2)),
@@ -36,7 +37,8 @@ estimate_moments <- function(data, bootstrap=FALSE, n_boot=1000,
 ## get bootstrap estimates for the estimating equations based estimator
 ## with pairs="all" without actually performing the matching multiple times
 ## through the use of weighting
-get_boot_moments <- function(d_counts, data, n_boot) {
+# TODO: allow parallel processing
+get_boot_moments <- function(d_counts, data, n_boot, n_cores, progressbar) {
 
   X2_X4 <- X2 <- X4 <- X1_X3 <- X1 <- X3 <- NULL
 

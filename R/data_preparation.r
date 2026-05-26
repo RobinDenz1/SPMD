@@ -3,8 +3,7 @@
 ## the final dataset needed for further analysis
 get_full_data <- function(data, start, stop, id, exposure, outcome,
                           pairs, n_pairs, risk_period, remove_noevents,
-                          include_exp_time) {
-
+                          bounds) {
   .time <- .max_t <- NULL
 
   # small preparations
@@ -49,7 +48,7 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
   # add outcome event count to it
   d_matches <- add_event_count(dt_index=d_matches, dt_events=d_events,
                                risk_period=risk_period,
-                               include_exp_time=include_exp_time)
+                               bounds=bounds)
 
   if (sum(d_matches$.n_events)==0) {
     stop("There were no events in the risk_period of any of the individuals",
@@ -226,8 +225,7 @@ matches2counts <- function(data, bootstrap) {
 #' @importFrom data.table :=
 #' @importFrom data.table .I
 #' @importFrom data.table .EACHI
-add_event_count <- function(dt_index, dt_events, risk_period,
-                            include_exp_time=FALSE) {
+add_event_count <- function(dt_index, dt_events, risk_period, bounds) {
 
   row_id <- end_time <- .time <- .id <- . <- .n_events <- NULL
 
@@ -243,29 +241,17 @@ add_event_count <- function(dt_index, dt_events, risk_period,
   setkey(dt_events, .id, .time)
 
   # count matching events per row
-  if (include_exp_time) {
-    out <- dt_events[
-      dt_index,
-      on = .(
-        .id,
-        .time >= .time,
-        .time <= end_time
-      ),
-      .(n_events = .N),
-      by = .EACHI
-    ]
-  } else {
-    out <- dt_events[
-      dt_index,
-      on = .(
-        .id,
-        .time > .time,
-        .time <= end_time
-      ),
-      .(n_events = .N),
-      by = .EACHI
-    ]
-  }
+  out <- switch(
+    bounds,
+    "()" = dt_events[dt_index, on=.(.id, .time > .time, .time < end_time),
+                     .(n_events = .N), by=.EACHI],
+    "(]" = dt_events[dt_index, on=.(.id, .time > .time, .time <= end_time),
+                     .(n_events = .N), by=.EACHI],
+    "[)" = dt_events[dt_index, on=.(.id, .time >= .time, .time < end_time),
+                     .(n_events = .N), by=.EACHI],
+    "[]" = dt_events[dt_index, on=.(.id, .time >= .time, .time <= end_time),
+                     .(n_events = .N), by=.EACHI],
+  )
 
   # attach counts
   dt_index[, .n_events := out$n_events]

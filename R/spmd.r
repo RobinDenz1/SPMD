@@ -3,8 +3,9 @@
 #' @export
 sym_pair_matching <- function(formula, data, id, risk_period, pairs="one",
                               n_pairs=NULL, estimator="moments",
-                              include_exp_time=TRUE, bootstrap=FALSE,
-                              n_boot=1000, conf_level=0.95, ...) {
+                              bounds="[)", bootstrap=FALSE, n_boot=1000,
+                              conf_level=0.95, n_cores=1,
+                              progressbar=TRUE, ...) {
 
   requireNamespace("data.table", quietly=TRUE)
 
@@ -13,8 +14,8 @@ sym_pair_matching <- function(formula, data, id, risk_period, pairs="one",
 
   check_inputs_spmd(formula=form_parsed, data=data, id=id,
                     risk_period=risk_period, pairs=pairs, n_pairs=n_pairs,
-                    estimator=estimator, include_exp_time=include_exp_time,
-                    bootstrap=bootstrap, n_boot=n_boot, conf_level=conf_level)
+                    estimator=estimator, bootstrap=bootstrap, n_boot=n_boot,
+                    conf_level=conf_level, bounds=bounds)
 
   # create matched dataset
   l_data <- get_full_data(data=data,
@@ -27,7 +28,7 @@ sym_pair_matching <- function(formula, data, id, risk_period, pairs="one",
                           n_pairs=n_pairs,
                           risk_period=risk_period,
                           remove_noevents=estimator=="moments",
-                          include_exp_time=include_exp_time)
+                          bounds=bounds)
 
   # initiate output object
   out <- list(d_matches=l_data$d_matches,
@@ -39,20 +40,16 @@ sym_pair_matching <- function(formula, data, id, risk_period, pairs="one",
                           bootstrap=bootstrap,
                           n_boot=n_boot,
                           conf_level=conf_level))
-  class(out) <- "SPMD"
-
   # analyse data
   if (estimator=="moments") {
 
-    l_est <- estimate_moments(data=l_data$d_matches, bootstrap=bootstrap,
-                              n_boot=n_boot, conf_level=conf_level)
+    l_est <- estimate_moments(data=l_data$d_matches,
+                              bootstrap=bootstrap & pairs=="all",
+                              n_boot=n_boot, conf_level=conf_level,
+                              n_cores=n_cores, progressbar=progressbar)
 
     # add to output
-    out$est <- l_est$est
-    out$ci <- l_est$ci
-    out$se <- l_est$se
-    out$d_counts <- l_est$d_counts
-    out$l_sums <- l_est$l_sums
+    out <- c(out, l_est)
     out$model <- NULL
 
   } else if (estimator=="glmm") {
@@ -60,10 +57,34 @@ sym_pair_matching <- function(formula, data, id, risk_period, pairs="one",
     l_est <- estimate_glmm(data=l_data$d_matches, ...)
 
     # add to output
-    out$est <- l_est$est
+    out <- c(out, l_est)
     out$d_counts <- NULL
     out$l_sums <- NULL
-    out$model <- l_est$model
+  }
+
+  # perform full bootstrapping
+  if (bootstrap && !(estimator=="moments" && pairs=="all")) {
+
+    out_boot <- perform_bootstrapping(
+      d_exp=l_data$d_exp,
+      d_events=l_data$d_events,
+      estimator=estimator,
+      pairs=pairs,
+      n_pairs=n_pairs,
+      risk_period=risk_period,
+      bounds=bounds,
+      n_boot=n_boot,
+      n_cores=n_cores,
+      progressbar=progressbar,
+      ...
+    )
+
+    out$boot_est <- out_boot
+    out$se <- stats::sd(out_boot, na.rm=TRUE)
+    out$ci <- stats::quantile(
+      x=out_boot, probs=c((1-conf_level)/2, conf_level+((1-conf_level)/2)),
+      na.rm=TRUE, names=FALSE
+    )
   }
 
   ## calculate some further statistics
@@ -90,6 +111,8 @@ sym_pair_matching <- function(formula, data, id, risk_period, pairs="one",
                     n_events=n_events,
                     n_has_event=n_has_event,
                     n_exposed_and_event=n_exposed_and_event)
+  class(out) <- "SPMD"
+
   return(out)
 }
 

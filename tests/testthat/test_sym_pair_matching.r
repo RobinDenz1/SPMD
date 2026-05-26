@@ -20,14 +20,14 @@ test_that("using glmm", {
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                            id=".id", pairs="one", estimator="glmm",
                            risk_period=40)
-  expect_equal(round(out$est, 3), 3.212)
+  expect_equal(round(out$est, 3), 3.170)
 
   # with pairs="random"
   set.seed(243)
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                            id=".id", pairs="random", estimator="glmm",
                            risk_period=40, n_pairs=200)
-  expect_equal(round(out$est, 3), 1.648)
+  expect_equal(round(out$est, 3), 1.88)
 
   # with pairs="all"
   set.seed(3455)
@@ -36,7 +36,7 @@ test_that("using glmm", {
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data2,
                            id=".id", pairs="all", estimator="glmm",
                            risk_period=40)
-  expect_equal(round(out$est, 3), 2.088)
+  expect_equal(round(out$est, 3), 2.101)
 })
 
 test_that("using estimating equations based estimator", {
@@ -61,7 +61,7 @@ test_that("using estimating equations based estimator", {
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data2,
                            id=".id", pairs="all", estimator="moments",
                            risk_period=40)
-  expect_equal(round(out$est, 3), 2.717)
+  expect_equal(round(out$est, 3), 2.791)
 })
 
 test_that("not using an estimator", {
@@ -92,8 +92,8 @@ test_that("different handling of risk_period", {
                             risk_period=20)
   out2 <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                             id=".id", pairs="all", estimator="moments",
-                            risk_period=20, include_exp_time=FALSE)
+                            risk_period=20, bounds="[]")
 
-  expect_equal(round(out1$est, 3), 3.252)
-  expect_equal(round(out2$est, 3), 3.457)
+  expect_equal(round(out1$est, 3), 3.311)
+  expect_equal(round(out2$est, 3), 3.252)
 })
