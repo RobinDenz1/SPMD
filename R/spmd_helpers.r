@@ -90,7 +90,7 @@ perform_bootstrapping <- function(d_exp, d_events, estimator, pairs, n_pairs,
                               bounds=bounds,
                               estimator=estimator, ...)
     }
-    # using multiple processing cores
+  # using multiple processing cores
   } else {
 
     requireNamespace("parallel", quietly=TRUE)

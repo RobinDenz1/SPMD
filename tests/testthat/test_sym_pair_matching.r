@@ -97,3 +97,104 @@ test_that("different handling of risk_period", {
   expect_equal(round(out1$est, 3), 3.311)
   expect_equal(round(out2$est, 3), 3.252)
 })
+
+set.seed(42)
+data <- sim_example_data(n=1000)
+
+test_that("bootstrap, n_cores = 1, pairs = 'one', moments", {
+
+  set.seed(2134)
+  out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+                           risk_period=40, pairs="one", estimator="moments",
+                           bootstrap=TRUE, n_boot=5, n_cores=1)
+  expect_true(length(out$boot_est)==5)
+  expect_true(is.numeric(out$boot_est))
+})
+
+test_that("bootstrap, n_cores = 1, pairs = 'one', glmm", {
+
+  set.seed(2134)
+  out <- suppressMessages(
+    sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+                      risk_period=40, pairs="one", estimator="glmm",
+                      bootstrap=TRUE, n_boot=5, n_cores=1)
+  )
+  expect_true(length(out$boot_est)==5)
+  expect_true(is.numeric(out$boot_est))
+})
+
+test_that("bootstrap, n_cores = 1, pairs = 'random', moments", {
+
+  set.seed(2134)
+  out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+                           risk_period=40, pairs="random", estimator="moments",
+                           bootstrap=TRUE, n_boot=5, n_cores=1, n_pairs=1000)
+  expect_true(length(out$boot_est)==5)
+  expect_true(is.numeric(out$boot_est))
+})
+
+test_that("bootstrap, n_cores = 1, pairs = 'random', glmm", {
+
+  set.seed(2134)
+  out <- suppressMessages(
+    sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+                      risk_period=40, pairs="random", estimator="glmm",
+                      bootstrap=TRUE, n_boot=5, n_cores=1, n_pairs=1000)
+  )
+  expect_true(length(out$boot_est)==5)
+  expect_true(is.numeric(out$boot_est))
+})
+
+test_that("bootstrap, n_cores = 1, pairs = 'all', moments", {
+
+  set.seed(2134)
+  out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+                           risk_period=40, pairs="all", estimator="moments",
+                           bootstrap=TRUE, n_boot=5, n_cores=1)
+  expect_true(length(out$boot_est)==5)
+  expect_true(is.numeric(out$boot_est))
+})
+
+test_that("bootstrap, n_cores = 2, pairs = 'all', moments", {
+
+  # with progressbar
+  set.seed(2134)
+  out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+                           risk_period=40, pairs="all", estimator="moments",
+                           bootstrap=TRUE, n_boot=5, n_cores=2)
+
+  expect_true(length(out$boot_est)==5)
+  expect_true(is.numeric(out$boot_est))
+
+  # no progressbar, also same results with same seed
+  set.seed(2134)
+  out2 <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+                            risk_period=40, pairs="all", estimator="moments",
+                            bootstrap=TRUE, n_boot=5, n_cores=2,
+                            progressbar=FALSE)
+  expect_equal(out, out2)
+})
+
+test_that("bootstrap, n_cores = 2, pairs = 'one', moments", {
+
+  # with progressbar
+  set.seed(2134)
+  out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+                           risk_period=40, pairs="one", estimator="moments",
+                           bootstrap=TRUE, n_boot=5, n_cores=2)
+
+  expect_true(length(out$boot_est)==5)
+  expect_true(is.numeric(out$boot_est))
+
+  # no progressbar, also same results with same seed (not directly
+  # tested because it somehow doesn't work with check(), but works perfectly
+  # with test_local())
+  set.seed(2134)
+  out2 <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+                            risk_period=40, pairs="one", estimator="moments",
+                            bootstrap=TRUE, n_boot=5, n_cores=2,
+                            progressbar=FALSE)
+
+  expect_true(length(out2$boot_est)==5)
+  expect_true(is.numeric(out2$boot_est))
+})

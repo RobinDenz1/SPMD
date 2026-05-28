@@ -50,6 +50,7 @@ sym_pair_matching <- function(formula, data, id, risk_period, pairs="one",
 
     # add to output
     out <- c(out, l_est)
+    out$boot_est <- l_est$boot_est
     out$model <- NULL
 
   } else if (estimator=="glmm") {
