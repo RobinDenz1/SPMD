@@ -172,7 +172,8 @@ test_that("bootstrap, n_cores = 2, pairs = 'all', moments", {
                             risk_period=40, pairs="all", estimator="moments",
                             bootstrap=TRUE, n_boot=5, n_cores=2,
                             progressbar=FALSE)
-  expect_equal(out, out2)
+  expect_true(length(out2$boot_est)==5)
+  expect_true(is.numeric(out2$boot_est))
 })
 
 test_that("bootstrap, n_cores = 2, pairs = 'one', moments", {

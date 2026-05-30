@@ -16,32 +16,25 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
   d_exp <- get_exposure_times(data)
   d_events <- get_event_times(data)
 
-  if (nrow(d_exp)==0) {
-    stop("There are no exposure instances in the supplied 'data'.",
-         " Estimation is thus impossible.", call.=FALSE)
-  } else if (nrow(d_events)==0) {
-    stop("There are no events in the supplied 'data'. Estimation",
-         " is thus impossible.", call.=FALSE)
-  }
+  stopifnotm(nrow(d_exp)!=0, "There are no exposure instances in the ",
+             "supplied 'data'. Estimation is thus impossible.")
+  stopifnotm(nrow(d_events)!=0, "There are no events in the supplied",
+             " 'data'. Estimation is thus impossible.")
 
   # remove those were we cannot observe the entire risk period
   n_exposed <- length(unique(d_exp$.id))
   n_exposures <- nrow(d_exp)
   d_exp <- subset(d_exp, .time <= .max_t - risk_period)[, c(".id", ".time")]
 
-  if (nrow(d_exp)==0) {
-    stop("After removing exposure instances with insufficient follow-up",
-         " (risk_period must be fully observed), no exposure instances",
-         " remain. Estimation is thus impossible.", call.=FALSE)
-  }
+  stopifnotm(nrow(d_exp)!=0, "After removing exposure instances with ",
+             "insufficient follow-up (risk_period must be fully observed), ",
+             "no exposure instances remain. Estimation is thus impossible.")
 
   # perform matching
   d_matches <- match_pairs(data=d_exp, pairs=pairs, risk_period=risk_period,
                            n_pairs=n_pairs)
 
-  if (nrow(d_matches)==0) {
-    stop("Could not create any valid matches.", call.=FALSE)
-  }
+  stopifnotm(nrow(d_matches)!=0, "Could not create any valid matches.")
 
   d_matches <- expand_pair_matches(d_matches)
 
@@ -50,11 +43,10 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
                                risk_period=risk_period,
                                bounds=bounds)
 
-  if (sum(d_matches$.n_events)==0) {
-    stop("There were no events in the risk_period of any of the individuals",
-         " included in the matched data (control and exposure periods).",
-         " Estimation is thus impossible.", call.=FALSE)
-  }
+  stopifnotm(sum(d_matches$.n_events)!=0, "There were no events in the ",
+             "risk_period of any of the individuals",
+             " included in the matched data (control and exposure periods).",
+             " Estimation is thus impossible.")
 
   out <- list(d_matches=d_matches, data=data, d_exp=d_exp, d_events=d_events,
               n_exposed=n_exposed, n_exposures=n_exposures)

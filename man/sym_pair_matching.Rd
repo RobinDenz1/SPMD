@@ -10,8 +10,8 @@ This function can be used to perform symmetric pair matching, which is a self-co
 \usage{
 sym_pair_matching(formula, data, id, risk_period, pairs="one",
                   n_pairs=NULL, estimator="moments",
-                  bounds="[)", bootstrap=FALSE,
-                  n_boot=1000, conf_level=0.95, n_cores=1,
+                  bounds="[)", bootstrap=FALSE, n_boot=1000,
+                  conf_level=0.95, n_cores=1,
                   progressbar=TRUE, ...)
 }
 \arguments{
@@ -62,7 +62,50 @@ Further arguments passed to \code{\link[lme4]{glmer}} when using \code{estimator
 
 \strong{\emph{How it Works}}:
 
-To be written
+In the symmetric pair matching design, we form pairs of individuals who were at some point exposed to the exposure of interest. We then use the individuals as control for each other at their respective exposure times. Pairs are only valid if they permit this sort of matching. For example, if individual \code{A} was exposed only at \eqn{t = 50} and individual \code{B} was exposed at \eqn{t = 100} with \code{risk_period=20}, they could form a valid pair. The pair would then look like this:
+
+\preformatted{
+----------------------------------------
+| individual | time | exposure | group |
+----------------------------------------
+|     B      |  50  |     0    |   1   |
+|     A      |  50  |     1    |   2   |
+|     A      |  100 |     0    |   3   |
+|     B      |  100 |     1    |   4   |
+----------------------------------------
+}
+
+Here, \code{B} acts as control for the exposure period of \code{A} at \eqn{t = 50} and similarly, \code{A} lates acts as control for the exposure period of \code{B} at \eqn{t = 100}. If this sort of pairing is not possible, for example because the two exposures are too close together in time or because of another exposure period in the required control time, the pairing is considered invalid. Under the assumption that individual and time effects are multiplicative, the following equation holds for each valid pair:
+
+\deqn{\theta = \frac{1}{2}\log\left(\frac{\lambda_{i2} \lambda_{i4}}{\lambda_{i1} \lambda_{i3}}\right),}
+
+where \eqn{\lambda_{ij}} are the event rates for each row or \code{group} of the pairing and \eqn{\theta} is the natural log of the multiplicative effect of interest. This means that, under some mild assumptions, both individual-level effects (e.g. any time-fixed confounders) and time effects cancel out. However, since we do not onserve the rates directly, but only event counts in the \code{risk_period} after \code{time}, we have to use related estimators. All of this is described in more detail in the associated paper.
+
+\strong{\emph{Required Data}}:
+
+This function expects \code{data} to be supplied in the start-stop or counting process format. Essentially, it is expected that the \code{data} is formatted in the same way that would be needed to fit a Cox proportional hazards model using the \pkg{survival} package. Each row should correspond to a time duration (defined by a \code{start} and \code{stop} time value) in which no covariates changed. Covariate changes should occur at \code{start} and events should occur exactly at \code{stop}. Events are expected to be binary and only binary exposures are supported.
+
+Ideally, the exposure specified on the RHS of the \code{formula} argument is coded as a logical variable, where \code{TRUE} corresponds to the "exposed" time and \code{FALSE} corresponds to the "unexposed" time. If this is not the case, this function will coerce it to this type internally using the following rules:
+
+1.) if the variable only consists of the numbers \code{0} and \code{1} (coded as numeric), \code{0} will be considered the "unexposed" time and \code{1} the "exposed" time; 2.) otherwise, if the variable is a factor, \code{levels(treat)[1]} will be considered the "exposed" time and the other value the "unexposed" time; 3.) otherwise \code{sort(unique(treat))[1]} will be considered "unexposed" and the other value the exposed. It is safest to ensure that the exposure variable is a logical variable.
+
+\strong{\emph{Forming the Pairs}}:
+
+Before we can estimate anything, we need to form valid pairs. Multiple options are available through the \code{pairs} argument. Suppose for the moment that each individual can only be exposed at most one time (only for explanatory purposes, multiple exposures per person are allowed in this package). The most intuitive way to form pairs is to build a pairing so that each exposure instance in the original data is paired to a single other person. In a dataset in which everyone is at most only exposed once, this would mean that every non-exposed person is discarded and each exposed person gets paired with exactly one other exposed person. Small caveat: If the number of exposed individuals is uneven, at least one person will get no match. This can be done using \code{pairs="one"}.
+
+Although fairly simple, this strategy is also sort of unefficient. It means that for each person, we only use the \code{risk_period} time units after its exposure time and the \code{risk_period} time units after its matched control time. All other observation time gets discarded, regardless of whether there might be some events there. The most efficient strategy would be to build \emph{all} possible pairings instead (\code{pairs="all"}). This, however, may not be feasible computationally, as the number of possible matches grows extremly fast with rising sample sizes. Instead, users may generate a pre-specified number of random valid pairs using \code{pairs="random"}.
+
+\strong{\emph{Estimators}}:
+
+This package implements two kinds of estimators. The main one (\code{estimator="moments"}) is simply:
+
+\deqn{\hat{\theta}_n = \frac{1}{2}\log\left(\frac{\sum_i X_{i2} X_{i4}}{\sum_i X_{i1} X_{i3}}\right),}
+
+where \eqn{X_{ij}} are the event counts observed in the \code{risk_period} time units after \code{time} in each \code{group} (\eqn{j}) (exact definitions of the interval can be changed using the \code{bounds} argument). This estimator requires minimal assumptions, but usually requires lots of pairs to be build. With \code{pairs="one"}, it may not work extremly well. Another option is to use a generalized linear mixed Poisson model (\code{estimator="glmm"}). Here, we estimate one fixed effect per group and assign one random effect per group / pair combination. This requires more assumptions, but may be more efficient with \code{pairs="one"}. However, it is also much slower computationally.
+
+\strong{\emph{Confidence Intervals & P-Values}}:
+
+Because of the non-linear nature of the estimator and the potentially non-independent pairs, a non-parametric bootstrap procedure on the individual level is needed to estimate confidence intervals or p-values. In particular, percentile bootstrap confidence intervals are used. The p-value tests whether \eqn{\exp(\hat{\theta}) == 1}. Since all aspects of the estimation, including the pair matching, have to be bootstrapped, this may become fairly slow with large sample sizes and large amounts of \code{n_boot}. The \code{n_cores} option may help here, by allowing the usage of multiple processing cores in parallel. The \pkg{doRNG} package is used internally to ensure that the results are still replicable. Additionally, when using \code{pairs="all"} and \code{estimator="moments"}, a weighting trick is performed internally so that the pairs do not have to be build over and over again.
 
 }
 \author{
@@ -81,6 +124,16 @@ Returns a \code{SPMD} object, containing the following objects:
   \item{\code{d_time_used}: A \code{data.table} containing the amount of observation time used for each individual included in the matching process.}
   \item{\code{sizes}: A \code{list} containing various numbers describing the used sample sizes.}
 }
+
+If \code{bootstrap=TRUE} was used, the output additionally contains:
+
+\itemize{
+  \item{\code{ci}: A numeric vector of length 2, containing the confidence interval.}
+  \item{\code{se}: A single number containing the estimated standard error.}
+  \item{\code{boot_est}: A numeric vector containing the bootstrapped estimates.}
+  \item{\code{p_value}: A single number containing the estimated p-value.}
+}
+
 }
 \seealso{
 \code{\link{summary.SPMD}}

@@ -15,6 +15,7 @@ estimate_moments <- function(data, bootstrap=FALSE, n_boot=1000,
       x=boot, probs=c((1-conf_level)/2, conf_level+((1-conf_level)/2)),
       na.rm=TRUE, names=FALSE
     )
+    p_value <- get_boot_p_value(boot)
 
     l_sums <- list(X2_X4=sum(d_counts$X2_X4),
                    X1_X3=sum(d_counts$X1_X3))
@@ -24,13 +25,14 @@ estimate_moments <- function(data, bootstrap=FALSE, n_boot=1000,
     se <- NULL
     ci <- NULL
     boot <- NULL
+    p_value <- NULL
   }
 
   # point estimate
   est <- exp(0.5 * log(l_sums$X2_X4 / l_sums$X1_X3))
 
   out <- list(d_counts=d_counts, l_sums=l_sums, est=est, se=se,
-              ci=ci, boot_est=boot)
+              ci=ci, boot_est=boot, p_value=p_value)
 
   return(out)
 }

@@ -86,6 +86,7 @@ sym_pair_matching <- function(formula, data, id, risk_period, pairs="one",
       x=out_boot, probs=c((1-conf_level)/2, conf_level+((1-conf_level)/2)),
       na.rm=TRUE, names=FALSE
     )
+    out$p_value <- get_boot_p_value(out_boot)
   }
 
   ## calculate some further statistics
@@ -137,6 +138,8 @@ print.SPMD <- function(x, ...) {
     cat(" - using the estimating equations based estimator\n")
   } else if (x$inputs$estimator=="glmm") {
     cat(" - using the generalized linear model based estimator\n")
+  } else if (x$inputs$estimator=="none") {
+    cat(" - without performing estimation\n")
   }
 }
 
@@ -172,7 +175,8 @@ summary.SPMD <- function(object, ...) {
 
   if (!is.null(object$ci)) {
     cat(object$inputs$conf_level * 100, "% CI: [",
-        round(object$ci[1], 3), "; ", round(object$ci[2], 3), "]\n\n", sep="")
+        round(object$ci[1], 3), "; ", round(object$ci[2], 3), "]\n", sep="")
+    cat("P-Value:", round(object$p_value, 3), "\n\n")
   } else {
     cat("\n")
   }
@@ -183,7 +187,7 @@ summary.SPMD <- function(object, ...) {
         sep="")
   }
 
-  if (!is.null(object$ci)) {
+  if (!is.null(object$ci) && object$inputs$estimator!="none") {
     cat("Bootstrap CI based on", object$inputs$n_boot,
         "bootstrap replications\n")
   }

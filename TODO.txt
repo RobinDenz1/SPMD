@@ -1,6 +1,5 @@
 
 # TODO:
- - finish man pages
  - write tests
  - add all the usual package stuff
    - pkdown site
@@ -14,8 +13,12 @@
 - update is_valid_match() function to also check if other risk periods of an individual create no issues when used as control
 - find a way to generate random matches without first generating all matches
 
+# Enhancements
+- print "correct" bootstrap p-value, e.g. it should be dependent on n_boot
+- maybe use "boot" package or similar to allow other bootstrap CI options
+
 # further features
  - allow adjustment for time-dependent confounders
- - maybe add gamma estimator
- - maybe add fixed effects Poisson model estimator
  - add more robust options for generating a pairs="one" type pairing
+ - allow estimation by strata
+ - allow matching on variables

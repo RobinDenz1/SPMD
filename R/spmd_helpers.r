@@ -137,51 +137,72 @@ perform_bootstrapping <- function(d_exp, d_events, estimator, pairs, n_pairs,
   return(out)
 }
 
+## estimates a p-value from bootstrapped samples
+get_boot_p_value <- function(boot_samples, null=1) {
+  p_lower <- mean(boot_samples <= null)
+  p_upper <- mean(boot_samples >= null)
+
+  p <- 2 * min(p_lower, p_upper)
+
+  return(min(p, 1))
+}
+
+## works similar to stopifnot() but allows a custom message in
+## a more convenient fashion
+stopifnotm <- function(assert, ...) {
+  if (!assert) {
+    stop(paste(..., collapse=""), call.=FALSE)
+  }
+}
+
+## similar to stopifnotm() but just returns a warning
+warnifnotm <- function(assert, ...) {
+  if (!assert) {
+    warning(paste(..., collapse=""), call.=FALSE)
+  }
+}
+
 ## input checks for the sym_pair_matching() function
 check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
                               estimator, bootstrap, n_boot, conf_level,
                               bounds) {
 
-  if (!is.data.frame(data)) {
-    stop("'data' must be a data.frame like object (tibbles, data.table, etc.).",
-         call.=FALSE)
-  } else if (nrow(data) < 2) {
-    stop("'data' must contain at least 2 rows (for valid results, much more).",
-         call.=FALSE)
-  } else  if (!(length(id)==1 && is.character(id) && id %in% colnames(data))) {
-    stop("'id' must be a single character string, identifying a valid",
-         " column in 'data'.", call.=FALSE)
-  } else if (!(length(risk_period)==1 && is.numeric(risk_period) &&
-               risk_period > 0)) {
-    stop("'risk_period' must be a single positive number.", call.=FALSE)
-  } else if (!(length(pairs)==1 && is.character(pairs) &&
-               pairs %in% c("one", "all", "random"))) {
-    stop("'pairs' must be either 'one', 'all' or 'random'.", call.=FALSE)
-  } else if (!(is.null(n_pairs) || (length(n_pairs)==1 && is.numeric(n_pairs) &&
-                                    n_pairs >= 1))) {
-    stop("'n_pairs' must be either NULL or a positive integer.", call.=FALSE)
-  } else if (pairs=="random" && is.null(n_pairs)) {
-    stop("'n_pairs' must be specified when pairs='random'.", call.=FALSE)
-  } else if (!(length(estimator)==1 && is.character(estimator) &&
-               estimator %in% c("none", "moments", "glmm"))) {
-    stop("'estimator' must be either 'none', 'moments' or 'glmm'.",
-         call.=FALSE)
-  } else if (!(length(bootstrap)==1 && is.logical(bootstrap))) {
-    stop("'bootstrap' must be either TRUE or FALSE.", call.=FALSE)
-  } else if (!(length(n_boot)==1 && is.numeric(n_boot) && n_boot > 0 &&
-               round(n_boot)==n_boot)) {
-    stop("'n_boot' must be a single integer > 0.", call.=FALSE)
-  } else if (!(length(conf_level)==1 && is.numeric(conf_level) &&
-               conf_level > 0 && conf_level < 1)) {
-    stop("'conf_level' must be a single number < 1 and > 0.", call.=FALSE)
-  } else if (!(length(bounds)==1 && is.character(bounds) &&
-               bounds %in% c("()", "(]", "[)", "[]"))) {
-    stop("'bounds' must be one of '()', '(]', '[)', or '[]'.", call.=FALSE)
-  }
+  stopifnotm(is.data.frame(data), "'data' must be a data.frame like ",
+             "object (tibbles, data.table, etc.).")
+  stopifnotm(nrow(data) > 1, "'data' must contain at least 2 rows ",
+             "(for valid results, much more).")
+  stopifnotm((length(id)==1 && is.character(id) && id %in% colnames(data)),
+             "'id' must be a single character string, identifying a valid",
+             " column in 'data'.")
+  stopifnotm((length(risk_period)==1 && is.numeric(risk_period) &&
+                risk_period > 0),
+             "'risk_period' must be a single positive number.")
+  stopifnotm((length(pairs)==1 && is.character(pairs) &&
+                pairs %in% c("one", "all", "random")),
+             "'pairs' must be either 'one', 'all' or 'random'.")
+  stopifnotm((is.null(n_pairs) || (length(n_pairs)==1 && is.numeric(n_pairs) &&
+                                     n_pairs >= 1)),
+             "'n_pairs' must be either NULL or a positive integer.")
+  stopifnotm(!(pairs=="random" && is.null(n_pairs)),
+             "'n_pairs' must be specified when pairs='random'.")
+  stopifnotm((length(estimator)==1 && is.character(estimator) &&
+                estimator %in% c("none", "moments", "glmm")),
+             "'estimator' must be either 'none', 'moments' or 'glmm'.")
+  stopifnotm((length(bootstrap)==1 && is.logical(bootstrap)),
+             "'bootstrap' must be either TRUE or FALSE.")
+  stopifnotm((length(n_boot)==1 && is.numeric(n_boot) && n_boot > 0 &&
+                round(n_boot)==n_boot),
+             "'n_boot' must be a single integer > 0.")
+  stopifnotm((length(conf_level)==1 && is.numeric(conf_level) &&
+                conf_level > 0 && conf_level < 1),
+             "'conf_level' must be a single number < 1 and > 0.")
+  stopifnotm((length(bounds)==1 && is.character(bounds) &&
+                bounds %in% c("()", "(]", "[)", "[]")),
+             "'bounds' must be one of '()', '(]', '[)', or '[]'.")
 
+  # check if all variables named in formula are in data
   for (i in seq_len(4)) {
-    if (!formula[[i]] %in% colnames(data)) {
-      stop("Column '", formula[[i]], "' not found in 'data'.", call.=FALSE)
-    }
+    stopifnotm(formula[[i]] %in% colnames(data),
+               "Column '", formula[[i]], "' not found in 'data'.")
   }
 }
