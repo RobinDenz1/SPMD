@@ -35,7 +35,8 @@ get_times_used <- function(d_matches, data, risk_period) {
 
 ## a single iteration of a full bootstrap procedure
 one_boot_iter <- function(ids, d_exp, d_events, pairs, n_pairs, risk_period,
-                          bounds, estimator, ...) {
+                          bounds, estimator, batch_size, rand_max_iter,
+                          ...) {
 
   # get bootstrap sample
   ids_i <- sample(x=ids, size=length(ids), replace=TRUE)
@@ -43,7 +44,8 @@ one_boot_iter <- function(ids, d_exp, d_events, pairs, n_pairs, risk_period,
 
   # perform matching
   d_matches_i <- match_pairs(data=d_exp_i, pairs=pairs, risk_period=risk_period,
-                             n_pairs=n_pairs)
+                             n_pairs=n_pairs, max_iter=rand_max_iter,
+                             batch_size=batch_size)
 
   if (nrow(d_matches_i)==0) {
     return(NA)
@@ -76,7 +78,8 @@ one_boot_iter <- function(ids, d_exp, d_events, pairs, n_pairs, risk_period,
 #' @importFrom data.table setDTthreads
 perform_bootstrapping <- function(d_exp, d_events, estimator, pairs, n_pairs,
                                   risk_period, bounds, n_boot,
-                                  n_cores, progressbar, ...) {
+                                  n_cores, progressbar, batch_size,
+                                  rand_max_iter, ...) {
   # includable ids
   ids <- unique(d_exp$.id)
 
@@ -87,7 +90,8 @@ perform_bootstrapping <- function(d_exp, d_events, estimator, pairs, n_pairs,
       out[i] <- one_boot_iter(ids=ids, d_exp=d_exp, d_events=d_events,
                               pairs=pairs, n_pairs=n_pairs,
                               risk_period=risk_period,
-                              bounds=bounds,
+                              bounds=bounds, batch_size=batch_size,
+                              rand_max_iter=rand_max_iter,
                               estimator=estimator, ...)
     }
   # using multiple processing cores
@@ -126,8 +130,8 @@ perform_bootstrapping <- function(d_exp, d_events, estimator, pairs, n_pairs,
 
       one_boot_iter(ids=ids, d_exp=d_exp, d_events=d_events, pairs=pairs,
                     n_pairs=n_pairs, risk_period=risk_period,
-                    bounds=bounds, estimator=estimator,
-                    ...)
+                    bounds=bounds, estimator=estimator, batch_size=batch_size,
+                    rand_max_iter=rand_max_iter, ...)
     }
     on.exit(close(pb))
     on.exit(parallel::stopCluster(cl))
@@ -143,8 +147,13 @@ get_boot_p_value <- function(boot_samples, null=1) {
   p_upper <- mean(boot_samples >= null)
 
   p <- 2 * min(p_lower, p_upper)
+  p <- min(p, 1)
 
-  return(min(p, 1))
+  # small correction, because p-values cannot actually be 0
+  # when derived from bootstrapping
+  p <- fifelse(p==0, 1/length(boot_samples), p)
+
+  return(p)
 }
 
 ## works similar to stopifnot() but allows a custom message in
@@ -165,7 +174,7 @@ warnifnotm <- function(assert, ...) {
 ## input checks for the sym_pair_matching() function
 check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
                               estimator, bootstrap, n_boot, conf_level,
-                              bounds) {
+                              bounds, batch_size, rand_max_iter) {
 
   stopifnotm(is.data.frame(data), "'data' must be a data.frame like ",
              "object (tibbles, data.table, etc.).")
@@ -178,8 +187,8 @@ check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
                 risk_period > 0),
              "'risk_period' must be a single positive number.")
   stopifnotm((length(pairs)==1 && is.character(pairs) &&
-                pairs %in% c("one", "all", "random")),
-             "'pairs' must be either 'one', 'all' or 'random'.")
+                pairs %in% c("one", "all", "random1", "random2")),
+             "'pairs' must be either 'one', 'all', 'random1' or 'random2'.")
   stopifnotm((is.null(n_pairs) || (length(n_pairs)==1 && is.numeric(n_pairs) &&
                                      n_pairs >= 1)),
              "'n_pairs' must be either NULL or a positive integer.")
@@ -199,6 +208,12 @@ check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
   stopifnotm((length(bounds)==1 && is.character(bounds) &&
                 bounds %in% c("()", "(]", "[)", "[]")),
              "'bounds' must be one of '()', '(]', '[)', or '[]'.")
+  stopifnotm((length(batch_size)==1 && is.numeric(batch_size) &&
+              round(batch_size)==batch_size && batch_size > 0),
+             "'batch_size' must be a single integer > 0.")
+  stopifnotm((length(rand_max_iter)==1 && is.numeric(rand_max_iter) &&
+                round(rand_max_iter)==rand_max_iter && rand_max_iter > 0),
+             "'rand_max_iter' must be a single integer > 0.")
 
   # check if all variables named in formula are in data
   for (i in seq_len(4)) {

@@ -8,11 +8,12 @@ Symmetric Pair Matching Design for Causal Inference
 This function can be used to perform symmetric pair matching, which is a self-controlled method that uses symmetric pairings to directly adjust for both time-invariant confounders and time effects. For more information, see details and the associated article and vignette.
 }
 \usage{
-sym_pair_matching(formula, data, id, risk_period, pairs="one",
-                  n_pairs=NULL, estimator="moments",
-                  bounds="[)", bootstrap=FALSE, n_boot=1000,
-                  conf_level=0.95, n_cores=1,
-                  progressbar=TRUE, ...)
+sym_pair_matching(formula, data, id, risk_period, bounds="[)",
+                  estimator="moments", pairs="random2",
+                  n_pairs=100000, batch_size=max(5000, n_pairs * 2),
+                  rand_max_iter=100, bootstrap=FALSE, n_boot=1000,
+                  conf_level=0.95, n_cores=1, progressbar=TRUE,
+                  ...)
 }
 \arguments{
   \item{formula}{
@@ -27,17 +28,23 @@ A single character string, specifying the name of the unique person identifier i
   \item{risk_period}{
 A single positive number specifying the length of the risk period.
   }
-  \item{pairs}{
-A single character string specifying what pair matches should be used. If \code{"one"} (default), a dataset is created in which each exposed individual is included in exactly one pair (if possible). If \code{"all"}, all possible valid pairings are created. This may be infeasible with large data. If \code{"random"}, a pre-specified amount of random pairings are created. In this case, the amount of pairs is controlled using the \code{n_pairs} argument.
-  }
-  \item{n_pairs}{
-A single positive number, specifying how many random matches should be created when using \code{pairs="random"}, ignored otherwise.
+  \item{bounds}{
+A single character string with two characters, specifying the bounds on the definition of the \code{risk_period}. Allowed values are \code{"()", "[)", "(]"} and \code{"[]"}. Curved parenthesis indicate open intervals, square parenthesis indicate closed intervals. So for example, using the default of \code{"[)"} events that occur at the exact time of exposure are counted as having occured in the risk-period, but events that occur on exactly \code{exposure_time + risk_period} are not.
   }
   \item{estimator}{
 A single character string specifying which estimator should be used. If \code{"moments"} (default) the estimating equations based estimator described in the main paper is used. If \code{"glmm"}, a generalized linear model from the Poisson family with a specific random effects structure (\code{(1 | .id_pair:.group)}) is used instead. May also be set to \code{"none"} to only return the matched dataset, without performing any estimation. See details.
   }
-  \item{bounds}{
-A single character string with two characters, specifying the bounds on the definition of the \code{risk_period}. Allowed values are \code{"()", "[)", "(]"} and \code{"[]"}. Curved parenthesis indicate open intervals, square parenthesis indicate closed intervals. So for example, using the default of \code{"[)"} events that occur at the exact time of exposure are counted as having occured in the risk-period, but events that occur on exactly \code{exposure_time + risk_period} are not.
+  \item{pairs}{
+A single character string specifying what pair matches should be used. If \code{"one"}, a dataset is created in which each exposed individual is included in exactly one pair (if possible). If \code{"all"}, all possible valid pairings are created. This may be infeasible with large data. If \code{"random1"}, a pre-specified amount of random pairings are created, without first creating all possible matches. In this case, the amount of pairs is controlled using the \code{n_pairs} argument. If \code{"random2"}, a pre-specified amount of random pairings is created by random sampling from all possible pairings (default). This is faster and more reliable than \code{"random1"}, but it is much more memory inefficient and not feasible with a large number of unique id/exposure combinations (see details).
+  }
+  \item{n_pairs}{
+A single positive number, specifying how many random matches should be created when using \code{pairs="random"}, ignored otherwise.
+  }
+  \item{batch_size}{
+A single positive integer, specifying the number of candidate pair matches that should be created each iteration when using \code{pairs="random1"}. Higher numbers may result in faster computation, but require more memory usage. Ignore if \code{pairs!="random1"}.
+  }
+  \item{rand_max_iter}{
+A single positive integer, specifying the maximum number of allowed iterations for generating random matches when \code{pairs="random1"}. Since the algorithm is iterative and does not generate all possible matches, it is possible that \code{n_pairs} is larger than the maximum possible number, or that through chance the algorithm gets stuck. This ensures that it eventually terminates (see details). Ignored if \code{pairs!="random1"}.
   }
   \item{bootstrap}{
 Either \code{TRUE} or \code{FALSE}, specifying whether bootstrapping should be performed to estimate confidence intervals. The bootstrapping is done on an individual level, before forming pairs, so that all parts of the analysis are included. This is necessary for correct estimation, but it might lead to long computation times. Especially when using \code{pairs="all"} or \code{pairs="random"} with a large \code{n_pairs} value, it might take a long time.
@@ -75,7 +82,7 @@ In the symmetric pair matching design, we form pairs of individuals who were at 
 ----------------------------------------
 }
 
-Here, \code{B} acts as control for the exposure period of \code{A} at \eqn{t = 50} and similarly, \code{A} lates acts as control for the exposure period of \code{B} at \eqn{t = 100}. If this sort of pairing is not possible, for example because the two exposures are too close together in time or because of another exposure period in the required control time, the pairing is considered invalid. Under the assumption that individual and time effects are multiplicative, the following equation holds for each valid pair:
+Here, \code{B} acts as control for the exposure period of \code{A} at \eqn{t = 50} and similarly, \code{A} later acts as control for the exposure period of \code{B} at \eqn{t = 100}. If this sort of pairing is not possible, for example because the two exposures are too close together in time or because of another exposure period in the required control time, the pairing is considered invalid. Under the assumption that individual and time effects are multiplicative, the following equation holds for each valid pair:
 
 \deqn{\theta = \frac{1}{2}\log\left(\frac{\lambda_{i2} \lambda_{i4}}{\lambda_{i1} \lambda_{i3}}\right),}
 
@@ -93,7 +100,11 @@ Ideally, the exposure specified on the RHS of the \code{formula} argument is cod
 
 Before we can estimate anything, we need to form valid pairs. Multiple options are available through the \code{pairs} argument. Suppose for the moment that each individual can only be exposed at most one time (only for explanatory purposes, multiple exposures per person are allowed in this package). The most intuitive way to form pairs is to build a pairing so that each exposure instance in the original data is paired to a single other person. In a dataset in which everyone is at most only exposed once, this would mean that every non-exposed person is discarded and each exposed person gets paired with exactly one other exposed person. Small caveat: If the number of exposed individuals is uneven, at least one person will get no match. This can be done using \code{pairs="one"}.
 
-Although fairly simple, this strategy is also sort of unefficient. It means that for each person, we only use the \code{risk_period} time units after its exposure time and the \code{risk_period} time units after its matched control time. All other observation time gets discarded, regardless of whether there might be some events there. The most efficient strategy would be to build \emph{all} possible pairings instead (\code{pairs="all"}). This, however, may not be feasible computationally, as the number of possible matches grows extremly fast with rising sample sizes. Instead, users may generate a pre-specified number of random valid pairs using \code{pairs="random"}.
+Although fairly simple, this strategy is also sort of unefficient. It means that for each person, we only use the \code{risk_period} time units after its exposure time and the \code{risk_period} time units after its matched control time. All other observation time gets discarded, regardless of whether there might be some events there. The most efficient strategy would be to build \emph{all} possible pairings instead (\code{pairs="all"}). This, however, may not be feasible computationally, as the number of possible matches grows extremly fast with rising sample sizes. Instead, users may generate a pre-specified number of random valid pairs using \code{pairs="random1"} or \code{pairs="random2"}.
+
+In \code{pairs="random1"}, randomly choosen pairs are generated in batches of size \code{batch_size}. It is then checked, whether these matches are valid and whether they were already included in the data. This continues until all \code{n_pairs} matches have been generated, or until \code{rand_max_iter} number of iterations are reached. This strategy is always feasible memory-wise, but is a bit slower than other strategies. It is also a little unstable, because it is possible that \code{n_pairs} is larger than the maximum number of possible (and valid) pairs. The algorithm then runs needlessly until \code{rand_max_iter} is reached. The option \code{pairs="random2"} also generates \code{n_pairs} random pairs, but does so by first generating all possible and valid pairs. This is generally preferable, whenever it is possible.
+
+We recommend trying \code{pairs="all"} first. If that is infeasible, we recommend switching to \code{pairs="random2"}. If that is still infeasible, use \code{pairs="random1"}. The option \code{pairs="one"} should only be used when using \code{estimator="glmm"}, or when the \code{data} is extremly large.
 
 \strong{\emph{Estimators}}:
 

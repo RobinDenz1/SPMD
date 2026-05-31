@@ -1,11 +1,12 @@
 
 ## main function to apply the symmetric pair matching design
 #' @export
-sym_pair_matching <- function(formula, data, id, risk_period, pairs="one",
-                              n_pairs=NULL, estimator="moments",
-                              bounds="[)", bootstrap=FALSE, n_boot=1000,
-                              conf_level=0.95, n_cores=1,
-                              progressbar=TRUE, ...) {
+sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
+                              estimator="moments", pairs="random2",
+                              n_pairs=100000, batch_size=max(5000, n_pairs * 2),
+                              rand_max_iter=100, bootstrap=FALSE, n_boot=1000,
+                              conf_level=0.95, n_cores=1, progressbar=TRUE,
+                              ...) {
 
   requireNamespace("data.table", quietly=TRUE)
 
@@ -15,7 +16,8 @@ sym_pair_matching <- function(formula, data, id, risk_period, pairs="one",
   check_inputs_spmd(formula=form_parsed, data=data, id=id,
                     risk_period=risk_period, pairs=pairs, n_pairs=n_pairs,
                     estimator=estimator, bootstrap=bootstrap, n_boot=n_boot,
-                    conf_level=conf_level, bounds=bounds)
+                    conf_level=conf_level, bounds=bounds,
+                    rand_max_iter=rand_max_iter, batch_size=batch_size)
 
   # create matched dataset
   l_data <- get_full_data(data=data,
@@ -28,7 +30,9 @@ sym_pair_matching <- function(formula, data, id, risk_period, pairs="one",
                           n_pairs=n_pairs,
                           risk_period=risk_period,
                           remove_noevents=estimator=="moments",
-                          bounds=bounds)
+                          bounds=bounds,
+                          rand_max_iter=rand_max_iter,
+                          batch_size=batch_size)
 
   # initiate output object
   out <- list(d_matches=l_data$d_matches,
@@ -39,7 +43,9 @@ sym_pair_matching <- function(formula, data, id, risk_period, pairs="one",
                           formula=formula,
                           bootstrap=bootstrap,
                           n_boot=n_boot,
-                          conf_level=conf_level))
+                          conf_level=conf_level,
+                          rand_max_iter=rand_max_iter,
+                          batch_size=batch_size))
   # analyse data
   if (estimator=="moments") {
 
@@ -77,6 +83,8 @@ sym_pair_matching <- function(formula, data, id, risk_period, pairs="one",
       n_boot=n_boot,
       n_cores=n_cores,
       progressbar=progressbar,
+      rand_max_iter=rand_max_iter,
+      batch_size=batch_size,
       ...
     )
 
@@ -128,7 +136,7 @@ print.SPMD <- function(x, ...) {
     cat(" - using each individual in a single symmetric pair\n")
   } else if (x$inputs$pairs=="all") {
     cat(" - using all possible unique symmetric pairs\n")
-  } else if (x$inputs$pairs=="random") {
+  } else if (x$inputs$pairs=="random1" || x$inputs$pairs=="random2") {
     cat(" - using", x$inputs$n_pairs, "random unique symmetric pairs\n")
   }
 

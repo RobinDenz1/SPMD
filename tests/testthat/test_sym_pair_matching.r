@@ -22,10 +22,17 @@ test_that("using glmm", {
                            risk_period=40)
   expect_equal(round(out$est, 3), 3.170)
 
-  # with pairs="random"
+  # with pairs="random1"
   set.seed(243)
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
-                           id=".id", pairs="random", estimator="glmm",
+                           id=".id", pairs="random1", estimator="glmm",
+                           risk_period=40, n_pairs=200)
+  expect_equal(round(out$est, 3), 1.519)
+
+  # with pairs="random2"
+  set.seed(243)
+  out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
+                           id=".id", pairs="random2", estimator="glmm",
                            risk_period=40, n_pairs=200)
   expect_equal(round(out$est, 3), 1.88)
 
@@ -47,12 +54,19 @@ test_that("using estimating equations based estimator", {
                            risk_period=40)
   expect_equal(round(out$est, 3), 1.732)
 
-  # with pairs="random"
-  set.seed(243)
+  # with pairs="random1"
+  set.seed(245)
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
-                           id=".id", pairs="random", estimator="moments",
-                           risk_period=40, n_pairs=200)
-  expect_equal(round(out$est, 3), 2)
+                           id=".id", pairs="random1", estimator="moments",
+                           risk_period=40, n_pairs=1000)
+  expect_equal(round(out$est, 3), 2.828)
+
+  # with pairs="random2"
+  set.seed(245)
+  out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
+                           id=".id", pairs="random2", estimator="moments",
+                           risk_period=40, n_pairs=1000)
+  expect_equal(round(out$est, 3), 2.449)
 
   # with pairs="all"
   set.seed(3455)
@@ -123,22 +137,44 @@ test_that("bootstrap, n_cores = 1, pairs = 'one', glmm", {
   expect_true(is.numeric(out$boot_est))
 })
 
-test_that("bootstrap, n_cores = 1, pairs = 'random', moments", {
+test_that("bootstrap, n_cores = 1, pairs = 'random1', moments", {
 
   set.seed(2134)
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
-                           risk_period=40, pairs="random", estimator="moments",
+                           risk_period=40, pairs="random1", estimator="moments",
                            bootstrap=TRUE, n_boot=5, n_cores=1, n_pairs=1000)
   expect_true(length(out$boot_est)==5)
   expect_true(is.numeric(out$boot_est))
 })
 
-test_that("bootstrap, n_cores = 1, pairs = 'random', glmm", {
+test_that("bootstrap, n_cores = 1, pairs = 'random2', moments", {
+
+  set.seed(2134)
+  out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+                           risk_period=40, pairs="random2", estimator="moments",
+                           bootstrap=TRUE, n_boot=5, n_cores=1, n_pairs=1000)
+  expect_true(length(out$boot_est)==5)
+  expect_true(is.numeric(out$boot_est))
+})
+
+test_that("bootstrap, n_cores = 1, pairs = 'random1', glmm", {
 
   set.seed(2134)
   out <- suppressMessages(
     sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
-                      risk_period=40, pairs="random", estimator="glmm",
+                      risk_period=40, pairs="random1", estimator="glmm",
+                      bootstrap=TRUE, n_boot=5, n_cores=1, n_pairs=1000)
+  )
+  expect_true(length(out$boot_est)==5)
+  expect_true(is.numeric(out$boot_est))
+})
+
+test_that("bootstrap, n_cores = 1, pairs = 'random2', glmm", {
+
+  set.seed(2134)
+  out <- suppressMessages(
+    sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+                      risk_period=40, pairs="random2", estimator="glmm",
                       bootstrap=TRUE, n_boot=5, n_cores=1, n_pairs=1000)
   )
   expect_true(length(out$boot_est)==5)

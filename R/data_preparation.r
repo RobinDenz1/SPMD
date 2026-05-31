@@ -3,7 +3,7 @@
 ## the final dataset needed for further analysis
 get_full_data <- function(data, start, stop, id, exposure, outcome,
                           pairs, n_pairs, risk_period, remove_noevents,
-                          bounds) {
+                          bounds, rand_max_iter, batch_size) {
   .time <- .max_t <- NULL
 
   # small preparations
@@ -32,7 +32,8 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
 
   # perform matching
   d_matches <- match_pairs(data=d_exp, pairs=pairs, risk_period=risk_period,
-                           n_pairs=n_pairs)
+                           n_pairs=n_pairs, max_iter=rand_max_iter,
+                           batch_size=batch_size)
 
   stopifnotm(nrow(d_matches)!=0, "Could not create any valid matches.")
 
