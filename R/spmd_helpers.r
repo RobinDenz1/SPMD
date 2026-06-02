@@ -45,7 +45,7 @@ one_boot_iter <- function(ids, d_exp, d_events, pairs, n_pairs, risk_period,
   # perform matching
   d_matches_i <- match_pairs(data=d_exp_i, pairs=pairs, risk_period=risk_period,
                              n_pairs=n_pairs, max_iter=rand_max_iter,
-                             batch_size=batch_size)
+                             batch_size=batch_size, bounds=bounds)
 
   if (nrow(d_matches_i)==0) {
     return(NA)

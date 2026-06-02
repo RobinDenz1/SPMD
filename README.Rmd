@@ -63,7 +63,7 @@ This is a simple simulated dataset. Here, `A` is the time-dependent exposure and
 ```{r}
 spmd <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                           id=".id", risk_period=40, pairs="all",
-                          estimator="moments")
+                          estimator="moments", bootstrap=TRUE)
 summary(spmd)
 ```
 

@@ -1,19 +1,21 @@
 
 ## create valid pairs from given data
-match_pairs <- function(data, pairs, risk_period, n_pairs=NULL,
+match_pairs <- function(data, pairs, risk_period, bounds, n_pairs=NULL,
                         batch_size=NULL, max_iter=NULL) {
 
   if (pairs=="one") {
-    d_pairs <- generate_one_pairing(data=data, risk_period=risk_period)
+    d_pairs <- generate_one_pairing(data=data, risk_period=risk_period,
+                                    bounds=bounds)
   } else if (pairs=="all") {
-    d_pairs <- generate_all_pairs(data=data, risk_period=risk_period)
+    d_pairs <- generate_all_pairs(data=data, risk_period=risk_period,
+                                  bounds=bounds)
   } else if (pairs=="random1") {
     d_pairs <- generate_random_pairs_mem(data=data, risk_period=risk_period,
                                          n_pairs=n_pairs, batch_size=batch_size,
-                                         max_iter=max_iter)
+                                         max_iter=max_iter, bounds=bounds)
   } else if (pairs=="random2") {
     d_pairs <- generate_random_pairs(data=data, risk_period=risk_period,
-                                     n_pairs=n_pairs)
+                                     n_pairs=n_pairs, bounds=bounds)
   }
 
   return(d_pairs)
@@ -21,9 +23,16 @@ match_pairs <- function(data, pairs, risk_period, n_pairs=NULL,
 
 ## check if two individuals are a valid pairing, e.g. they are not the
 ## same individual and their risk-periods do not overlap
-# TODO: this does not work with multiple exposures!
-is_valid_match <- function(.id, .id2, .time, .time2, risk_period) {
-  !(.id==.id2 | abs(.time - .time2) <= risk_period)
+# NOTE: If either of the bounds is defined using ( or ), intervals
+#       that touch each other will have no overlapping information and can
+#       thus be used. If both ends are included, however, touching intervals
+#       would overlap at the "touch point", thus making them invalid
+is_overlapping <- function(.id, .id2, .time, .time2, risk_period, bounds) {
+  if (bounds=="[]") {
+    out <- .id==.id2 | (abs(.time - .time2) <= risk_period)
+  } else {
+    out <- .id==.id2 | (abs(.time - .time2) < risk_period)
+  }
 }
 
 ## generates all possible (and valid) pairings of individuals
@@ -31,7 +40,7 @@ is_valid_match <- function(.id, .id2, .time, .time2, risk_period) {
 #' @importFrom data.table .N
 #' @importFrom data.table .I
 #' @importFrom data.table setnames
-generate_all_pairs <- function(data, risk_period) {
+generate_all_pairs <- function(data, risk_period, bounds) {
 
   .idx <- . <- .id <- .id2 <- .time <- .time2 <- .id_pair <- NULL
 
@@ -52,9 +61,8 @@ generate_all_pairs <- function(data, risk_period) {
   setnames(d_pairs, old=c("i..id", "i..time"), new=c(".id2", ".time2"))
 
   # keep only valid pairs
-  d_pairs <- subset(d_pairs, is_valid_match(.id=.id, .id2=.id2, .time=.time,
-                                            .time2=.time2,
-                                            risk_period=risk_period))
+  d_pairs <- remove_invalid_matches(d_pairs=d_pairs, d_exp=data,
+                                    risk_period=risk_period, bounds=bounds)
   d_pairs[, .id_pair := seq_len(.N)]
 
   return(d_pairs)
@@ -62,9 +70,10 @@ generate_all_pairs <- function(data, risk_period) {
 
 ## generates a set of n random (valid) pairs
 #' @importFrom data.table .N
-generate_random_pairs <- function(data, risk_period, n_pairs) {
+generate_random_pairs <- function(data, risk_period, bounds, n_pairs) {
 
-  d_pairs <- generate_all_pairs(data=data, risk_period=risk_period)
+  d_pairs <- generate_all_pairs(data=data, risk_period=risk_period,
+                                bounds=bounds)
 
   if (n_pairs > nrow(d_pairs)) {
     warning("Cannot generate ", format(n_pairs, scientific=FALSE),
@@ -83,7 +92,7 @@ generate_random_pairs <- function(data, risk_period, n_pairs) {
 #' @importFrom data.table data.table
 #' @importFrom data.table :=
 #' @importFrom data.table .I
-generate_random_pairs_mem <- function(data, n_pairs, risk_period,
+generate_random_pairs_mem <- function(data, n_pairs, risk_period, bounds,
                                       batch_size=max(5000L, n_pairs * 2L),
                                       max_iter=100L) {
   . <- .id_pair <- NULL
@@ -174,16 +183,10 @@ generate_random_pairs_mem <- function(data, n_pairs, risk_period,
       .time2 = data$.time[j]
     )]
 
-    # vectorized validity check
-    valid <- is_valid_match(
-      .id = cand$.id,
-      .id2 = cand$.id2,
-      .time = cand$.time,
-      .time2 = cand$.time2,
-      risk_period = risk_period
-    )
-
-    cand <- cand[valid]
+    # remove invalid ones
+    cand <- remove_invalid_matches(d_pairs=cand, d_exp=data,
+                                   risk_period=risk_period,
+                                   bounds=bounds)
 
     if (nrow(cand)==0) {
       next
@@ -217,7 +220,7 @@ generate_random_pairs_mem <- function(data, n_pairs, risk_period,
 #' @importFrom data.table setnames
 #' @importFrom data.table .N
 #' @importFrom data.table :=
-generate_one_pairing <- function(data, risk_period) {
+generate_one_pairing <- function(data, risk_period, bounds) {
 
   .time <- .id_pair <- NULL
 
@@ -233,16 +236,99 @@ generate_one_pairing <- function(data, risk_period) {
   d_pairs <- cbind(d_1, d_2)
 
   # check if all are valid
-  is_valid <- is_valid_match(.id=d_pairs$.id, .id2=d_pairs$.id2,
-                             .time=d_pairs$.time, .time2=d_pairs$.time2,
-                             risk_period=risk_period)
+  n_prev <- nrow(d_pairs)
+  d_pairs <- remove_invalid_matches(d_pairs=d_pairs, d_exp=data,
+                                    risk_period=risk_period, bounds=bounds)
 
-  if (!all(is_valid==TRUE)) {
-    stop("Matching failed. Use random matches (pairs='random') or",
-         " all matches (pairs='all') instead.", call.=FALSE)
+  if (n_prev != nrow(d_pairs)) {
+    stop("Matching failed. Use random matches (pairs='random1' / ",
+         "pairs='random2') or all matches (pairs='all') instead.", call.=FALSE)
   }
 
   d_pairs[, .id_pair := seq_len(.N)]
 
+  return(d_pairs)
+}
+
+## takes a set of pair matches and checks if they are valid
+#' @importFrom data.table :=
+#' @importFrom data.table .N
+#' @importFrom data.table setnames
+#' @importFrom data.table dcast
+remove_invalid_matches <- function(d_pairs, d_exp, risk_period, bounds) {
+
+  . <- .id <- .id2 <- .time <- .time2 <- .n_exp1 <- .n_exp2 <- .num <-
+    is_valid <- NULL
+
+  # skip more complex processing if only one exposure per person
+  if (length(unique(d_exp$.id))==nrow(d_exp)) {
+    d_pairs <- subset(d_pairs, !is_overlapping(.id=.id, .id2=.id2, .time=.time,
+                                               .time2=.time2,
+                                               risk_period=risk_period,
+                                               bounds=bounds))
+    # otherwise, more is needed
+  } else {
+
+    # apply first check
+    d_pairs <- subset(d_pairs, !is_overlapping(.id=.id, .id2=.id2, .time=.time,
+                                               .time2=.time2,
+                                               risk_period=risk_period,
+                                               bounds=bounds))
+    # merge n exposures per id to it
+    d_n_exp <- d_exp[, .(.n_exp1 = .N), by=.id]
+
+    d_pairs <- merge(d_pairs, d_n_exp, by=".id", all.x=TRUE)
+    setnames(d_n_exp, old=".n_exp1", new=".n_exp2")
+    d_pairs <- merge(d_pairs, d_n_exp, by.x=".id2", by.y=".id", all.x=TRUE)
+
+    # those with just one exposure are valid
+    d_pairs1 <- subset(d_pairs, .n_exp1==1 & .n_exp2==1)
+
+    ## more complex checking for other cases
+    d_pairs <- subset(d_pairs, .n_exp1 > 1 | .n_exp2 > 1)
+    d_pairs[, c(".n_exp1", ".n_exp2") := NULL]
+
+    # transform exposure times to long-format
+    d_exp[, .num := seq_len(.N), by=.id]
+    d_exp_long <- dcast(d_exp, .id ~ .num, value.var=".time")
+
+    # rename columns
+    max_exp <- ncol(d_exp_long)
+    times_id1 <- paste0("id1_", 1:(max_exp-1))
+    colnames(d_exp_long)[2:max_exp] <- times_id1
+
+    # merge to pairs once for .id and once for .id2
+    d_pairs <- merge(d_pairs, d_exp_long, by=".id", all.x=TRUE)
+
+    times_id2 <- paste0("id2_", 1:(max_exp-1))
+    colnames(d_exp_long)[2:max_exp] <- times_id2
+    d_pairs <- merge(d_pairs, d_exp_long, by.x=".id2", by.y=".id", all.x=TRUE)
+
+    # initialize indicator
+    d_pairs[, is_valid := TRUE]
+
+    # check if exposure period of .id overlaps with any exposure periods of .id2
+    for (k in seq_len(length(times_id2))) {
+      d_pairs[is_overlapping(.id=.id, .id2=.id2, .time=.time,
+                             .time2=get(times_id2[k]),
+                             risk_period=risk_period, bounds=bounds),
+              is_valid := FALSE]
+    }
+
+    # check if exposure period of .id2 overlaps with any exposure periods of .id
+    for (k in seq_len(length(times_id1))) {
+      d_pairs[is_overlapping(.id=.id, .id2=.id2, .time=get(times_id1[k]),
+                             .time2=.time2, risk_period=risk_period,
+                             bounds=bounds),
+              is_valid := FALSE]
+    }
+
+    # remove invalid matches
+    d_pairs <- subset(d_pairs, is_valid==TRUE)
+
+    # put pairs back together
+    d_pairs <- rbind(d_pairs[, c(".id", ".time", ".id2", ".time2")],
+                     d_pairs1[, c(".id", ".time", ".id2", ".time2")])
+  }
   return(d_pairs)
 }

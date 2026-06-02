@@ -8,9 +8,6 @@
  - add plot.SPMD(), could be a flowchart maybe
  - write a small vignette
  - create a package logo
- 
-# FIX
-- update is_valid_match() function to also check if other risk periods of an individual create no issues when used as control
 
 # Enhancements
 - maybe use "boot" package or similar to allow other bootstrap CI options

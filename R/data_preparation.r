@@ -22,6 +22,7 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
              " 'data'. Estimation is thus impossible.")
 
   # remove those were we cannot observe the entire risk period
+  # (e.g. handling right-censoring)
   n_exposed <- length(unique(d_exp$.id))
   n_exposures <- nrow(d_exp)
   d_exp <- subset(d_exp, .time <= .max_t - risk_period)[, c(".id", ".time")]
@@ -33,7 +34,7 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
   # perform matching
   d_matches <- match_pairs(data=d_exp, pairs=pairs, risk_period=risk_period,
                            n_pairs=n_pairs, max_iter=rand_max_iter,
-                           batch_size=batch_size)
+                           batch_size=batch_size, bounds=bounds)
 
   stopifnotm(nrow(d_matches)!=0, "Could not create any valid matches.")
 

@@ -1,16 +1,6 @@
 # pairs='one', estimator='moments'
 
     Code
-      print(out)
-    Output
-      A SPMD object
-       - using each individual in a single symmetric pair
-       - using a risk-period of 40 time units
-       - using the estimating equations based estimator
-
----
-
-    Code
       summary(out)
     Output
       Symmetric Pair Matching using an estimating equation based estimator
@@ -31,16 +21,6 @@
 # pairs='one', estimator='none'
 
     Code
-      print(out)
-    Output
-      A SPMD object
-       - using each individual in a single symmetric pair
-       - using a risk-period of 40 time units
-       - without performing estimation
-
----
-
-    Code
       summary(out)
     Output
       Symmetric Pair Matching  Formula: Surv(start, stop, Y) ~ A 
@@ -59,14 +39,24 @@
 # pairs='random', estimator='moments'
 
     Code
-      print(out)
+      summary(out)
     Output
-      A SPMD object
-       - using 500 random unique symmetric pairs
-       - using a risk-period of 40 time units
-       - using the estimating equations based estimator
+      Symmetric Pair Matching using an estimating equation based estimator
+        Formula: Surv(start, stop, Y) ~ A 
+        Risk period: 40 
+      
+        No. individuals in data = 800 
+        No. exposed individuals = 535 
+        No. unique exposure times = 535 
+        No. exposed individuals with event(s) = 535 
+        500 symmetric pairs were created
+        12.33% of the included observation time was used
+      
+      Final estimate: 3.464 
+      
+      Estimated using: exp(0.5 * log(12/1))
 
----
+# pairs='random', estimator='moments', bootstrap=TRUE
 
     Code
       summary(out)
@@ -79,26 +69,19 @@
         No. exposed individuals = 535 
         No. unique exposure times = 535 
         No. exposed individuals with event(s) = 535 
-        120682 symmetric pairs were created
-        12.25% of the included observation time was used
+        500 symmetric pairs were created
+        12.33% of the included observation time was used
       
-      Final estimate: 1.732 
+      Final estimate: 3.464 
+      95% CI: [1.732; Inf]
+      P-Value: 0.1 
       
-      Estimated using: exp(0.5 * log(6/2))
+      Estimated using: exp(0.5 * log(12/1))
+      Bootstrap CI based on 10 bootstrap replications
 
 # pairs='all', estimator='moments'
 
     Code
-      print(out)
-    Output
-      A SPMD object
-       - using all possible unique symmetric pairs
-       - using a risk-period of 40 time units
-       - using the estimating equations based estimator
-
----
-
-    Code
       summary(out)
     Output
       Symmetric Pair Matching using an estimating equation based estimator
@@ -109,24 +92,14 @@
         No. exposed individuals = 535 
         No. unique exposure times = 535 
         No. exposed individuals with event(s) = 535 
-        120862 symmetric pairs were created
-        97.71% of the included observation time was used
+        121412 symmetric pairs were created
+        97.91% of the included observation time was used
       
       Final estimate: 3.3 
       
-      Estimated using: exp(0.5 * log(1884/173))
+      Estimated using: exp(0.5 * log(1895/174))
 
 # pairs='one', estimator='glmm'
-
-    Code
-      print(out)
-    Output
-      A SPMD object
-       - using each individual in a single symmetric pair
-       - using a risk-period of 40 time units
-       - using the generalized linear model based estimator
-
----
 
     Code
       summary(out)
@@ -148,16 +121,6 @@
 # pairs='random', estimator='glmm'
 
     Code
-      print(out)
-    Output
-      A SPMD object
-       - using 300 random unique symmetric pairs
-       - using a risk-period of 40 time units
-       - using the estimating equations based estimator
-
----
-
-    Code
       summary(out)
     Output
       Symmetric Pair Matching using an estimating equation based estimator
@@ -169,23 +132,13 @@
         No. unique exposure times = 535 
         No. exposed individuals with event(s) = 535 
         120610 symmetric pairs were created
-        10.44% of the included observation time was used
+        10.46% of the included observation time was used
       
-      Final estimate: 1.633 
+      Final estimate: Inf 
       
-      Estimated using: exp(0.5 * log(8/3))
+      Estimated using: exp(0.5 * log(5/0))
 
 # pairs='all', estimator='moments', with bootstrap
-
-    Code
-      print(out)
-    Output
-      A SPMD object
-       - using all possible unique symmetric pairs
-       - using a risk-period of 40 time units
-       - using the estimating equations based estimator
-
----
 
     Code
       summary(out)
@@ -198,10 +151,10 @@
         No. exposed individuals = 535 
         No. unique exposure times = 535 
         No. exposed individuals with event(s) = 535 
-        120862 symmetric pairs were created
-        97.71% of the included observation time was used
+        121412 symmetric pairs were created
+        97.91% of the included observation time was used
       
       Final estimate: 3.3 
       
-      Estimated using: exp(0.5 * log(1884/173))
+      Estimated using: exp(0.5 * log(1895/174))
 

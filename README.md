@@ -86,7 +86,7 @@ on `Y` adjusting for both, we could use:
 ``` r
 spmd <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                           id=".id", risk_period=40, pairs="all",
-                          estimator="moments")
+                          estimator="moments", bootstrap=TRUE)
 summary(spmd)
 #> Symmetric Pair Matching using an estimating equation based estimator
 #>   Formula: Surv(start, stop, Y) ~ A 
@@ -94,13 +94,17 @@ summary(spmd)
 #> 
 #>   No. individuals in data = 500 
 #>   No. exposed individuals = 339 
-#>   No. exposed with event(s) = 337 
-#>   48345 symmetric pairs were created
-#>   94.82% of the included observation time was used
+#>   No. unique exposure times = 339 
+#>   No. exposed individuals with event(s) = 337 
+#>   48575 symmetric pairs were created
+#>   95.07% of the included observation time was used
 #> 
-#> Final estimate: 2.505 
+#> Final estimate: 2.499 
+#> 95% CI: [1.545; 3.816]
+#> P-Value: 0.001 
 #> 
-#> Estimated using: exp(0.5 * log(1908/304))
+#> Estimated using: exp(0.5 * log(456/73))
+#> Bootstrap CI based on 1000 bootstrap replications
 ```
 
 The true effect is 2.5 (see `?sim_example_data`), so the estimate is
