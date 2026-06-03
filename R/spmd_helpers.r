@@ -180,9 +180,10 @@ check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
              "object (tibbles, data.table, etc.).")
   stopifnotm(nrow(data) > 1, "'data' must contain at least 2 rows ",
              "(for valid results, much more).")
-  stopifnotm((length(id)==1 && is.character(id) && id %in% colnames(data)),
+  stopifnotm((length(id)==1 && is.character(id) && id %in% colnames(data) &&
+              is.numeric(data[[id]])),
              "'id' must be a single character string, identifying a valid",
-             " column in 'data'.")
+             " numeric column in 'data'.")
   stopifnotm((length(risk_period)==1 && is.numeric(risk_period) &&
                 risk_period > 0),
              "'risk_period' must be a single positive number.")

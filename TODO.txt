@@ -5,9 +5,12 @@
    - pkdown site
    - codecov
    - citation info
- - add plot.SPMD(), could be a flowchart maybe
  - write a small vignette
  - create a package logo
+
+# Fix
+- there must be something wrong with pairs="random1", when generating large amounts
+  of pairs it seems to be still biased, and it covers regions that even pairs="all" can't cover
 
 # Enhancements
 - maybe use "boot" package or similar to allow other bootstrap CI options

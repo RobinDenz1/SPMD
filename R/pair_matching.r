@@ -104,7 +104,7 @@ generate_random_pairs_mem <- function(data, n_pairs, risk_period, bounds,
     stop("'n_pairs' is larger than ", ((n * (n-1)) / 2),
          " which is the maximum possible amount of matches (if all possible",
          " matches were valid). Use a smaller value for 'n_pairs' or",
-         " use pairs='all' or pairs='random2' instead.", .call=FALSE)
+         " use pairs='all' or pairs='random2' instead.", call.=FALSE)
   }
 
   # stores accepted pairs
@@ -187,7 +187,6 @@ generate_random_pairs_mem <- function(data, n_pairs, risk_period, bounds,
     cand <- remove_invalid_matches(d_pairs=cand, d_exp=data,
                                    risk_period=risk_period,
                                    bounds=bounds)
-
     if (nrow(cand)==0) {
       next
     }

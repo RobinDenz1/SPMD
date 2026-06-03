@@ -36,6 +36,7 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
 
   # initiate output object
   out <- list(d_matches=l_data$d_matches,
+              d_events=l_data$d_events,
               inputs=list(pairs=pairs,
                           n_pairs=n_pairs,
                           estimator=estimator,
