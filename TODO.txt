@@ -1,16 +1,11 @@
 
 # TODO:
- - write tests
  - add all the usual package stuff
    - pkdown site
    - codecov
    - citation info
  - write a small vignette
  - create a package logo
-
-# Fix
-- there must be something wrong with pairs="random1", when generating large amounts
-  of pairs it seems to be still biased, and it covers regions that even pairs="all" can't cover
 
 # Enhancements
 - maybe use "boot" package or similar to allow other bootstrap CI options
@@ -19,4 +14,5 @@
  - allow adjustment for time-dependent confounders
  - add more robust options for generating a pairs="one" type pairing
  - allow estimation by strata
- - allow matching on variables
+ - allow matching on time fixed variables
+ - allow matching on time varying variables 

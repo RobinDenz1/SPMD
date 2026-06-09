@@ -153,6 +153,7 @@ print.SPMD <- function(x, ...) {
 }
 
 ## S3 summary method for SPMD objects
+#' @importFrom data.table uniqueN
 #' @export
 summary.SPMD <- function(object, ...) {
 
@@ -171,7 +172,7 @@ summary.SPMD <- function(object, ...) {
   cat("  No. unique exposure times =", object$sizes$n_exposures, "\n")
   cat("  No. exposed individuals with event(s) =",
       object$sizes$n_exposed_and_event, "\n")
-  cat(" ", max(object$d_matches$.id_pair), "symmetric pairs were created\n")
+  cat(" ", uniqueN(object$d_matches$.id_pair), "symmetric pairs were created\n")
   cat("  ", round((sum(object$d_time_used$.time_used) /
                   sum(object$d_time_used$.max_possible_t))*100, 2), "%",
       " of the included observation time was used\n\n", sep="")

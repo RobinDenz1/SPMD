@@ -81,7 +81,8 @@ generate_random_pairs <- function(data, risk_period, bounds, n_pairs) {
             " possible valid pairs exist. Took all possible valid pairs",
             " instead.", call.=FALSE)
   } else {
-    d_pairs <- d_pairs[sample(x=.N, size=n_pairs)]
+    inds <- sample.int(n=nrow(d_pairs), size=n_pairs, replace=FALSE)
+    d_pairs <- d_pairs[inds]
   }
 
   return(d_pairs)
@@ -109,8 +110,10 @@ generate_random_pairs_mem <- function(data, n_pairs, risk_period, bounds,
 
   # stores accepted pairs
   accepted <- data.table(
-    i = integer(),
-    j = integer()
+    .id = integer(),
+    .time = integer(),
+    .id2 = integer(),
+    .time2 = integer()
   )
 
   # stores unique pair keys
@@ -180,7 +183,9 @@ generate_random_pairs_mem <- function(data, n_pairs, risk_period, bounds,
       .id = data$.id[i],
       .id2 = data$.id[j],
       .time = data$.time[i],
-      .time2 = data$.time[j]
+      .time2 = data$.time[j],
+      i = NULL,
+      j = NULL
     )]
 
     # remove invalid ones
@@ -191,25 +196,13 @@ generate_random_pairs_mem <- function(data, n_pairs, risk_period, bounds,
       next
     }
 
-    accepted <- rbind(
-      accepted,
-      cand[, .(i, j)],
-      use.names = TRUE
-    )
+    accepted <- rbind(accepted, cand, use.names=TRUE)
   }
 
   accepted <- accepted[seq_len(n_pairs)]
+  accepted[, .id_pair := .I]
 
-  # create output
-  out <- data.table(
-    .id = data$.id[accepted$i],
-    .id2 = data$.id[accepted$j],
-    .time = data$.time[accepted$i],
-    .time2 = data$.time[accepted$j]
-  )[seq_len(min(c(n_pairs, nrow(accepted))))]
-  out[, .id_pair := .I]
-
-  return(out)
+  return(accepted)
 }
 
 ## a greedy time sorting algorithm to create a dataset in which every person

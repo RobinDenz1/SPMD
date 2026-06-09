@@ -73,7 +73,7 @@
         12.33% of the included observation time was used
       
       Final estimate: 3.464 
-      95% CI: [1.732; Inf]
+      95% CI: [1.414; Inf]
       P-Value: 0.1 
       
       Estimated using: exp(0.5 * log(12/1))
@@ -131,7 +131,7 @@
         No. exposed individuals = 535 
         No. unique exposure times = 535 
         No. exposed individuals with event(s) = 535 
-        120610 symmetric pairs were created
+        300 symmetric pairs were created
         10.46% of the included observation time was used
       
       Final estimate: Inf 
