@@ -12,7 +12,7 @@ public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostat
 coverage](https://codecov.io/gh/RobinDenz1/SPMD/graph/badge.svg)](https://app.codecov.io/gh/RobinDenz1/SPMD)
 <!-- badges: end -->
 
-# SPMD
+# SPMD <img src="man/figures/logo.png" height="240" align="right" />
 
 Author: Robin Denz
 

@@ -33,6 +33,7 @@ is_overlapping <- function(.id, .id2, .time, .time2, risk_period, bounds) {
   } else {
     out <- .id==.id2 | (abs(.time - .time2) < risk_period)
   }
+  return(out)
 }
 
 ## generates all possible (and valid) pairings of individuals

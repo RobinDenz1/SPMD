@@ -40,7 +40,8 @@ plot.SPMD <- function(x, show_events=FALSE, fill_control="steelblue",
   ), by = .(.id, .grp)]
 
   # merge new id to it
-  d_times <- merge(d_times, d_exp[, c(".id", ".new_id")], by=".id", all.x=TRUE)
+  d_times <- merge(d_times, d_exp[, c(".id", ".new_id")], by=".id", all.x=TRUE,
+                   allow.cartesian=TRUE)
 
   if (show_events) {
     d_events <- copy(x$d_events)
