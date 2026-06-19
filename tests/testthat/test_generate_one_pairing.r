@@ -1,7 +1,7 @@
 
 test_that("general test case", {
 
-  data <- data.table(.id=c(1, 2, 3, 4), .time=c(20, 45, 80, 20))
+  data <- data.table(.id=c(1, 2, 3, 4), .time=c(20, 45, 80, 20), .max_t=1000)
 
   expected <- data.table(.id=c(1, 4), .time=c(20, 20),
                          .id2=c(2, 3), .time2=c(45, 80), .id_pair=c(1, 2))
@@ -12,7 +12,7 @@ test_that("general test case", {
 
 test_that("works if no matches are possible", {
 
-  data <- data.table(.id=c(1, 2, 3, 4), .time=c(20, 45, 80, 20))
+  data <- data.table(.id=c(1, 2, 3, 4), .time=c(20, 45, 80, 20), .max_t=1000)
 
   expect_error(generate_one_pairing(data, risk_period=200, bounds="[]"),
                paste0("Matching failed. Use random matches ",

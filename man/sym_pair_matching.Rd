@@ -118,6 +118,10 @@ where \eqn{X_{ij}} are the event counts observed in the \code{risk_period} time 
 
 Because of the non-linear nature of the estimator and the potentially non-independent pairs, a non-parametric bootstrap procedure on the individual level is needed to estimate confidence intervals or p-values. In particular, percentile bootstrap confidence intervals are used. The p-value tests whether \eqn{\exp(\hat{\theta}) == 1}. Since all aspects of the estimation, including the pair matching, have to be bootstrapped, this may become fairly slow with large sample sizes and large amounts of \code{n_boot}. The \code{n_cores} option may help here, by allowing the usage of multiple processing cores in parallel. The \pkg{doRNG} package is used internally to ensure that the results are still replicable. Additionally, when using \code{pairs="all"} and \code{estimator="moments"}, a weighting trick is performed internally so that the pairs do not have to be build over and over again.
 
+\strong{\emph{Individuals without Events}}:
+
+Similar to the self-controlled case series (SCCS) method, individuals that never experienced an event do not contribute meaningfully to any pair when using \code{estimator="moments"}. The reason for this is that we multiply the number of events of the matched individuals at each of the two points in time. Therefore, if an individual has no events, it will always multiply its paired value by 0, effectively making no contribution to the final ratio. To save computation time, we thus exclude all individuals without any events before creating pairs.
+
 }
 \author{
 Robin Denz

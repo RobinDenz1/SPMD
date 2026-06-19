@@ -1,7 +1,8 @@
 
 test_that("general test case", {
 
-  data <- data.table(.id=c(1, 2, 3, 4), .time=c(20, 45, 80, 20))
+  data <- data.table(.id=c(1, 2, 3, 4), .time=c(20, 45, 80, 20),
+                     .max_t=1000)
 
   expected <- data.table(.id=c(2, 3, 3, 4, 4),
                          .time=c(45, 80, 80, 20, 20),
@@ -18,7 +19,8 @@ test_that("general test case", {
 
 test_that("works if no matches are possible", {
 
-  data <- data.table(.id=c(1, 2, 3, 4), .time=c(20, 45, 80, 20))
+  data <- data.table(.id=c(1, 2, 3, 4), .time=c(20, 45, 80, 20),
+                     .max_t=1000)
 
   out <- generate_all_pairs(data, risk_period=200, bounds="()")
   expect_equal(nrow(out), 0)
@@ -27,7 +29,7 @@ test_that("works if no matches are possible", {
 test_that("works with multiple exposures in one person", {
 
   # pairs possible through id = 2
-  data <- data.table(.id=c(1, 2, 4, 4), .time=c(20, 45, 80, 20))
+  data <- data.table(.id=c(1, 2, 4, 4), .time=c(20, 45, 80, 20), .max_t=1000)
 
   expected <- data.table(.id=c(4, 4, 2),
                          .time=c(80, 20, 45),
@@ -39,7 +41,7 @@ test_that("works with multiple exposures in one person", {
   expect_equal(out, expected)
 
   # no pairs possible
-  data <- data.table(.id=c(1, 4, 4), .time=c(20, 80, 20))
+  data <- data.table(.id=c(1, 4, 4), .time=c(20, 80, 20), .max_t=1000)
 
   out <- generate_all_pairs(data, risk_period=20, bounds="()")
   expect_true(nrow(out)==0)
@@ -47,7 +49,7 @@ test_that("works with multiple exposures in one person", {
 
 test_that("works with multiple exposures in two persons", {
 
-  data <- data.table(.id=c(1, 1, 4, 4), .time=c(20, 45, 80, 20))
+  data <- data.table(.id=c(1, 1, 4, 4), .time=c(20, 45, 80, 20), .max_t=1000)
 
   expected <- data.table(.id=c(4),
                          .time=c(80),
@@ -60,10 +62,27 @@ test_that("works with multiple exposures in two persons", {
 
 })
 
+test_that("multiple exposures per person, some censored", {
+
+  data <- data.table(.id=c(1, 1, 4, 4, 4), .time=c(20, 45, 110, 20, 70),
+                     .max_t=c(1000, 1000, 120, 120, 120))
+
+  expected <- data.table(.id=c(4),
+                         .time=c(70),
+                         .id2=c(1),
+                         .time2=c(45),
+                         .id_pair=c(1))
+
+  out <- generate_all_pairs(data, risk_period=20, bounds="[]")
+  expect_equal(out, expected)
+
+})
+
 test_that("with [], less matches are found than with other bounds", {
 
   data <- data.table(.id=c(1, 2, 3, 4, 5, 6),
-                     .time=c(20, 45, 80, 20, 40, 88))
+                     .time=c(20, 45, 80, 20, 40, 88),
+                     .max_t=1000)
 
   out1 <- generate_all_pairs(data, risk_period=20, bounds="[]")
   out2 <- generate_all_pairs(data, risk_period=20, bounds="(]")

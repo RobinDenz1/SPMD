@@ -27,13 +27,33 @@ match_pairs <- function(data, pairs, risk_period, bounds, n_pairs=NULL,
 #       that touch each other will have no overlapping information and can
 #       thus be used. If both ends are included, however, touching intervals
 #       would overlap at the "touch point", thus making them invalid
-is_overlapping <- function(.id, .id2, .time, .time2, risk_period, bounds) {
+is_valid_pair <- function(.id, .id2, .time, .time2, .max_t, .max_t2,
+                          risk_period, bounds, check_censoring=TRUE) {
+
+  # check overlap of risk periods
   if (bounds=="[]") {
     out <- .id==.id2 | (abs(.time - .time2) <= risk_period)
   } else {
     out <- .id==.id2 | (abs(.time - .time2) < risk_period)
   }
-  return(out)
+
+  # check if follow-up time for each individual is sufficient
+  # NOTE: We do not treat this differently depending on the bounds, because
+  #       we assume that right-censoring means that we know a person is
+  #       event free up to the end of max_t (so effectively we have observed
+  #       max_t). It is then sufficient to require that max_t should be
+  #       equal to time + risk_period regardless of bounds.
+  if (check_censoring) {
+    complete_followup <-
+      .max_t >= (.time + risk_period) &
+      .max_t2 >= (.time + risk_period) &
+      .max_t >= (.time2 + risk_period) &
+      .max_t2 >= (.time2 + risk_period)
+  } else {
+    complete_followup <- TRUE
+  }
+
+  return(!out & complete_followup)
 }
 
 ## generates all possible (and valid) pairings of individuals
@@ -59,7 +79,9 @@ generate_all_pairs <- function(data, risk_period, bounds) {
   # self-join keeping only i < j to avoid duplicates
   d_pairs <- data[data, on = .(.idx > .idx), allow.cartesian=TRUE, nomatch=0]
   d_pairs[, .idx := NULL]
-  setnames(d_pairs, old=c("i..id", "i..time"), new=c(".id2", ".time2"))
+  setnames(d_pairs,
+           old=c("i..id", "i..time", "i..max_t"),
+           new=c(".id2", ".time2", ".max_t2"))
 
   # keep only valid pairs
   d_pairs <- remove_invalid_matches(d_pairs=d_pairs, d_exp=data,
@@ -185,6 +207,8 @@ generate_random_pairs_mem <- function(data, n_pairs, risk_period, bounds,
       .id2 = data$.id[j],
       .time = data$.time[i],
       .time2 = data$.time[j],
+      .max_t = data$.max_t[i],
+      .max_t2 = data$.max_t[j],
       i = NULL,
       j = NULL
     )]
@@ -208,22 +232,27 @@ generate_random_pairs_mem <- function(data, n_pairs, risk_period, bounds,
 
 ## a greedy time sorting algorithm to create a dataset in which every person
 ## that was exposed at some point in time is in exactly a single pair
-# TODO: this does not always work
 #' @importFrom data.table setorder
 #' @importFrom data.table setnames
 #' @importFrom data.table .N
 #' @importFrom data.table :=
 generate_one_pairing <- function(data, risk_period, bounds) {
 
-  .time <- .id_pair <- NULL
+  .time <- .id_pair <- .max_t <- NULL
 
   # sort by time
   setorder(data, .time)
 
+  # remove definitely right-censored exposure times
+  # NOTE: done here so that this does not later fail the final check, still
+  #       need to supply original exposure times to d_exp in checks
+  data2 <- subset(data, .time <= .max_t - risk_period)
+
   # split into two pieces
-  d_1 <- data[seq_len(nrow(data)/2)]
-  d_2 <- data[seq(nrow(data)/2+1, nrow(data))]
-  setnames(d_2, old=c(".id", ".time"), new=c(".id2", ".time2"))
+  d_1 <- data2[seq_len(nrow(data2)/2)]
+  d_2 <- data2[seq(nrow(data2)/2+1, nrow(data2))]
+  setnames(d_2, old=c(".id", ".time", ".max_t"),
+           new=c(".id2", ".time2", ".max_t2"))
 
   # put together in one pairwise data.table
   d_pairs <- cbind(d_1, d_2)
@@ -251,22 +280,28 @@ generate_one_pairing <- function(data, risk_period, bounds) {
 remove_invalid_matches <- function(d_pairs, d_exp, risk_period, bounds) {
 
   . <- .id <- .id2 <- .time <- .time2 <- .n_exp1 <- .n_exp2 <- .num <-
-    is_valid <- NULL
+    is_valid <- .max_t <- .max_t2 <- NULL
 
   # skip more complex processing if only one exposure per person
   if (length(unique(d_exp$.id))==nrow(d_exp)) {
-    d_pairs <- subset(d_pairs, !is_overlapping(.id=.id, .id2=.id2, .time=.time,
-                                               .time2=.time2,
-                                               risk_period=risk_period,
-                                               bounds=bounds))
-    # otherwise, more is needed
+
+    d_pairs <- subset(d_pairs, is_valid_pair(
+      .id=.id, .id2=.id2, .time=.time, .time2=.time2,
+      .max_t=.max_t, .max_t2=.max_t2, risk_period=risk_period,
+      bounds=bounds
+      )
+    )
+    d_pairs[, c(".max_t", ".max_t2") := NULL]
+
+  # otherwise, more is needed
   } else {
 
     # apply first check
-    d_pairs <- subset(d_pairs, !is_overlapping(.id=.id, .id2=.id2, .time=.time,
-                                               .time2=.time2,
-                                               risk_period=risk_period,
-                                               bounds=bounds))
+    d_pairs <- subset(d_pairs, is_valid_pair(.id=.id, .id2=.id2, .time=.time,
+                                             .time2=.time2, .max_t=.max_t,
+                                             .max_t2=.max_t2,
+                                             risk_period=risk_period,
+                                             bounds=bounds))
     # merge n exposures per id to it
     d_n_exp <- d_exp[, .(.n_exp1 = .N), by=.id]
 
@@ -302,17 +337,19 @@ remove_invalid_matches <- function(d_pairs, d_exp, risk_period, bounds) {
 
     # check if exposure period of .id overlaps with any exposure periods of .id2
     for (k in seq_len(length(times_id2))) {
-      d_pairs[is_overlapping(.id=.id, .id2=.id2, .time=.time,
-                             .time2=get(times_id2[k]),
-                             risk_period=risk_period, bounds=bounds),
+      d_pairs[!is_valid_pair(.id=.id, .id2=.id2, .time=.time,
+                             .time2=get(times_id2[k]), .max_t=.max_t,
+                             .max_t2=.max_t2, risk_period=risk_period,
+                             bounds=bounds, check_censoring=FALSE),
               is_valid := FALSE]
     }
 
     # check if exposure period of .id2 overlaps with any exposure periods of .id
     for (k in seq_len(length(times_id1))) {
-      d_pairs[is_overlapping(.id=.id, .id2=.id2, .time=get(times_id1[k]),
-                             .time2=.time2, risk_period=risk_period,
-                             bounds=bounds),
+      d_pairs[!is_valid_pair(.id=.id, .id2=.id2, .time=get(times_id1[k]),
+                             .time2=.time2, .max_t=.max_t, .max_t2=.max_t2,
+                             risk_period=risk_period, bounds=bounds,
+                             check_censoring=FALSE),
               is_valid := FALSE]
     }
 

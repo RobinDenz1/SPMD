@@ -21,15 +21,17 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
   stopifnotm(nrow(d_events)!=0, "There are no events in the supplied",
              " 'data'. Estimation is thus impossible.")
 
-  # remove those were we cannot observe the entire risk period
-  # (e.g. handling right-censoring)
-  n_exposed <- length(unique(d_exp$.id))
-  n_exposures <- nrow(d_exp)
-  d_exp <- subset(d_exp, .time <= .max_t - risk_period)[, c(".id", ".time")]
+  # check if there are any overlapping risk periods in one individual
+  if (bounds=="[]") {
+    d_exp[, overlap := (.time - shift(.time)) <= risk_period, by=.id]
+  } else {
+    d_exp[, overlap := (.time - shift(.time)) < risk_period, by=.id]
+  }
 
-  stopifnotm(nrow(d_exp)!=0, "After removing exposure instances with ",
-             "insufficient follow-up (risk_period must be fully observed), ",
-             "no exposure instances remain. Estimation is thus impossible.")
+  stopifnotm(sum(d_exp$overlap, na.rm=TRUE)==0,
+             "Some individuals exhibit multiple exposure periods that overlap ",
+             "with each other, which is not allowed.")
+  d_exp[, overlap := NULL]
 
   # perform matching
   d_matches <- match_pairs(data=d_exp, pairs=pairs, risk_period=risk_period,
@@ -51,7 +53,7 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
              " Estimation is thus impossible.")
 
   out <- list(d_matches=d_matches, data=data, d_exp=d_exp, d_events=d_events,
-              n_exposed=n_exposed, n_exposures=n_exposures)
+              n_exposed=length(unique(d_exp$.id)), n_exposures=nrow(d_exp))
 
   return(out)
 }
