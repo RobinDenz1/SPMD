@@ -38,16 +38,16 @@ A single character string specifying which estimator should be used. If \code{"m
 A single character string specifying what pair matches should be used. If \code{"one"}, a dataset is created in which each exposed individual is included in exactly one pair (if possible). If \code{"all"}, all possible valid pairings are created. This may be infeasible with large data. If \code{"random1"}, a pre-specified amount of random pairings are created, without first creating all possible matches. In this case, the amount of pairs is controlled using the \code{n_pairs} argument. If \code{"random2"}, a pre-specified amount of random pairings is created by random sampling from all possible pairings (default). This is faster and more reliable than \code{"random1"}, but it is much more memory inefficient and not feasible with a large number of unique id/exposure combinations (see details).
   }
   \item{n_pairs}{
-A single positive number, specifying how many random matches should be created when using \code{pairs="random"}, ignored otherwise.
+A single positive number, specifying how many random matches should be created when using \code{pairs="random1"} or \code{pairs="random2"}, ignored otherwise.
   }
   \item{batch_size}{
-A single positive integer, specifying the number of candidate pair matches that should be created each iteration when using \code{pairs="random1"}. Higher numbers may result in faster computation, but require more memory usage. Ignore if \code{pairs!="random1"}.
+A single positive integer, specifying the number of candidate pair matches that should be created each iteration when using \code{pairs="random1"}. Higher numbers may result in faster computation, but require more memory usage. Ignored if \code{pairs!="random1"}.
   }
   \item{rand_max_iter}{
 A single positive integer, specifying the maximum number of allowed iterations for generating random matches when \code{pairs="random1"}. Since the algorithm is iterative and does not generate all possible matches, it is possible that \code{n_pairs} is larger than the maximum possible number, or that through chance the algorithm gets stuck. This ensures that it eventually terminates (see details). Ignored if \code{pairs!="random1"}.
   }
   \item{bootstrap}{
-Either \code{TRUE} or \code{FALSE}, specifying whether bootstrapping should be performed to estimate confidence intervals. The bootstrapping is done on an individual level, before forming pairs, so that all parts of the analysis are included. This is necessary for correct estimation, but it might lead to long computation times. Especially when using \code{pairs="all"} or \code{pairs="random"} with a large \code{n_pairs} value, it might take a long time.
+Either \code{TRUE} or \code{FALSE}, specifying whether bootstrapping should be performed to estimate confidence intervals. The bootstrapping is done on an individual level, before forming pairs, so that all parts of the analysis are included. This is necessary for correct estimation, but it might lead to long computation times. Especially when using \code{pairs="all"}, \code{pairs="random1"} or \code{pairs="random2"} with a large \code{n_pairs} value, it might take a long time.
   }
   \item{n_boot}{
 A single positive integer, specifying the number of bootstrap replications that should be done for confidence interval estimation. Ignored if \code{bootstrap=FALSE}.

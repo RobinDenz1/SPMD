@@ -1,0 +1,103 @@
+---
+title: "The Symmetric Pair Matching Design in R"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 4
+author: "Robin Denz"
+vignette: >
+  %\VignetteIndexEntry{The Symmetric Pair Matching Design in R}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(
+  collapse=TRUE,
+  comment="#>",
+  fig.align="center"
+)
+```
+
+# Introduction
+
+In this small vignette, we introduce the `SPMD` package, which can be used to apply the ***S**ymmetric **P**air **M**atching **D**esign*, introduced by Denz et al. (20XX). In a nutshell, it is a type of self-controlled method that automatically adjusts for all types of time-invariant confounders, while also automatically controlling for any confounding effects that arise through time itself. It is similar to the self-controlled case series (SCCS) design, but, contrary to the SCCS design, it does not require the user to model time trends. The `SPMD` package is a full implementation of the method, including multiple ways to create the required matches, confidence interval estimation and convenient plotting methods.
+
+The package is currently not available on CRAN, but may be installed using the `remotes` package:
+
+```{r, eval=FALSE}
+remotes::install_github("RobinDenz1/SPMD")
+```
+
+We load some packages here, although not all of them are required for usage of `SPMD`. Some are only needed for the specific contents of this vignette.
+
+```{r, message=FALSE, warning=FALSE}
+library(SPMD)
+library(data.table)
+library(ggplot2)
+library(lme4)
+```
+
+# What is the Symmetric Pair Matching Design?
+
+In the following we give a very informal and short introduction to the SPM design. We highly encourage readers and users of the method to read the associated paper instead (Denz et al. 20XX), which describes the method and its associated assumptions in much more detail. The goal of the SPM design is to estimate the causal relative risk of a binary time-dependent exposure on a possibly re-current binary time-to-event outcome. A classic example would be the effect of a Covid-19 vaccination on the occurrence of acute myocarditis in a short period (for example 24 days) after vaccination. Importantly, the exposure is assumed to be transient, e.g. it is assumed that it only has an effect on the outcome for a known duration after exposure, after which the risk goes back to the persons baseline level.
+
+Under the assumption that there are no time-dependent confounders of the relationship between vaccination and the development of acute myocarditis, two potential sources of confounding remain: (1) time-invariant confounders, such as sex or genetics and (2) time itself. The latter my arise when the probability for vaccination is time-dependent and the probability for the outcome is also time-dependent, irrespective of individual characteristics. In vaccine-safety studies, this is frequently the case, especially for seasonal vaccinations such as influenza vaccines. Briefly, the method adjusts for both types of confounding through a special pair matching structure, as its name suggests.
+
+Individuals with exposures are matched to each other, so that they can be used as control during the exposure period of the matched individual. For example, suppose there are two individuals, one vaccinated on day 50 and one vaccinated on day 120. We assume a risk period of 40 days. The resulting pairing of these two individuals would look like this:
+
+```{r, echo=FALSE, fig.width=6, fig.height=5}
+plotdata <- data.table(id=factor(c(2,1,1,2), levels=c(2, 1),
+                                 labels=c("Person B", "Person A")),
+                       A=factor(c("Unexposed","Exposed","Unexposed","Exposed")),
+                       time=c(50,50,120,120),
+                       time_end=c(50,50,120,120) + 40)
+
+ggplot(plotdata, aes(y=id)) +
+  annotate("rect", xmin=50, xmax=90, ymin=-Inf, ymax=Inf,
+           fill="grey80", alpha=0.3) +
+  annotate("rect", xmin=120, xmax=120+40, ymin=-Inf, ymax=Inf,
+           fill="grey80", alpha=0.3) +
+  annotate("text", x=70, y=Inf, label="Pairing 1", vjust=1.5,
+           family="serif", fontface="italic", size=5) +
+  annotate("text", x=140, y=Inf, label="Pairing 2", vjust=1.5,
+           family="serif", fontface="italic", size=5) +
+  geom_hline(yintercept=c(1,2), linetype="dashed") +
+  geom_segment(aes(y=id, yend=id, x=time, xend=time_end), linewidth=1) +
+  geom_point(aes(x=time, shape=A, color=A), size=5) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_text(
+      family = "serif",
+      face = "italic",
+      size = 14   # roughly matches annotate(size = 5)
+    ),
+    legend.position="bottom"
+  ) +
+  xlim(c(35, 170)) +
+  labs(x="Time", y="", shape="", color="")
+```
+
+At $t = 50$, person A is exposed and his risk period of length 40 begins. Since person B is unexposed at this time, we can use the same duration as a control for person A. We then do the exact same thing at $t = 120$, when person B is exposed. In a table, we would write down this pair as:
+
+| | | |
+| -- | -- | -- | -- |
+| individual | time | exposure | group |
+| B | 50 | 0 | 1 |
+| A | 50 | 1 | 2 |
+| A | 120 | 0 | 3 |
+| B | 120 | 1 | 4 |
+
+It can be shown mathematically that under fairly weak assumptions of multiplicative effects, the following equation holds for each individual pairing:
+
+$$
+\theta = \frac{1}{2}\log\left(\frac{\lambda_{i2} \lambda_{i4}}{\lambda_{i1} \lambda_{i3}}\right).
+$$
+
+where $\lambda_{ij}$ are the rate parameters of Poisson distributions that describe the number of events in the 40 day risk period in each "group". Of course, we cannot directly calculate this value, because those rates are unknown. We do, however, observe the event counts in those times, which is enough to define estimators.
+
+
+
+# References
+
+Denz, Robin and Nina Timmesfeld (2026). "Simulating Complex Cross-Sectional and Longitudinal Data using the simDAG R Package". Journal of Statistical Software 116 (2), doi: 10.18637/jss.v116.i02.
