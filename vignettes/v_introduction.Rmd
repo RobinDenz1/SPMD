@@ -94,7 +94,161 @@ $$
 \theta = \frac{1}{2}\log\left(\frac{\lambda_{i2} \lambda_{i4}}{\lambda_{i1} \lambda_{i3}}\right).
 $$
 
-where $\lambda_{ij}$ are the rate parameters of Poisson distributions that describe the number of events in the 40 day risk period in each "group". Of course, we cannot directly calculate this value, because those rates are unknown. We do, however, observe the event counts in those times, which is enough to define estimators.
+where $\lambda_{ij}$ are the rate parameters of Poisson distributions that describe the number of events in the 40 day risk period in each "group". Of course, we cannot directly calculate this value, because those rates are unknown. We do, however, observe the event counts in those times, which is enough to define estimators. Those are described further down in this vignette, after we have introduced the required data and pair matching algorithms.
+
+# Required Data
+
+In principal, we only need information on two variables to apply the symmetric pair matching design: the exposure status and the outcome. Additionally, we need to know exactly *when* the exposures and outcome events occurred and for whom. The most flexible and standard way to encode this information usually used in time-to-event analysis is the *start-stop* or *counting process* format. This corresponds to the data format used to fit `coxph()` models (see the famous `survival` package) and is required by the `SPMD` package as well. 
+
+To give an example, we will use the `sim_example_data()` function of this package:
+
+```{r}
+set.seed(1234)
+
+data <- sim_example_data(n=500)
+head(data)
+```
+
+This function internally uses the `simDAG` package to simulate this data (Denz & Timmesfeld 2026). Here, each person is identified by a unique person identifier contained in the `.id` column. A person may have multiple rows, where each row corresponds to a period of time (defined by the `start` and `stop` columns) in which no variables changed for that individual. For example, the first row of this dataset shows that from 0 to 249, individual with `.id = 1` was unexposed (exposure is denoted by column `A`) and had no event (the outcome is shown in column `Y`). Exactly at $t = 249$, the same person is then exposed for the first time and stays exposed until $t = 289$. In other words, the exposure, and potentially other covariates, are coded so that the intervals are `left-closed` or `right-open`, often denoted using `[)`.
+
+The outcome events should be coded slightly differently. Events are assumed to happen exactly at the time denoted by `stop`. For example, individual `.id = 2` experienced an event at exactly $t = 623$ in this example dataset. This data format has two main advantages. First, it allows usage of continuous time. Secondly, it is much more memory efficient than the full long-format, because we usually have to store way less rows directly. To create such datasets, the `tmerge()` function of the `survival` package, or the `merge_start_stop()` function from the `MatchTime` package (see https://robindenz1.github.io/MatchTime/) may be used.
+
+# General Syntax
+
+Once such a dataset exists, it is very easy to apply the symmetric pair matching design. We simply need to call the `sym_pair_matching()` function on it, which can be done like this:
+
+```{r}
+out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+                         pairs="all", estimator="moments", risk_period=30)
+```
+
+The function uses the classic time-to-event formula interface, in which the `Surv()` function is used to define the beginning (`start`) and end (`stop`) of the time intervals, as well as the outcome (`Y`) in this order. The right-hand side of the formula should only contain the exposure (`A`). In real applications, users are of course free to use any other names. Additionally, we have to specify the unique person identifier (`id`), the `data` in which we find all of these columns, the duration of the risk period after exposure (`risk_period`), as well as the method to generate the matched pairs (`pairs`) and which estimator to use (`estimator`). Most of these arguments are discussed in greater detail below.
+
+Once we have created an `SPMD` object using this function, we can show the results using the associated `summary()` method:
+
+```{r}
+summary(out)
+```
+
+# Creating the Matched Pairs
+
+The `sym_pair_matching()` function implements different options to create the matched pairs. In the following, we give an overview of these options and show how to use them.
+
+## One unique Pairing
+
+The first option to create pairs is to use each person / exposure period in exactly one pairing. For example, if each person has only a single exposure time, that person would be part of exactly one matched pair. This can be done in `sym_pair_matching()` by using `pairs="one"` like this:
+
+```{r}
+out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+                         pairs="one", estimator="none", risk_period=30)
+```
+
+Here, we set `estimator="none"` to skip any actual estimation for now. The function then only generates the matched pairs, which can be inspected directly using:
+
+```{r}
+head(out$d_matches)
+```
+
+We can also inspect the used times of the matches visually, using the associated `plot()` method:
+
+```{r, fig.width=6, fig.height=5}
+plot(out)
+```
+
+In this plot, each individual that was included in the pair-generation process forms one line of the plot (the y-axis). The red segments denote time under exposure. Blue segments denote time without exposure, that was used at some point as control in a matched pair. White segments denote observation time that remained unused. 
+
+Internally, the dataset of all individual / exposure combinations is first ordered by exposure time. Then, the dataset is "cut in half". The first person  / exposure combination (e.g. row in the dataset) of the first half is then matched to the first row of the second dataset. This is not guaranteed to work. Under some extreme distributions of exposure times, this may fail, making it a little less robust than other methods. Additionally, since we only use each exposure instance in one pair, we throw out a lot of information that we could include using the other methods. Therefore, this method is generally discouraged.
+
+## All Possible Pairs
+
+The most statistically efficient variant is to simply use all pairs that could possible be formed. This can be done using `pairs="all"` instead:
+
+```{r}
+out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+                         pairs="all", estimator="none", risk_period=30)
+```
+
+If we use `plot()`, we can directly see that a lot more of the observation time per person is used in the matched dataset:
+
+```{r, fig.width=6, fig.height=5}
+plot(out)
+```
+
+Note that even though all possible matches were generated, the plot still includes some white areas. These are observation times that could not be used in any of the possible matches. Although using all possible matches is statistically very efficient, it is very heavy computationally. The upper limit of possible matches grows very fast and can be calculated as
+
+$$
+\frac{n \cdot (n-1)}{2},
+$$
+
+where $n$ is the number of unique individual / exposure instances. Due to this fast growth, it might not even be possible computationally to generate all pairs with large $n$. Luckily, we do not actually need to do this. It is perfectly acceptable to use a fixed large number of randomly choosen pairs instead.
+
+## Fast random selection
+
+The package implements a random selection of pairs in two ways. The first one is a fast selection algorithm, which generates all possible pairs first and then takes a random sample of size `n_pairs` from the resulting dataset. This can be done using `pairs="random2"`:
+
+```{r}
+out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+                         pairs="random2", estimator="none", risk_period=30,
+                         n_pairs=100000)
+```
+
+Here we used a 100,000 matched pairs, as specified through the `n_pairs` argument. If we run `plot()` on this again, we can see that we are still using quite a lot of the observed time per person at least once:
+
+```{r, fig.width=6, fig.height=5}
+plot(out)
+```
+
+This may work for fairly large datasets and it is fairly fast, but eventually it will fail as well due to the required RAM of the first step. If it fails, we may use `pairs="random1"` instead.
+
+## Memory efficient random selection
+
+To circumvent the problem of having to create all possible matches first, we may use an iterative algorithm instead. Here, we randomly sample `batch_size / 2` rows from the individual / exposure dataset and match them to further, also randomly sampled, `batch_size / 2` rows. We then remove duplicates and invalid matches. All generated matches are then added to the output. If we have created `n_pairs` matches, we stop. If we have not, we repeat the process until we found enough matches or until `rand_max_iter` iterations were executed. This can be done using `pairs="random1"`:
+
+```{r}
+out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+                         pairs="random1", estimator="none", risk_period=30,
+                         n_pairs=100000)
+```
+
+It is often quite a bit slower than `pairs="random2"`, because of its iterative nature and the sometimes large amount of invalid or repeated matches created during the iterations. The main advantage is that it can always be used, regardless of how many matches are possible.
+
+## Which pair generation method should I use?
+
+The amount of options naturally raises the question, which option is the best. Whenever using `estimator="moments"` (which should be used in most cases), we recommend trying `pairs="all"` first, because it is the statistically most efficient option. If this fails due to the amount of matches being too large, it is best to try `pairs="random2"` next, with a large number of `n_pairs` such as 1,000,000. If that still fails due to RAM issues, `pairs="random1"` is the best alternative (again with a large value for `n_pairs`). One-to-one matching as implemented in `pairs="one"` should generally only be used if the dataset is gigantic, or when using `estimator="glmm"`.
+
+# Estimators
+
+After having created the symmetric pair matches, we still have to apply an estimator to obtain the relative risk of interest. The package implements two main estimators, the main empirical moments based estimator (`estimator="moments"`) and an experimental estimator based on a generalized linear mixed Poisson model (`estimator="glmm"`).
+
+## Empirical moments based estimator
+
+## Generalized linear mixed model based estimator
+
+
+# Confidence interval estimation
+
+The estimators by themselves only return a point estimate (e.g. an estimate of the relative risk). In most applications, we are, however, also interested in estimating the uncertainty of this point estimate. This is often done using confidence intervals. We may also wish to test the hypothesis, that the true relative risk is 1, which is often done using p-values. Currently, no equation exists that could be used to directly estimate the standard error of the estimate, which would be required for both applications. We therefore usually rely on bootstrapping, which is implemented into the `sym_pair_matching()` function through the `bootstrap` argument:
+
+```{r}
+out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+                         pairs="all", estimator="moments", risk_period=30,
+                         bootstrap=TRUE, n_boot=1000)
+summary(out)
+```
+
+Here, we first draw `n_boot` random samples with replacement from all individuals, where the size of the samples is equal to the number of unique individuals in the dataset. Then, we apply the pair matching to each of these datasets. Afterwards, we apply the estimator to all matched datasets. The result is a vector of `n_boot` bootstrap estimates. To estimate a 95% confidence interval, we use the percentile method, in which the lower 0.025 and upper 0.975 quantiles of this bootstrap distribution is used directly. P-values are calculated similarly, although with the caveat that a bootstrap p-value can never be smaller than `1 / n_boot` (ZITAT).
+
+We can inspect the distribution of the bootstrap samples directly using something like:
+
+```{r, fig.width=6, fig.height=5}
+plot(density(out$boot_est))
+```
+
+Ideally, the distribution should look more or less Gaussian. In any case, it is recommended to set the number of bootstrap samples high enough so that the distribution looks fairly smooth. `n_boot=1000` is a good start, but may not always be sufficient.
+
+Bootstrapping may become fairly computationally expensive, particularly with large samples and `pairs="all"` or `pairs="random1"` / `pairs="random2"` when using many matches. We have implemented some computational tricks that keep the computation time low, particularly when using `pairs="all"`. In this case, the pair matching is only done once and the bootstrap samples are generated directly from all pairs through re-weighting them. This is possible because repeated inclusion of individuals never generates new samples (individuals cannot match themselves, because the risk periods would overlap). Additionally, the `n_cores` argument may be used to run the bootstrap calculations on multiple processing cores, potentially saving much more time as well.
+
+# A real data example
 
 
 
