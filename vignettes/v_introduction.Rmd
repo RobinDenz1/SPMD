@@ -48,7 +48,7 @@ Individuals with exposures are matched to each other, so that they can be used a
 
 ```{r, echo=FALSE, fig.width=6, fig.height=5}
 plotdata <- data.table(id=factor(c(2,1,1,2), levels=c(2, 1),
-                                 labels=c("Person B", "Person A")),
+                                 labels=c("Person b", "Person a")),
                        A=factor(c("Unexposed","Exposed","Unexposed","Exposed")),
                        time=c(50,50,120,120),
                        time_end=c(50,50,120,120) + 40)
@@ -78,23 +78,23 @@ ggplot(plotdata, aes(y=id)) +
   labs(x="Time", y="", shape="", color="")
 ```
 
-At $t = 50$, person A is exposed and his risk period of length 40 begins. Since person B is unexposed at this time, we can use the same duration as a control for person A. We then do the exact same thing at $t = 120$, when person B is exposed. In a table, we would write down this pair as:
+At $t = 50$, person $a$ is exposed and his risk period of length 40 begins. Since person $b$ is unexposed at this time, we can use the same duration as a control for person $a$. We then do the exact same thing at $t = 120$, when person $b$ is exposed. In a table, we would write down this pair as:
 
 | | | |
 | -- | -- | -- | -- |
 | individual | time | exposure | group |
-| B | 50 | 0 | 1 |
-| A | 50 | 1 | 2 |
-| A | 120 | 0 | 3 |
-| B | 120 | 1 | 4 |
+| b | 50 | 0 | 1 |
+| a | 50 | 1 | 2 |
+| a | 120 | 0 | 3 |
+| b | 120 | 1 | 4 |
 
 It can be shown mathematically that under fairly weak assumptions of multiplicative effects, the following equation holds for each individual pairing:
 
 $$
-\theta = \frac{1}{2}\log\left(\frac{\lambda_{i2} \lambda_{i4}}{\lambda_{i1} \lambda_{i3}}\right).
+\theta = \frac{1}{2}\log\left(\frac{\lambda_{b1} \lambda_{a2}}{\lambda_{a1} \lambda_{b2}}\right).
 $$
 
-where $\lambda_{ij}$ are the rate parameters of Poisson distributions that describe the number of events in the 40 day risk period in each "group". Of course, we cannot directly calculate this value, because those rates are unknown. We do, however, observe the event counts in those times, which is enough to define estimators. Those are described further down in this vignette, after we have introduced the required data and pair matching algorithms.
+where $\lambda_{it}$ are the rate parameters of Poisson distributions that describe the number of events in the 40 day risk period in each "group". Of course, we cannot directly calculate this value, because those rates are unknown. We do, however, observe the event counts in those times, which is enough to define estimators. Those are described further down in this vignette, after we have introduced the required data and pair matching algorithms.
 
 # Required Data
 
@@ -180,7 +180,7 @@ $$
 \frac{n \cdot (n-1)}{2},
 $$
 
-where $n$ is the number of unique individual / exposure instances. Due to this fast growth, it might not even be possible computationally to generate all pairs with large $n$. Luckily, we do not actually need to do this. It is perfectly acceptable to use a fixed large number of randomly choosen pairs instead.
+where $n$ is the number of unique individual / exposure instances. Due to this fast growth, it might not even be possible computationally to generate all pairs with large $n$. Luckily, we do not actually need to do this. It is perfectly acceptable to use a fixed large number of randomly chosen pairs instead.
 
 ## Fast random selection
 
@@ -222,8 +222,17 @@ After having created the symmetric pair matches, we still have to apply an estim
 
 ## Empirical moments based estimator
 
+Given $m$ pairs of individuals, the estimator is defined as:
+
+$$
+\hat{\theta}_m = \frac{1}{2} \ln\! \left(\frac{\frac{1}{m}\sum_{i = 1}^m X_{b1} X_{a2}}{\frac{1}{m}\sum_{i = 1}^m X_{a1} X_{b2}}\right),
+$$
+
+where $X_{a1}$, $X_{a2}$, $X_{b1}$ and $X_{b2}$ denote the observed event counts in each "group" inside a pair. Essentially, we average over individual level products of events in both the denominator and numerator. By taking `exp()` of the resulting $\hat{\theta}_m$, we obtain an estimate of the causal risk ratio. In this package, this estimator can be used by setting `estimator="moments"`.
+
 ## Generalized linear mixed model based estimator
 
+An alternative experimental estimator is based on a generalized linear mixed Poisson model, where an individual and time-specific random effect is modeled directly. This method may be more efficient than the moments based estimator, because it utilizes information across pairs more efficiently, but it is also fairly difficult to fit. In many cases, it will not converge in practice. We recommend not using this estimator for now, as its theoretical properties have not been studied in detail.
 
 # Confidence interval estimation
 
@@ -248,7 +257,21 @@ Ideally, the distribution should look more or less Gaussian. In any case, it is 
 
 Bootstrapping may become fairly computationally expensive, particularly with large samples and `pairs="all"` or `pairs="random1"` / `pairs="random2"` when using many matches. We have implemented some computational tricks that keep the computation time low, particularly when using `pairs="all"`. In this case, the pair matching is only done once and the bootstrap samples are generated directly from all pairs through re-weighting them. This is possible because repeated inclusion of individuals never generates new samples (individuals cannot match themselves, because the risk periods would overlap). Additionally, the `n_cores` argument may be used to run the bootstrap calculations on multiple processing cores, potentially saving much more time as well.
 
-# A real data example
+# Some subtleties
+
+## Censoring
+
+Right-censoring is directly supported by this package. The underlying algorithm only ever uses pairs in which all four time periods are fully observed. In other words, if right-censoring would cut one or more of the observation periods required for estimation short, the pair is deemed invalid. For required assumptions regarding censoring, please consult the associated paper (Denz et al. 202X).
+
+## Bounds of the risk period
+
+The `bounds` argument allows users to specify whether / which endpoints of the risk periods defined by the exposure times and `risk_period` arguments should be included or excluded. It is particularly important to specify this argument if the measurements of exposure and outcome times is done in discrete time. See `?sym_pair_matching` for a full explanations on supported values.
+
+## Time zero
+
+In randomized controlled trials, time zero (e.g. the begin of the observation period) is well defined for each participant in the study. This is not necessarily the case for retrospective studies. For example, when analyzing electronic health records based data, multiple choices for time zero, such as the date of a diagnosis or the first date of eligibility, may be appropriate. Theoretically, any time scale may be used for the application of SPMD. It is, however, crucial that the choice of time scale reflects the time trends the user wants to adjust for. For example, if time trends in the outcome are caused by calender time and are shared across individuals, the time scale should be the calender time. If, on the other hand, the time trends are anchored to time since a diagnosis, than time zero should be the date of diagnosis.
+
+# An example
 
 
 
