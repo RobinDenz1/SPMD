@@ -44,11 +44,9 @@ is_valid_pair <- function(.id, .id2, .time, .time2, .max_t, .max_t2,
   #       max_t). It is then sufficient to require that max_t should be
   #       equal to time + risk_period regardless of bounds.
   if (check_censoring) {
-    complete_followup <-
-      .max_t >= (.time + risk_period) &
-      .max_t2 >= (.time + risk_period) &
-      .max_t >= (.time2 + risk_period) &
-      .max_t2 >= (.time2 + risk_period)
+    complete_followup <- fifelse(.time <= .time2,
+                                 .max_t > .time2 & .max_t2 > .time2,
+                                 .max_t > .time & .max_t2 > .time)
   } else {
     complete_followup <- TRUE
   }
@@ -134,9 +132,11 @@ generate_random_pairs_mem <- function(data, n_pairs, risk_period, bounds,
   # stores accepted pairs
   accepted <- data.table(
     .id = integer(),
-    .time = integer(),
+    .time = numeric(),
     .id2 = integer(),
-    .time2 = integer()
+    .time2 = numeric(),
+    .max_t = numeric(),
+    .max_t2 = numeric()
   )
 
   # stores unique pair keys
@@ -291,7 +291,6 @@ remove_invalid_matches <- function(d_pairs, d_exp, risk_period, bounds) {
       bounds=bounds
       )
     )
-    d_pairs[, c(".max_t", ".max_t2") := NULL]
 
   # otherwise, more is needed
   } else {
@@ -357,8 +356,9 @@ remove_invalid_matches <- function(d_pairs, d_exp, risk_period, bounds) {
     d_pairs <- subset(d_pairs, is_valid==TRUE)
 
     # put pairs back together
-    d_pairs <- rbind(d_pairs[, c(".id", ".time", ".id2", ".time2")],
-                     d_pairs1[, c(".id", ".time", ".id2", ".time2")])
+    cnames <- c(".id", ".time", ".id2", ".time2", ".max_t", ".max_t2")
+    d_pairs <- rbind(d_pairs[, cnames, with=FALSE],
+                     d_pairs1[, cnames, with=FALSE])
   }
   return(d_pairs)
 }

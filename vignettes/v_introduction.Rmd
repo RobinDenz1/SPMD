@@ -271,10 +271,6 @@ The `bounds` argument allows users to specify whether / which endpoints of the r
 
 In randomized controlled trials, time zero (e.g. the begin of the observation period) is well defined for each participant in the study. This is not necessarily the case for retrospective studies. For example, when analyzing electronic health records based data, multiple choices for time zero, such as the date of a diagnosis or the first date of eligibility, may be appropriate. Theoretically, any time scale may be used for the application of SPMD. It is, however, crucial that the choice of time scale reflects the time trends the user wants to adjust for. For example, if time trends in the outcome are caused by calender time and are shared across individuals, the time scale should be the calender time. If, on the other hand, the time trends are anchored to time since a diagnosis, than time zero should be the date of diagnosis.
 
-# An example
-
-
-
 # References
 
 Denz, Robin and Nina Timmesfeld (2026). "Simulating Complex Cross-Sectional and Longitudinal Data using the simDAG R Package". Journal of Statistical Software 116 (2), doi: 10.18637/jss.v116.i02.

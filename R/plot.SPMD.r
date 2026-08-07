@@ -11,7 +11,7 @@ plot.SPMD <- function(x, show_events=FALSE, fill_control="steelblue",
                       fill_exposed="red", event_size=1, event_shape=8,
                       event_color="black", xlab="Time", ...) {
 
-  . <- .stop <- .time <- .A <- .start <- .id <- .new_id <-
+  . <- .end_time <- .time <- .A <- .start <- .id <- .new_id <-
     .grp <- .GRP <- NULL
 
   stopifnotm(inherits(x, "SPMD"), "'x' must be an SPMD object, created",
@@ -19,13 +19,12 @@ plot.SPMD <- function(x, show_events=FALSE, fill_control="steelblue",
 
   # get relevant matched data
   d_times <- unique(x$d_matches, by=c(".id", ".time"))
-  d_times[, .stop := .time + x$inputs$risk_period]
   setnames(d_times, old=".time", new=".start")
 
   # get unique exposure times
   d_exp <- unique(
     d_times[.A==TRUE], by=c(".id", ".start")
-  )[, c(".id", ".start", ".stop")]
+  )[, c(".id", ".start", ".end_time")]
 
   # create new ids, sorted by first exposure time
   setkey(d_exp, .start, .id)
@@ -33,10 +32,11 @@ plot.SPMD <- function(x, show_events=FALSE, fill_control="steelblue",
 
   # extract unique observation periods
   setorder(d_times, .id, .start)
-  d_times[, .grp := cumsum(.start > shift(cummax(.stop), fill=-Inf)), by=.id]
+  d_times[, .grp := cumsum(.start > shift(cummax(.end_time), fill=-Inf)),
+          by=.id]
   d_times <- d_times[, .(
     .start = min(.start),
-    .stop  = max(.stop)
+    .end_time  = max(.end_time)
   ), by = .(.id, .grp)]
 
   # merge new id to it
@@ -53,13 +53,13 @@ plot.SPMD <- function(x, show_events=FALSE, fill_control="steelblue",
   p <- ggplot2::ggplot(NULL) +
     ggplot2::geom_rect(data=d_times,
                        ggplot2::aes(xmin=.start,
-                                    xmax=.stop,
+                                    xmax=.end_time,
                                     ymin=.new_id - 0.5,
                                     ymax=.new_id + 0.5),
                        fill=fill_control, linewidth=0) +
     ggplot2::geom_rect(data=d_exp,
                        ggplot2::aes(xmin=.start,
-                                    xmax=.stop,
+                                    xmax=.end_time,
                                     ymin=.new_id - 0.5,
                                     ymax=.new_id + 0.5),
                        fill=fill_exposed, linewidth=0) +

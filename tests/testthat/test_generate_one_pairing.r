@@ -3,8 +3,9 @@ test_that("general test case", {
 
   data <- data.table(.id=c(1, 2, 3, 4), .time=c(20, 45, 80, 20), .max_t=1000)
 
-  expected <- data.table(.id=c(1, 4), .time=c(20, 20),
-                         .id2=c(2, 3), .time2=c(45, 80), .id_pair=c(1, 2))
+  expected <- data.table(.id=c(1, 4), .time=c(20, 20), .max_t=c(1000, 1000),
+                         .id2=c(2, 3), .time2=c(45, 80),
+                         .max_t2=c(1000, 1000), .id_pair=c(1, 2))
   out <- generate_one_pairing(data, risk_period=20, bounds="[]")
 
   expect_equal(out, expected)

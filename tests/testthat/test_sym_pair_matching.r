@@ -27,14 +27,14 @@ test_that("using glmm", {
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                            id=".id", pairs="random1", estimator="glmm",
                            risk_period=40, n_pairs=200)
-  expect_equal(round(out$est, 3), 1.653)
+  expect_equal(round(out$est, 3), 1.536)
 
   # with pairs="random2"
   set.seed(243)
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                            id=".id", pairs="random2", estimator="glmm",
                            risk_period=40, n_pairs=200)
-  expect_equal(round(out$est, 3), 1.883)
+  expect_equal(round(out$est, 3), 4.163)
 
   # with pairs="all"
   set.seed(3455)
@@ -66,7 +66,7 @@ test_that("using estimating equations based estimator", {
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                            id=".id", pairs="random2", estimator="moments",
                            risk_period=40, n_pairs=1000)
-  expect_equal(round(out$est, 3), 2.449)
+  expect_equal(round(out$est, 3), 2.000)
 
   # with pairs="all"
   set.seed(3455)

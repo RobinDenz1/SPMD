@@ -21,15 +21,31 @@ test_that("general test cases", {
                        .max_t=1000, .max_t2=1000, bounds="[]")
   expect_false(out)
 
-  # control period could not be observed due to right-censoring
+  # control period could not be fully observed due to right-censoring
+  # but its fine because its after t2
   out <- is_valid_pair(.id=10, .id2=12, .time=10, .time2=50, risk_period=30,
                        .max_t=60, .max_t2=1000, bounds="[]")
+  expect_true(out)
+
+  # control period could not be observed at all due to right-censoring
+  out <- is_valid_pair(.id=10, .id2=12, .time=10, .time2=50, risk_period=30,
+                       .max_t=40, .max_t2=1000, bounds="[]")
   expect_false(out)
 
   # same as above, but censoring isn't checked so it should work
   out <- is_valid_pair(.id=10, .id2=12, .time=10, .time2=50, risk_period=30,
-                       .max_t=60, .max_t2=1000, bounds="[]",
+                       .max_t=40, .max_t2=1000, bounds="[]",
                        check_censoring=FALSE)
+  expect_true(out)
+
+  # one control period cannot be observed at all, the risk period only partially
+  out <- is_valid_pair(.id=10, .id2=12, .time=10, .time2=50, risk_period=30,
+                       .max_t=35, .max_t2=70, bounds="[]")
+  expect_false(out)
+
+  # two censoring times, both should be fine
+  out <- is_valid_pair(.id=10, .id2=12, .time=10, .time2=50, risk_period=30,
+                       .max_t=75, .max_t2=70, bounds="[]")
   expect_true(out)
 })
 

@@ -1,8 +1,10 @@
 
-## given a sorted vector of unique times and a duration, calculates the
+## given a sorted vector of unique time durations, calculates the
 ## amount of unique observation time used
-calculate_total_time <- function(times, risk_duration) {
-  out <- risk_duration + sum(pmin(diff(times), risk_duration))
+calculate_total_time <- function(start, stop) {
+  durations <- stop - start
+  len_dur <- length(durations)
+  out <- sum(pmin(diff(start), durations[1:(len_dur-1)])) + durations[len_dur]
   return(out)
 }
 
@@ -11,14 +13,14 @@ calculate_total_time <- function(times, risk_duration) {
 get_times_used <- function(d_matches, data, risk_period) {
 
   .id <- .time <- . <- .start <- .stop <- .max_possible_t <- .max_t <-
-    .min_t <- .used_prop <- .time_used <- NULL
+    .min_t <- .used_prop <- .time_used <- .end_time <- NULL
 
   # unique start times per person
   d_times <- unique(d_matches, by=c(".id", ".time"))
   setkey(d_times, .id, .time)
 
   # total duration used per person
-  d_dur <- d_times[, .(.time_used = calculate_total_time(.time, risk_period)),
+  d_dur <- d_times[, .(.time_used = calculate_total_time(.time, .end_time)),
                    by=.id]
 
   # maximal duration observed per person
@@ -51,7 +53,7 @@ one_boot_iter <- function(ids, d_exp, d_events, pairs, n_pairs, risk_period,
     return(NA)
   }
 
-  d_matches_i <- expand_pair_matches(d_matches_i)
+  d_matches_i <- expand_pair_matches(d_matches_i, risk_period=risk_period)
 
   # add outcome event count to it
   d_matches_i <- add_event_count(dt_index=d_matches_i, dt_events=d_events,

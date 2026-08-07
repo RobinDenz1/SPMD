@@ -4,7 +4,7 @@
 get_full_data <- function(data, start, stop, id, exposure, outcome,
                           pairs, n_pairs, risk_period, remove_noevents,
                           bounds, rand_max_iter, batch_size) {
-  .time <- .max_t <- NULL
+  .time <- .max_t <- overlap <- .id <- NULL
 
   # small preparations
   data <- prepare_start_stop(data=data, start=start, stop=stop, id=id,
@@ -40,7 +40,7 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
 
   stopifnotm(nrow(d_matches)!=0, "Could not create any valid matches.")
 
-  d_matches <- expand_pair_matches(d_matches)
+  d_matches <- expand_pair_matches(d_matches, risk_period=risk_period)
 
   # add outcome event count to it
   d_matches <- add_event_count(dt_index=d_matches, dt_events=d_events,
@@ -164,9 +164,9 @@ prepare_start_stop <- function(data, start, stop, id, exposure, outcome,
 #' @importFrom data.table setkey
 #' @importFrom data.table copy
 #' @importFrom data.table :=
-expand_pair_matches <- function(data) {
+expand_pair_matches <- function(data, risk_period) {
 
-  .A <- .time <- .time2 <- .id_pair <- .group <- NULL
+  .A <- .time <- .time2 <- .id_pair <- .group <- .max_t <- .end_time <- NULL
 
   data[, .A := TRUE]
 
@@ -176,14 +176,20 @@ expand_pair_matches <- function(data) {
   data2[, .A := FALSE]
 
   data <- rbind(data, data2)
-  data3 <- data[, c(".id2", ".time2", ".id_pair", ".A"), with=FALSE]
-  setnames(data3, old=c(".id2", ".time2"), new=c(".id", ".time"))
-  data <- rbind(data[, -c(".id2", ".time2")], data3)
+  data3 <- data[, c(".id2", ".time2", ".max_t2", ".id_pair", ".A"), with=FALSE]
+  setnames(data3, old=c(".id2", ".time2", ".max_t2"),
+           new=c(".id", ".time", ".max_t"))
+  data <- rbind(data[, -c(".id2", ".time2", ".max_t2")], data3)
 
   # assign all needed ids
   setkey(data, .id_pair, .time, .A)
   data[, .group := rep(c(1, 2, 3, 4), nrow(data)/4)]
   setkey(data, .id_pair, .group)
+
+  # calculate interval end
+  data[, .max_t := min(.max_t), by=c(".id_pair", ".time")]
+  data[, .end_time := .time + risk_period]
+  data[.end_time > .max_t, .end_time := .max_t]
 
   return(data)
 }
@@ -223,15 +229,12 @@ matches2counts <- function(data, bootstrap) {
 #' @importFrom data.table .EACHI
 add_event_count <- function(dt_index, dt_events, risk_period, bounds) {
 
-  row_id <- end_time <- .time <- .id <- . <- .n_events <- NULL
+  row_id <- .end_time <- .time <- .id <- . <- .n_events <- NULL
 
   dt_index <- copy(dt_index)
 
   # unique row identifier
   dt_index[, row_id := .I]
-
-  # interval end
-  dt_index[, end_time := .time + risk_period]
 
   # key events table
   setkey(dt_events, .id, .time)
@@ -239,13 +242,13 @@ add_event_count <- function(dt_index, dt_events, risk_period, bounds) {
   # count matching events per row
   out <- switch(
     bounds,
-    "()" = dt_events[dt_index, on=.(.id, .time > .time, .time < end_time),
+    "()" = dt_events[dt_index, on=.(.id, .time > .time, .time < .end_time),
                      .(n_events = .N), by=.EACHI],
-    "(]" = dt_events[dt_index, on=.(.id, .time > .time, .time <= end_time),
+    "(]" = dt_events[dt_index, on=.(.id, .time > .time, .time <= .end_time),
                      .(n_events = .N), by=.EACHI],
-    "[)" = dt_events[dt_index, on=.(.id, .time >= .time, .time < end_time),
+    "[)" = dt_events[dt_index, on=.(.id, .time >= .time, .time < .end_time),
                      .(n_events = .N), by=.EACHI],
-    "[]" = dt_events[dt_index, on=.(.id, .time >= .time, .time <= end_time),
+    "[]" = dt_events[dt_index, on=.(.id, .time >= .time, .time <= .end_time),
                      .(n_events = .N), by=.EACHI],
   )
 
@@ -256,7 +259,7 @@ add_event_count <- function(dt_index, dt_events, risk_period, bounds) {
   dt_index[is.na(.n_events), .n_events := 0L]
 
   # cleanup
-  dt_index[, c("row_id", "end_time") := NULL]
+  dt_index[, c("row_id") := NULL]
 
   return(dt_index)
 }
