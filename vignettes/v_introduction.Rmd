@@ -78,15 +78,15 @@ ggplot(plotdata, aes(y=id)) +
   labs(x="Time", y="", shape="", color="")
 ```
 
-At $t = 50$, person $a$ is exposed and his risk period of length 40 begins. Since person $b$ is unexposed at this time, we can use the same duration as a control for person $a$. We then do the exact same thing at $t = 120$, when person $b$ is exposed. In a table, we would write down this pair as:
+At $t = 50$, person $b$ is exposed and his risk period of length 40 begins. Since person $a$ is unexposed at this time, we can use the same duration as a control for person $b$. We then do the exact same thing at $t = 120$, when person $a$ is exposed. In a table, we would write down this pair as:
 
 | | | |
 | -- | -- | -- | -- |
-| individual | time | exposure | group |
-| b | 50 | 0 | 1 |
-| a | 50 | 1 | 2 |
-| a | 120 | 0 | 3 |
-| b | 120 | 1 | 4 |
+| individual | time | exposure | index |
+| a | 50 | 0 | a1 |
+| b | 50 | 1 | b1 |
+| b | 120 | 0 | b2 |
+| a | 120 | 1 | a2 |
 
 It can be shown mathematically that under fairly weak assumptions of multiplicative effects, the following equation holds for each individual pairing:
 
@@ -94,7 +94,7 @@ $$
 \theta = \frac{1}{2}\log\left(\frac{\lambda_{b1} \lambda_{a2}}{\lambda_{a1} \lambda_{b2}}\right).
 $$
 
-where $\lambda_{it}$ are the rate parameters of Poisson distributions that describe the number of events in the 40 day risk period in each "group". Of course, we cannot directly calculate this value, because those rates are unknown. We do, however, observe the event counts in those times, which is enough to define estimators. Those are described further down in this vignette, after we have introduced the required data and pair matching algorithms.
+where $\lambda$ are the rate parameters of Poisson distributions that describe the number of events in the 40 day risk period in each "group". Of course, we cannot directly calculate this value, because those rates are unknown. We do, however, observe the event counts in those times, which is enough to define estimators. Those are described further down in this vignette, after we have introduced the required data and pair matching algorithms.
 
 # Required Data
 
@@ -228,7 +228,7 @@ $$
 \hat{\theta}_m = \frac{1}{2} \ln\! \left(\frac{\frac{1}{m}\sum_{i = 1}^m X_{b1} X_{a2}}{\frac{1}{m}\sum_{i = 1}^m X_{a1} X_{b2}}\right),
 $$
 
-where $X_{a1}$, $X_{a2}$, $X_{b1}$ and $X_{b2}$ denote the observed event counts in each "group" inside a pair. Essentially, we average over individual level products of events in both the denominator and numerator. By taking `exp()` of the resulting $\hat{\theta}_m$, we obtain an estimate of the causal risk ratio. In this package, this estimator can be used by setting `estimator="moments"`.
+where $X_{a1}$, $X_{a2}$, $X_{b1}$ and $X_{b2}$ denote the observed event counts in each "index" inside a pair. Essentially, we average over individual level products of events in both the denominator and numerator. By taking `exp()` of the resulting $\hat{\theta}_m$, we obtain an estimate of the causal risk ratio. In this package, this estimator can be used by setting `estimator="moments"`.
 
 ## Generalized linear mixed model based estimator
 
@@ -261,7 +261,7 @@ Bootstrapping may become fairly computationally expensive, particularly with lar
 
 ## Censoring
 
-Right-censoring is directly supported by this package. The underlying algorithm only ever uses pairs in which all four time periods are fully observed. In other words, if right-censoring would cut one or more of the observation periods required for estimation short, the pair is deemed invalid. For required assumptions regarding censoring, please consult the associated paper (Denz et al. 202X).
+Right-censoring is directly supported by this package. The underlying algorithm uses pairs in which no observation period is censored, and pairs in which the right-censoring occurs after the larger of the two exposure times in a pair. In the latter case, both individuals inside the pair are censored at the minimum censoring time when calculating $X_{a2}$ and $X_{b2}$. This way, the time effects still cancel out. For more information and required assumptions regarding censoring, please consult the associated paper (Denz et al. 202X).
 
 ## Bounds of the risk period
 

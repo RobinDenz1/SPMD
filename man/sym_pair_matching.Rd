@@ -26,13 +26,13 @@ A single \code{data.frame} like object in the start-stop format. This dataset sh
 A single character string, specifying the name of the unique person identifier in \code{data}.
   }
   \item{risk_period}{
-A single positive number specifying the length of the risk period.
+A single positive number specifying the length of the risk period (corresponds to \eqn{\tau} in the main paper).
   }
   \item{bounds}{
 A single character string with two characters, specifying the bounds on the definition of the \code{risk_period}. Allowed values are \code{"()", "[)", "(]"} and \code{"[]"}. Curved parenthesis indicate open intervals, square parenthesis indicate closed intervals. So for example, using the default of \code{"[)"} events that occur at the exact time of exposure are counted as having occured in the risk-period, but events that occur on exactly \code{exposure_time + risk_period} are not. This also impacts which pairs are valid. If the risk period of two pairs "touches" (for example \code{id = 1} has an exposure at \code{t = 10} and \code{id = 2} has an exposure at \code{t = 20} with \code{risk_period=10}), it is considered valid as long as \code{bounds!="[]"}, because then no information is overlapping.
   }
   \item{estimator}{
-A single character string specifying which estimator should be used. If \code{"moments"} (default) the estimating equations based estimator described in the main paper is used. If \code{"glmm"}, a generalized linear model from the Poisson family with a specific random effects structure (\code{(1 | .id_pair:.group)}) is used instead. May also be set to \code{"none"} to only return the matched dataset, without performing any estimation. See details.
+A single character string specifying which estimator should be used. If \code{"moments"} (default) the empirical based estimator described in the main paper is used. If \code{"glmm"}, a generalized linear model from the Poisson family with a specific random effects structure (\code{(1 | .id_pair:.group)}) is used instead. May also be set to \code{"none"} to only return the matched dataset, without performing any estimation. See details.
   }
   \item{pairs}{
 A single character string specifying what pair matches should be used. If \code{"one"}, a dataset is created in which each exposed individual is included in exactly one pair (if possible). If \code{"all"}, all possible valid pairings are created. This may be infeasible with large data. If \code{"random1"}, a pre-specified amount of random pairings are created, without first creating all possible matches. In this case, the amount of pairs is controlled using the \code{n_pairs} argument. If \code{"random2"}, a pre-specified amount of random pairings is created by random sampling from all possible pairings (default). This is faster and more reliable than \code{"random1"}, but it is much more memory inefficient and not feasible with a large number of unique id/exposure combinations (see details).
@@ -69,24 +69,24 @@ Further arguments passed to \code{\link[lme4]{glmer}} when using \code{estimator
 
 \strong{\emph{How it Works}}:
 
-In the symmetric pair matching design, we form pairs of individuals who were at some point exposed to the exposure of interest. We then use the individuals as control for each other at their respective exposure times. Pairs are only valid if they permit this sort of matching. For example, if individual \code{A} was exposed only at \eqn{t = 50} and individual \code{B} was exposed at \eqn{t = 100} with \code{risk_period=20}, they could form a valid pair. The pair would then look like this:
+In the symmetric pair matching design, we form pairs of individuals who were at some point exposed to the exposure of interest. We then use the individuals as control for each other at their respective exposure times. Pairs are only valid if they permit this sort of matching. For example, if individual \code{b} was exposed only at \eqn{t = 50} and individual \code{a} was exposed at \eqn{t = 100} with \code{risk_period=20}, they could form a valid pair. The pair would then look like this:
 
 \preformatted{
 ----------------------------------------
-| individual | time | exposure | group |
+| individual | time | exposure | index |
 ----------------------------------------
-|     B      |  50  |     0    |   1   |
-|     A      |  50  |     1    |   2   |
-|     A      |  100 |     0    |   3   |
-|     B      |  100 |     1    |   4   |
+|     a      |  50  |     0    |   a1  |
+|     b      |  50  |     1    |   b1  |
+|     b      |  100 |     0    |   b2  |
+|     a      |  100 |     1    |   a2  |
 ----------------------------------------
 }
 
-Here, \code{B} acts as control for the exposure period of \code{A} at \eqn{t = 50} and similarly, \code{A} later acts as control for the exposure period of \code{B} at \eqn{t = 100}. If this sort of pairing is not possible, for example because the two exposures are too close together in time or because of another exposure period in the required control time, the pairing is considered invalid. Under the assumption that individual and time effects are multiplicative, the following equation holds for each valid pair:
+Here, \code{a} acts as control for the exposure period of \code{b} at \eqn{t = 50} and similarly, \code{b} later acts as control for the exposure period of \code{a} at \eqn{t = 100}. If this sort of pairing is not possible, for example because the two exposures are too close together in time or because of another exposure period in the required control time, the pairing is considered invalid. Under the assumption that individual and time effects are multiplicative, the following equation holds for each valid pair:
 
-\deqn{\theta = \frac{1}{2}\log\left(\frac{\lambda_{i2} \lambda_{i4}}{\lambda_{i1} \lambda_{i3}}\right),}
+\deqn{\theta = \frac{1}{2}\log\left(\frac{\lambda_{b1} \lambda_{a2}}{\lambda_{a1} \lambda_{b2}}\right),}
 
-where \eqn{\lambda_{ij}} are the event rates for each row or \code{group} of the pairing and \eqn{\theta} is the natural log of the multiplicative effect of interest. This means that, under some mild assumptions, both individual-level effects (e.g. any time-fixed confounders) and time effects cancel out. However, since we do not onserve the rates directly, but only event counts in the \code{risk_period} after \code{time}, we have to use related estimators. All of this is described in more detail in the associated paper.
+where the four \eqn{\lambda}s are the event rates for each row (see \code{index}) of the pairing and \eqn{\theta} is the natural log of the multiplicative effect of interest. This means that, under some mild assumptions, both individual-level effects (e.g. any time-fixed confounders) and time effects cancel out. However, since we do not onserve the rates directly, but only event counts in the \code{risk_period} after \code{time}, we have to use related estimators. All of this is described in more detail in the associated paper.
 
 \strong{\emph{Required Data}}:
 
@@ -100,7 +100,7 @@ Ideally, the exposure specified on the RHS of the \code{formula} argument is cod
 
 Before we can estimate anything, we need to form valid pairs. Multiple options are available through the \code{pairs} argument. Suppose for the moment that each individual can only be exposed at most one time (only for explanatory purposes, multiple exposures per person are allowed in this package). The most intuitive way to form pairs is to build a pairing so that each exposure instance in the original data is paired to a single other person. In a dataset in which everyone is at most only exposed once, this would mean that every non-exposed person is discarded and each exposed person gets paired with exactly one other exposed person. Small caveat: If the number of exposed individuals is uneven, at least one person will get no match. This can be done using \code{pairs="one"}.
 
-Although fairly simple, this strategy is also sort of unefficient. It means that for each person, we only use the \code{risk_period} time units after its exposure time and the \code{risk_period} time units after its matched control time. All other observation time gets discarded, regardless of whether there might be some events there. The most efficient strategy would be to build \emph{all} possible pairings instead (\code{pairs="all"}). This, however, may not be feasible computationally, as the number of possible matches grows extremly fast with rising sample sizes. Instead, users may generate a pre-specified number of random valid pairs using \code{pairs="random1"} or \code{pairs="random2"}.
+Although fairly simple, this strategy is also inefficient. It means that for each person, we only use the \code{risk_period} time units after its exposure time and the \code{risk_period} time units after its matched control time. All other observation time gets discarded, regardless of whether there might be some events there. The most efficient strategy would be to build \emph{all} possible pairings instead (\code{pairs="all"}). This, however, may not be feasible computationally, as the number of possible matches grows extremly fast with rising sample sizes. Instead, users may generate a pre-specified number of random valid pairs using \code{pairs="random1"} or \code{pairs="random2"}.
 
 In \code{pairs="random1"}, randomly choosen pairs are generated in batches of size \code{batch_size}. It is then checked, whether these matches are valid and whether they were already included in the data. This continues until all \code{n_pairs} matches have been generated, or until \code{rand_max_iter} number of iterations are reached. This strategy is always feasible memory-wise, but is a bit slower than other strategies. It is also a little unstable, because it is possible that \code{n_pairs} is larger than the maximum number of possible (and valid) pairs. The algorithm then runs needlessly until \code{rand_max_iter} is reached. The option \code{pairs="random2"} also generates \code{n_pairs} random pairs, but does so by first generating all possible and valid pairs. This is generally preferable, whenever it is possible.
 
@@ -110,9 +110,9 @@ We recommend trying \code{pairs="all"} first. If that is infeasible, we recommen
 
 This package implements two kinds of estimators. The main one (\code{estimator="moments"}) is simply:
 
-\deqn{\hat{\theta}_n = \frac{1}{2}\log\left(\frac{\sum_i X_{i2} X_{i4}}{\sum_i X_{i1} X_{i3}}\right),}
+\deqn{\hat{\theta}_n = \frac{1}{2}\log\left(\frac{\sum_i X_{b1} X_{a2}}{\sum_i X_{a1} X_{b2}}\right),}
 
-where \eqn{X_{ij}} are the event counts observed in the \code{risk_period} time units after \code{time} in each \code{group} (\eqn{j}) (exact definitions of the interval can be changed using the \code{bounds} argument). This estimator requires minimal assumptions, but usually requires lots of pairs to be build. With \code{pairs="one"}, it may not work extremly well. Another option is to use a generalized linear mixed Poisson model (\code{estimator="glmm"}). Here, we estimate one fixed effect per group and assign one random effect per group / pair combination. This requires more assumptions, but may be more efficient with \code{pairs="one"}. However, it is also much slower computationally.
+where \eqn{X} represents the event counts observed in the \code{risk_period} time units after \code{time} in each \code{group} (exact definitions of the interval can be changed using the \code{bounds} argument). This estimator requires minimal assumptions, but usually requires lots of pairs to be build. With \code{pairs="one"}, it may not work extremly well. Another option is to use a generalized linear mixed Poisson model (\code{estimator="glmm"}). Here, we estimate one fixed effect per group and assign one random effect per group / pair combination. This requires more assumptions, but may be more efficient with \code{pairs="one"}. However, it is also much slower computationally and often does not converge. We recommend using \code{estimator="moments"}.
 
 \strong{\emph{Confidence Intervals & P-Values}}:
 
@@ -151,7 +151,7 @@ If \code{bootstrap=TRUE} was used, the output additionally contains:
 
 }
 \seealso{
-\code{\link{summary.SPMD}}
+\code{\link{summary.SPMD}}, \code{\link{plot.SPMD}}
 }
 \references{
 TODO
@@ -163,7 +163,7 @@ set.seed(42)
 data <- sim_example_data(n=500)
 
 # apply pair matching using all possible pairs and the
-# estimating equations based estimator
+# empirical moments based estimator
 out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                          risk_period=40, pairs="all", estimator="moments")
 summary(out)
