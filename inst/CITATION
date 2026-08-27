@@ -1,0 +1,18 @@
+
+bibentry(bibtype = "Misc",
+  title        = "The Symmetric Pair Matching Design: A Self-Controlled Method with Automatic Adjustment for Time Effects",
+  author       = c(person(given = "Robin",
+                          family = "Denz",
+                          email = "robin.denz@rub.de"),
+				   person(given = "Filippo",
+                          family = "Saatkamp"),
+				   person(given = "Katharina",
+                          family = "Meiszl"),
+                   person(given = "Nina",
+                          family = "Timmesfeld")),
+  year         = "2026",
+  eprint       = "2608.25979",
+  archive      = "arXiv",
+  doi          = "10.48550/arXiv.2608.25979",
+  header       = "To cite SPMD in publications use:"
+)

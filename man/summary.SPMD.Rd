@@ -33,7 +33,7 @@ Returns \code{NULL}.
 \code{\link{sym_pair_matching}}
 }
 \references{
-TODO
+Denz, Robin, Filippo Saatkamp, Katharina Meiszl and Nina Timmesfeld (2026). "The Symmetric Pair Matching Design: A Self-Controlled Method with Automatic Adjustment for Time Effects". arXiv Preprint. doi: 10.48550/arXiv.2608.25979.
 }
 \examples{
 set.seed(1234)

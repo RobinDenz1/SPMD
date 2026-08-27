@@ -5,7 +5,7 @@
 Symmetric Pair Matching Design for Causal Inference
 }
 \description{
-This function can be used to perform symmetric pair matching, which is a self-controlled method that uses symmetric pairings to directly adjust for both time-invariant confounders and time effects. For more information, see details and the associated article and vignette.
+This function can be used to perform symmetric pair matching, which is a self-controlled method that uses symmetric pairings to directly adjust for both time-invariant confounders and time effects. For more information, see details and the associated article (Denz et al. 2026) and vignette.
 }
 \usage{
 sym_pair_matching(formula, data, id, risk_period, bounds="[)",
@@ -120,7 +120,7 @@ Because of the non-linear nature of the estimator and the potentially non-indepe
 
 \strong{\emph{Individuals without Events}}:
 
-Similar to the self-controlled case series (SCCS) method, individuals that never experienced an event do not contribute meaningfully to any pair when using \code{estimator="moments"}. The reason for this is that we multiply the number of events of the matched individuals at each of the two points in time. Therefore, if an individual has no events, it will always multiply its paired value by 0, effectively making no contribution to the final ratio. To save computation time, we thus exclude all individuals without any events before creating pairs.
+Similar to the self-controlled case series (SCCS) method (Farrington 1995), individuals that never experienced an event do not contribute meaningfully to any pair when using \code{estimator="moments"}. The reason for this is that we multiply the number of events of the matched individuals at each of the two points in time. Therefore, if an individual has no events, it will always multiply its paired value by 0, effectively making no contribution to the final ratio. To save computation time, we thus exclude all individuals without any events before creating pairs.
 
 }
 \author{
@@ -154,7 +154,9 @@ If \code{bootstrap=TRUE} was used, the output additionally contains:
 \code{\link{summary.SPMD}}, \code{\link{plot.SPMD}}
 }
 \references{
-TODO
+Denz, Robin, Filippo Saatkamp, Katharina Meiszl and Nina Timmesfeld (2026). "The Symmetric Pair Matching Design: A Self-Controlled Method with Automatic Adjustment for Time Effects". arXiv Preprint. doi: 10.48550/arXiv.2608.25979.
+
+Farrington, C. Paddy (1995). "Relative Incidence Estimation from Case Series for Vaccine Safety Evaluation". In: Biometrics 51.1, pp. 228–235. doi: 10.2307/2533328.
 }
 \examples{
 set.seed(42)

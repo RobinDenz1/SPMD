@@ -4,10 +4,11 @@ Version: 0.1.0
 Authors@R: 
     person("Robin", "Denz", , "robin.denz@rub.de", role = c("aut", "cre"))
 Maintainer: Robin Denz <robin.denz@rub.de>
-Description: Symmetric time pair matching is a self-controlled method that is designed to
+Description: Symmetric pair matching is a self-controlled method that is designed to
 	allow estimation of the causal effect of a transient exposure (such as vaccinations) on a potentially recurrent outcome.
 	It automatically adjust for all time-invariant confounders and time effects using a special kind of pair matching. As such,
 	only very minimal assumptions have to be made about how time influences the exposure or outcome probability.
+	See Denz et al. (2026) <doi:10.48550/arXiv.2608.25979> for more information.
 License: GPL (>= 3)
 URL: https://github.com/RobinDenz1/SPMD,
     https://robindenz1.github.io/SPMD/

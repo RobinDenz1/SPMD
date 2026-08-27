@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 
 # Introduction
 
-In this small vignette, we introduce the `SPMD` package, which can be used to apply the ***S**ymmetric **P**air **M**atching **D**esign*, introduced by Denz et al. (20XX). In a nutshell, it is a type of self-controlled method that automatically adjusts for all types of time-invariant confounders, while also automatically controlling for any confounding effects that arise through time itself. It is similar to the self-controlled case series (SCCS) design, but, contrary to the SCCS design, it does not require the user to model time trends. The `SPMD` package is a full implementation of the method, including multiple ways to create the required matches, confidence interval estimation and convenient plotting methods.
+In this small vignette, we introduce the `SPMD` package, which can be used to apply the ***S**ymmetric **P**air **M**atching **D**esign*, introduced by Denz et al. (2026). In a nutshell, it is a type of self-controlled method that automatically adjusts for all types of time-invariant confounders, while also automatically controlling for any confounding effects that arise through time itself. It is similar to the self-controlled case series (SCCS) design (Farrington 1995), but, contrary to the SCCS design, it does not require the user to model time trends. The `SPMD` package is a full implementation of the method, including multiple ways to create the required matches, confidence interval estimation and convenient plotting methods.
 
 The package is currently not available on CRAN, but may be installed using the `remotes` package:
 
@@ -40,7 +40,7 @@ library(lme4)
 
 # What is the Symmetric Pair Matching Design?
 
-In the following we give a very informal and short introduction to the SPM design. We highly encourage readers and users of the method to read the associated paper instead (Denz et al. 20XX), which describes the method and its associated assumptions in much more detail. The goal of the SPM design is to estimate the causal relative risk of a binary time-dependent exposure on a possibly re-current binary time-to-event outcome. A classic example would be the effect of a Covid-19 vaccination on the occurrence of acute myocarditis in a short period (for example 24 days) after vaccination. Importantly, the exposure is assumed to be transient, e.g. it is assumed that it only has an effect on the outcome for a known duration after exposure, after which the risk goes back to the persons baseline level.
+In the following we give a very informal and short introduction to the SPM design. We highly encourage readers and users of the method to read the associated paper instead (Denz et al. 2026), which describes the method and its associated assumptions in much more detail. The goal of the SPM design is to estimate the causal relative risk of a binary time-dependent exposure on a possibly re-current binary time-to-event outcome. A classic example would be the effect of a Covid-19 vaccination on the occurrence of acute myocarditis in a short period (for example 24 days) after vaccination. Importantly, the exposure is assumed to be transient, e.g. it is assumed that it only has an effect on the outcome for a known duration after exposure, after which the risk goes back to the persons baseline level.
 
 Under the assumption that there are no time-dependent confounders of the relationship between vaccination and the development of acute myocarditis, two potential sources of confounding remain: (1) time-invariant confounders, such as sex or genetics and (2) time itself. The latter my arise when the probability for vaccination is time-dependent and the probability for the outcome is also time-dependent, irrespective of individual characteristics. In vaccine-safety studies, this is frequently the case, especially for seasonal vaccinations such as influenza vaccines. Briefly, the method adjusts for both types of confounding through a special pair matching structure, as its name suggests.
 
@@ -245,7 +245,7 @@ out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
 summary(out)
 ```
 
-Here, we first draw `n_boot` random samples with replacement from all individuals, where the size of the samples is equal to the number of unique individuals in the dataset. Then, we apply the pair matching to each of these datasets. Afterwards, we apply the estimator to all matched datasets. The result is a vector of `n_boot` bootstrap estimates. To estimate a 95% confidence interval, we use the percentile method, in which the lower 0.025 and upper 0.975 quantiles of this bootstrap distribution is used directly. P-values are calculated similarly, although with the caveat that a bootstrap p-value can never be smaller than `1 / n_boot` (ZITAT).
+Here, we first draw `n_boot` random samples with replacement from all individuals, where the size of the samples is equal to the number of unique individuals in the dataset. Then, we apply the pair matching to each of these datasets. Afterwards, we apply the estimator to all matched datasets. The result is a vector of `n_boot` bootstrap estimates. To estimate a 95% confidence interval, we use the percentile method, in which the lower 0.025 and upper 0.975 quantiles of this bootstrap distribution is used directly. P-values are calculated similarly, although with the caveat that a bootstrap p-value can never be smaller than `1 / n_boot`.
 
 We can inspect the distribution of the bootstrap samples directly using something like:
 
@@ -272,5 +272,9 @@ The `bounds` argument allows users to specify whether / which endpoints of the r
 In randomized controlled trials, time zero (e.g. the begin of the observation period) is well defined for each participant in the study. This is not necessarily the case for retrospective studies. For example, when analyzing electronic health records based data, multiple choices for time zero, such as the date of a diagnosis or the first date of eligibility, may be appropriate. Theoretically, any time scale may be used for the application of SPMD. It is, however, crucial that the choice of time scale reflects the time trends the user wants to adjust for. For example, if time trends in the outcome are caused by calender time and are shared across individuals, the time scale should be the calender time. If, on the other hand, the time trends are anchored to time since a diagnosis, than time zero should be the date of diagnosis.
 
 # References
+
+Denz, Robin, Filippo Saatkamp, Katharina Meiszl and Nina Timmesfeld (2026). "The Symmetric Pair Matching Design: A Self-Controlled Method with Automatic Adjustment for Time Effects". arXiv Preprint. doi: 10.48550/arXiv.2608.25979.
+
+Farrington, C. Paddy (1995). "Relative Incidence Estimation from Case Series for Vaccine Safety Evaluation". In: Biometrics 51.1, pp. 228–235. doi: 10.2307/2533328.
 
 Denz, Robin and Nina Timmesfeld (2026). "Simulating Complex Cross-Sectional and Longitudinal Data using the simDAG R Package". Journal of Statistical Software 116 (2), doi: 10.18637/jss.v116.i02.

@@ -19,22 +19,23 @@ Author: Robin Denz
 ## Description
 
 `SPMD` is a small R Package implementing the ***S**ymmetric **P**air
-**M**atching **D**esign*. Briefly, it is a self-controlled method that
-allows estimation of the causal effect of a possible re-current binary
-exposure on a possible re-current event. It is similar in spirit to the
-famous self-controlled case series (SCCS) design in the sense that it is
-bi-directional, using both time before and after exposures as controls
-(irrespective of events). However, unlike the SCCS method, it not only
-automatically adjusts for time-invariant confounders, but also
-automatically adjusts for all time-effects, without requiring any
-assumptions on the functional form of these time effects.
+**M**atching **D**esign* (SPMD). Briefly, SPMD is a self-controlled
+method that allows estimation of the causal effect of a possible
+re-current binary exposure on a possible re-current event. It is similar
+in spirit to the famous self-controlled case series (SCCS) design in the
+sense that it is bi-directional, using both time before and after
+exposures as controls (irrespective of events). However, unlike the SCCS
+method, it not only automatically adjusts for time-invariant
+confounders, but also automatically adjusts for all time-effects,
+without requiring any assumptions on the functional form of these time
+effects.
 
 It does so by creating pairs of individuals, in which each individual
 acts as a control for the other individual at their respective exposure
 time. It can be shown that under mild assumptions of multiplicative
 effects and no interactions, both individual-level effects and time
 effects cancel out perfectly. For more details, please consult the
-associated paper.
+associated paper (Denz et al. 2026).
 
 ## Installation
 
@@ -95,15 +96,15 @@ summary(spmd)
 #>   No. individuals in data = 500 
 #>   No. exposed individuals = 339 
 #>   No. unique exposure times = 339 
-#>   No. exposed individuals with event(s) = 337 
-#>   48575 symmetric pairs were created
-#>   95.07% of the included observation time was used
+#>   No. exposed individuals with event(s) = 339 
+#>   49247 symmetric pairs were created
+#>   96.57% of the included observation time was used
 #> 
-#> Final estimate: 2.499 
-#> 95% CI: [1.545; 3.816]
+#> Final estimate: 2.457 
+#> 95% CI: [1.596; 3.718]
 #> P-Value: 0.001 
 #> 
-#> Estimated using: exp(0.5 * log(456/73))
+#> Estimated using: exp(0.5 * log(489/81))
 #> Bootstrap CI based on 1000 bootstrap replications
 ```
 
@@ -114,7 +115,10 @@ actually very close.
 
 If you use this package, please cite the associated article:
 
-PUT PAPER HERE
+Denz, Robin, Filippo Saatkamp, Katharina Meiszl and Nina Timmesfeld
+(2026). “The Symmetric Pair Matching Design: A Self-Controlled Method
+with Automatic Adjustment for Time Effects”. arXiv Preprint. doi:
+10.48550/arXiv.2608.25979.
 
 ## License
 
