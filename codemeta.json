@@ -2,8 +2,8 @@
   "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
   "@type": "SoftwareSourceCode",
   "identifier": "SPMD",
-  "description": "Symmetric time pair matching is a self-controlled method that is designed to allow estimation of the causal effect of a transient exposure (such as vaccinations) on a potentially recurrent outcome. It automatically adjust for all time-invariant confounders and time effects using a special kind of pair matching. As such, only very minimal assumptions have to be made about how time influences the exposure or outcome probability.",
-  "name": "SPMD: Symmetric Time Pair Matching for Causal Inference",
+  "description": "Symmetric pair matching is a self-controlled method that is designed to allow estimation of the causal effect of a transient exposure (such as vaccinations) on a potentially recurrent outcome. It automatically adjust for all time-invariant confounders and time effects using a special kind of pair matching. As such, only very minimal assumptions have to be made about how time influences the exposure or outcome probability. See Denz et al. (2026) <doi:10.48550/arXiv.2608.25979> for more information.",
+  "name": "SPMD: Symmetric Pair Matching Design for Causal Inference",
   "relatedLink": "https://robindenz1.github.io/SPMD/",
   "codeRepository": "https://github.com/RobinDenz1/SPMD",
   "issueTracker": "https://github.com/RobinDenz1/SPMD/issues",
@@ -205,6 +205,42 @@
     },
     "SystemRequirements": null
   },
-  "fileSize": "34.624KB",
-  "releaseNotes": "https://github.com/RobinDenz1/SPMD/blob/master/NEWS.md"
+  "fileSize": "220.176KB",
+  "citation": [
+    {
+      "@type": "CreativeWork",
+      "datePublished": "2026",
+      "author": [
+        {
+          "@type": "Person",
+          "givenName": "Robin",
+          "familyName": "Denz",
+          "email": "robin.denz@rub.de"
+        },
+        {
+          "@type": "Person",
+          "givenName": "Filippo",
+          "familyName": "Saatkamp"
+        },
+        {
+          "@type": "Person",
+          "givenName": "Katharina",
+          "familyName": "Meiszl"
+        },
+        {
+          "@type": "Person",
+          "givenName": "Nina",
+          "familyName": "Timmesfeld"
+        }
+      ],
+      "name": "The Symmetric Pair Matching Design: A Self-Controlled Method with Automatic Adjustment for Time Effects",
+      "identifier": "10.48550/arXiv.2608.25979",
+      "@id": "https://doi.org/10.48550/arXiv.2608.25979",
+      "sameAs": "https://doi.org/10.48550/arXiv.2608.25979"
+    }
+  ],
+  "releaseNotes": "https://github.com/RobinDenz1/SPMD/blob/master/NEWS.md",
+  "readme": "https://github.com/RobinDenz1/SPMD/blob/main/README.md",
+  "contIntegration": ["https://github.com/RobinDenz1/SPMD/actions/workflows/R-CMD-check.yaml", "https://app.codecov.io/gh/RobinDenz1/SPMD"],
+  "developmentStatus": "https://www.repostatus.org/#wip"
 }
