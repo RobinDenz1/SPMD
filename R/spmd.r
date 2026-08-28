@@ -114,8 +114,16 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                                 data=l_data$data,
                                 risk_period=risk_period)
 
+  # convergence stats when re-using pairs
+  if (pairs!="one" && estimator=="moments") {
+    convergence <- get_convergence_stats(out$d_counts)
+  } else {
+    convergence <- list(A_n=0, E_n=nrow(out$d_counts)^2, ratio=0)
+  }
+
   # add to output
   out$d_time_used <- d_time_used
+  out$convergence <- convergence
   out$sizes <- list(n_total=n_total, n_exposed=n_exposed,
                     n_exposed_time=n_exposed_time,
                     n_exposures=n_exposures,
@@ -125,80 +133,4 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
   class(out) <- "SPMD"
 
   return(out)
-}
-
-## S3 print method for SPMD objects
-#' @export
-print.SPMD <- function(x, ...) {
-
-  cat("A SPMD object\n")
-
-  if (x$inputs$pairs=="one") {
-    cat(" - using each individual in a single symmetric pair\n")
-  } else if (x$inputs$pairs=="all") {
-    cat(" - using all possible unique symmetric pairs\n")
-  } else if (x$inputs$pairs=="random1" || x$inputs$pairs=="random2") {
-    cat(" - using", x$inputs$n_pairs, "random unique symmetric pairs\n")
-  }
-
-  cat(" - using a risk-period of", x$inputs$risk_period, "time units\n")
-
-  if (x$inputs$estimator=="moments") {
-    cat(" - using the estimating equations based estimator\n")
-  } else if (x$inputs$estimator=="glmm") {
-    cat(" - using the generalized linear model based estimator\n")
-  } else if (x$inputs$estimator=="none") {
-    cat(" - without performing estimation\n")
-  }
-}
-
-## S3 summary method for SPMD objects
-#' @importFrom data.table uniqueN
-#' @export
-summary.SPMD <- function(object, ...) {
-
-  cat("Symmetric Pair Matching")
-
-  if (object$inputs$estimator=="moments") {
-    cat(" using an estimating equation based estimator\n")
-  } else if (object$inputs$estimator=="glmm") {
-    cat(" using a generalized linear mixed model based estimator\n")
-  }
-
-  cat("  Formula:", format(object$inputs$formula), "\n")
-  cat("  Risk period:", object$input$risk_period, "\n\n")
-  cat("  No. individuals in data =", object$sizes$n_total, "\n")
-  cat("  No. exposed individuals =", object$sizes$n_exposed, "\n")
-  cat("  No. unique exposure times =", object$sizes$n_exposures, "\n")
-  cat("  No. exposed individuals with event(s) =",
-      object$sizes$n_exposed_and_event, "\n")
-  cat(" ", uniqueN(object$d_matches$.id_pair), "symmetric pairs were created\n")
-  cat("  ", round((sum(object$d_time_used$.time_used) /
-                  sum(object$d_time_used$.max_possible_t))*100, 2), "%",
-      " of the included observation time was used\n\n", sep="")
-
-  if (object$inputs$estimator=="none") {
-    cat("No estimation was done.\n")
-  } else {
-    cat("Final estimate:", round(object$est, 3), "\n")
-  }
-
-  if (!is.null(object$ci)) {
-    cat(object$inputs$conf_level * 100, "% CI: [",
-        round(object$ci[1], 3), "; ", round(object$ci[2], 3), "]\n", sep="")
-    cat("P-Value:", round(object$p_value, 3), "\n\n")
-  } else {
-    cat("\n")
-  }
-
-  if (object$inputs$estimator=="moments") {
-    cat("Estimated using: exp(0.5 * log(",
-        object$l_sums$X2_X4, "/", object$l_sums$X1_X3, "))\n",
-        sep="")
-  }
-
-  if (!is.null(object$ci) && object$inputs$estimator!="none") {
-    cat("Bootstrap CI based on", object$inputs$n_boot,
-        "bootstrap replications\n")
-  }
 }

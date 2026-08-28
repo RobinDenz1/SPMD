@@ -1,25 +1,20 @@
 
-# TODO:
- - add all the usual package stuff
-   - pkdown site
-   - codecov
-   - citation info
- - write a small vignette
+# TODOs
+- what should be done if some bootstrap estimates are not finite?
 
 # further features
  - allow adjustment for time-dependent confounders
- - add more robust options for generating a pairs="one" type pairing
  - allow estimation by strata
  - allow matching on time fixed variables
  - allow matching on time varying variables 
+ - support pairs with overlapping exposure periods
 
 For the paper:
 
-- finish formal proof of consistency assuming independence among observations
-- extend the proof to using all matches
-- structure
-	- make a sketch for the structure
-	- decide on a good example (maybe I can use katharinas data from VAC-MAC?)
-- perform some simulations
-	- small ones for main paper
-	- put katharinas in appendix
+- more explicitly mention method failures with rare events
+	-> those happen, but as shown in appendix, if the event is rare enough for the
+	   method to fail, other methods also produce biased results
+- investigate bootstrap confidence interval coverage using simulation
+- add illustrative example
+- maybe discuss how the estimand changes under effect heterogeneity
+- in the discussion, state conditions when SPM is preferable to SCCS more clearly

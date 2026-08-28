@@ -1,4 +1,9 @@
 url: https://robindenz1.github.io/SPMD/
 template:
   bootstrap: 5
-
+reference:
+- contents:
+    - sym_pair_matching
+    - summary.SPMD
+    - plot.SPMD
+    - sim_example_data

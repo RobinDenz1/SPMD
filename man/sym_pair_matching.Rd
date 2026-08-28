@@ -131,12 +131,14 @@ Returns a \code{SPMD} object, containing the following objects:
 
 \itemize{
   \item{\code{d_matches}: A \code{data.table} containing the matched pairs.}
+  \item{\code{d_events}: A \code{data.table} containing the events and associated \code{id}s from all relevant individuals.}
   \item{\code{inputs}: A \code{list} containing the arguments supplied by the user.}
   \item{\code{est}: A single number containing the estimated relative risk.}
   \item{\code{d_counts}: If \code{estimator="moments"}, a \code{data.table} containing the four event counts per matched pair.}
   \item{\code{l_sums}: If \code{estimator="moments"}, a \code{list} containing the two sums used in the estimator.}
   \item{\code{model}: If \code{estimator="glmm"}, an object of class \code{merMod}, which is the generalized linear model used to calculate the estimate.}
   \item{\code{d_time_used}: A \code{data.table} containing the amount of observation time used for each individual included in the matching process.}
+  \item{\code{convergence}: A \code{list} containing three numbers: \code{A_n} (the number of pairs of pairs that contain at least one overlapping individual, if ordered pairs are considered), \code{E_n} (the number of possible pairs of pairs, if ordered pairs are considered) and \code{ratio} (A_n / E_n^2). All of these numbers are estimated with respect to the pairs actually used.}
   \item{\code{sizes}: A \code{list} containing various numbers describing the used sample sizes.}
 }
 

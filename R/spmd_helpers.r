@@ -158,6 +158,30 @@ get_boot_p_value <- function(boot_samples, null=1) {
   return(p)
 }
 
+## calculate convergence statistics
+#' @importFrom data.table rbindlist
+get_convergence_stats <- function(d_counts) {
+
+  .id1 <- .id2 <- id <- d1 <- d2 <- i.N <- NULL
+
+  # degree of each individual
+  deg <- rbindlist(list(
+    d_counts[, .(id = .id1)],
+    d_counts[, .(id = .id2)]
+  ))[, .N, by = id]
+
+  # number of pairs of pairs containing the same individual (A_n)
+  A_n <- d_counts[deg, on=c(.id1 = "id"), d1 := i.N][
+                  deg, on=c(.id2 = "id"), d2 := i.N][
+                  , sum((d1 - 1L) + (d2 - 1L))]
+
+  # number of pairs of pairs
+  E_n <- nrow(d_counts)^2
+  out <- list(A_n=A_n, E_n=E_n, ratio=A_n / (E_n^2))
+
+  return(out)
+}
+
 ## works similar to stopifnot() but allows a custom message in
 ## a more convenient fashion
 stopifnotm <- function(assert, ...) {

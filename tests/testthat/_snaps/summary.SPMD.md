@@ -3,158 +3,237 @@
     Code
       summary(out)
     Output
-      Symmetric Pair Matching using an estimating equation based estimator
-        Formula: Surv(start, stop, Y) ~ A 
-        Risk period: 40 
+      ──────────────────────────────────────────────────────────────
+      Symmetric Pair Matching Design
+      ──────────────────────────────────────────────────────────────
+      Design
+        Risk period                      40
+        Pairing strategy                 One pair per individual
+        Estimator                        Estimating equations
       
-        No. individuals in data = 800 
-        No. exposed individuals = 535 
-        No. unique exposure times = 535 
-        No. exposed individuals with event(s) = 535 
-        267 symmetric pairs were created
-        8% of the included observation time was used
+      Sample
+        Individuals                      800
+        Exposed individuals              535
+        Exposure episodes                535
+        Individuals with >=1 event       535
+        Exposed + event                  535
+        Symmetric pairs                  267
+        Observation time used            8.00%
       
-      Final estimate: Inf 
+      Effect estimate
+        No finite estimate available.
       
-      Estimated using: exp(0.5 * log(2/0))
+      Estimation
+        Estimating equation: exp{1/2 log(2 / 0)}
+        |A_n| / |E_n|^2: 0
+      ──────────────────────────────────────────────────────────────
 
 # pairs='one', estimator='none'
 
     Code
       summary(out)
     Output
-      Symmetric Pair Matching  Formula: Surv(start, stop, Y) ~ A 
-        Risk period: 40 
+      ──────────────────────────────────────────────────────────────
+      Symmetric Pair Matching Design
+      ──────────────────────────────────────────────────────────────
+      Design
+        Risk period                      40
+        Pairing strategy                 One pair per individual
+        Estimator                        None
       
-        No. individuals in data = 800 
-        No. exposed individuals = 774 
-        No. unique exposure times = 774 
-        No. exposed individuals with event(s) = 535 
-        385 symmetric pairs were created
-        8% of the included observation time was used
+      Sample
+        Individuals                      800
+        Exposed individuals              774
+        Exposure episodes                774
+        Individuals with >=1 event       535
+        Exposed + event                  535
+        Symmetric pairs                  385
+        Observation time used            8.00%
       
-      No estimation was done.
-      
+      Effect estimate
+        No finite estimate available.
+      ──────────────────────────────────────────────────────────────
 
 # pairs='random', estimator='moments'
 
     Code
       summary(out)
     Output
-      Symmetric Pair Matching using an estimating equation based estimator
-        Formula: Surv(start, stop, Y) ~ A 
-        Risk period: 40 
+      ──────────────────────────────────────────────────────────────
+      Symmetric Pair Matching Design
+      ──────────────────────────────────────────────────────────────
+      Design
+        Risk period                      40
+        Pairing strategy                 Random pairs (500)
+        Estimator                        Estimating equations
       
-        No. individuals in data = 800 
-        No. exposed individuals = 535 
-        No. unique exposure times = 535 
-        No. exposed individuals with event(s) = 535 
-        500 symmetric pairs were created
-        12.33% of the included observation time was used
+      Sample
+        Individuals                      800
+        Exposed individuals              535
+        Exposure episodes                535
+        Individuals with >=1 event       535
+        Exposed + event                  535
+        Symmetric pairs                  500
+        Observation time used            12.33%
       
-      Final estimate: 3.464 
+      Effect estimate
+        log(RR)    RR
+        1.242      3.464
       
-      Estimated using: exp(0.5 * log(12/1))
+      Estimation
+        Estimating equation: exp{1/2 log(12 / 1)}
+        |A_n| / |E_n|^2: 2.9824e-08
+      ──────────────────────────────────────────────────────────────
 
 # pairs='random', estimator='moments', bootstrap=TRUE
 
     Code
       summary(out)
     Output
-      Symmetric Pair Matching using an estimating equation based estimator
-        Formula: Surv(start, stop, Y) ~ A 
-        Risk period: 40 
+      ──────────────────────────────────────────────────────────────
+      Symmetric Pair Matching Design
+      ──────────────────────────────────────────────────────────────
+      Design
+        Risk period                      40
+        Pairing strategy                 Random pairs (500)
+        Estimator                        Estimating equations
       
-        No. individuals in data = 800 
-        No. exposed individuals = 535 
-        No. unique exposure times = 535 
-        No. exposed individuals with event(s) = 535 
-        500 symmetric pairs were created
-        12.33% of the included observation time was used
+      Sample
+        Individuals                      800
+        Exposed individuals              535
+        Exposure episodes                535
+        Individuals with >=1 event       535
+        Exposed + event                  535
+        Symmetric pairs                  500
+        Observation time used            12.33%
       
-      Final estimate: 3.464 
-      95% CI: [1.414; Inf]
-      P-Value: 0.1 
+      Effect estimate
+        log(RR)    RR         SE         95% CI          P-value
+        1.242      3.464      NaN        1.414 – Inf     0.1
       
-      Estimated using: exp(0.5 * log(12/1))
-      Bootstrap CI based on 10 bootstrap replications
+      Bootstrap: 10 replicates
+      
+      Estimation
+        Estimating equation: exp{1/2 log(12 / 1)}
+        |A_n| / |E_n|^2: 2.9824e-08
+      ──────────────────────────────────────────────────────────────
 
 # pairs='all', estimator='moments'
 
     Code
       summary(out)
     Output
-      Symmetric Pair Matching using an estimating equation based estimator
-        Formula: Surv(start, stop, Y) ~ A 
-        Risk period: 40 
+      ──────────────────────────────────────────────────────────────
+      Symmetric Pair Matching Design
+      ──────────────────────────────────────────────────────────────
+      Design
+        Risk period                      40
+        Pairing strategy                 All possible pairs
+        Estimator                        Estimating equations
       
-        No. individuals in data = 800 
-        No. exposed individuals = 535 
-        No. unique exposure times = 535 
-        No. exposed individuals with event(s) = 535 
-        121412 symmetric pairs were created
-        97.91% of the included observation time was used
+      Sample
+        Individuals                      800
+        Exposed individuals              535
+        Exposure episodes                535
+        Individuals with >=1 event       535
+        Exposed + event                  535
+        Symmetric pairs                  121,412
+        Observation time used            97.91%
       
-      Final estimate: 3.3 
+      Effect estimate
+        log(RR)    RR
+        1.194      3.300
       
-      Estimated using: exp(0.5 * log(1895/174))
+      Estimation
+        Estimating equation: exp{1/2 log(1,895 / 174)}
+        |A_n| / |E_n|^2: 5.093083e-13
+      ──────────────────────────────────────────────────────────────
 
 # pairs='one', estimator='glmm'
 
     Code
       summary(out)
     Output
-      Symmetric Pair Matching using a generalized linear mixed model based estimator
-        Formula: Surv(start, stop, Y) ~ A 
-        Risk period: 40 
+      ──────────────────────────────────────────────────────────────
+      Symmetric Pair Matching Design
+      ──────────────────────────────────────────────────────────────
+      Design
+        Risk period                      40
+        Pairing strategy                 One pair per individual
+        Estimator                        Generalized linear mixed model
       
-        No. individuals in data = 800 
-        No. exposed individuals = 774 
-        No. unique exposure times = 774 
-        No. exposed individuals with event(s) = 535 
-        385 symmetric pairs were created
-        8% of the included observation time was used
+      Sample
+        Individuals                      800
+        Exposed individuals              774
+        Exposure episodes                774
+        Individuals with >=1 event       535
+        Exposed + event                  535
+        Symmetric pairs                  385
+        Observation time used            8.00%
       
-      Final estimate: 3.908 
-      
+      Effect estimate
+        log(RR)    RR
+        1.363      3.908
+      ──────────────────────────────────────────────────────────────
 
 # pairs='random', estimator='glmm'
 
     Code
       summary(out)
     Output
-      Symmetric Pair Matching using an estimating equation based estimator
-        Formula: Surv(start, stop, Y) ~ A 
-        Risk period: 40 
+      ──────────────────────────────────────────────────────────────
+      Symmetric Pair Matching Design
+      ──────────────────────────────────────────────────────────────
+      Design
+        Risk period                      40
+        Pairing strategy                 Random pairs (300)
+        Estimator                        Estimating equations
       
-        No. individuals in data = 800 
-        No. exposed individuals = 535 
-        No. unique exposure times = 535 
-        No. exposed individuals with event(s) = 535 
-        300 symmetric pairs were created
-        10.46% of the included observation time was used
+      Sample
+        Individuals                      800
+        Exposed individuals              535
+        Exposure episodes                535
+        Individuals with >=1 event       535
+        Exposed + event                  535
+        Symmetric pairs                  300
+        Observation time used            10.46%
       
-      Final estimate: Inf 
+      Effect estimate
+        No finite estimate available.
       
-      Estimated using: exp(0.5 * log(5/0))
+      Estimation
+        Estimating equation: exp{1/2 log(5 / 0)}
+        |A_n| / |E_n|^2: 8.938272e-08
+      ──────────────────────────────────────────────────────────────
 
 # pairs='all', estimator='moments', with bootstrap
 
     Code
       summary(out)
     Output
-      Symmetric Pair Matching using an estimating equation based estimator
-        Formula: Surv(start, stop, Y) ~ A 
-        Risk period: 40 
+      ──────────────────────────────────────────────────────────────
+      Symmetric Pair Matching Design
+      ──────────────────────────────────────────────────────────────
+      Design
+        Risk period                      40
+        Pairing strategy                 All possible pairs
+        Estimator                        Estimating equations
       
-        No. individuals in data = 800 
-        No. exposed individuals = 535 
-        No. unique exposure times = 535 
-        No. exposed individuals with event(s) = 535 
-        121412 symmetric pairs were created
-        97.91% of the included observation time was used
+      Sample
+        Individuals                      800
+        Exposed individuals              535
+        Exposure episodes                535
+        Individuals with >=1 event       535
+        Exposed + event                  535
+        Symmetric pairs                  121,412
+        Observation time used            97.91%
       
-      Final estimate: 3.3 
+      Effect estimate
+        log(RR)    RR
+        1.194      3.300
       
-      Estimated using: exp(0.5 * log(1895/174))
+      Estimation
+        Estimating equation: exp{1/2 log(1,895 / 174)}
+        |A_n| / |E_n|^2: 5.093083e-13
+      ──────────────────────────────────────────────────────────────
 
