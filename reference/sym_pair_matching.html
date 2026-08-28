@@ -148,12 +148,14 @@
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Returns a <code>SPMD</code> object, containing the following objects:</p>
 <ul><li><p><code>d_matches</code>: A <code>data.table</code> containing the matched pairs.</p></li>
+<li><p><code>d_events</code>: A <code>data.table</code> containing the events and associated <code>id</code>s from all relevant individuals.</p></li>
 <li><p><code>inputs</code>: A <code>list</code> containing the arguments supplied by the user.</p></li>
 <li><p><code>est</code>: A single number containing the estimated relative risk.</p></li>
 <li><p><code>d_counts</code>: If <code>estimator="moments"</code>, a <code>data.table</code> containing the four event counts per matched pair.</p></li>
 <li><p><code>l_sums</code>: If <code>estimator="moments"</code>, a <code>list</code> containing the two sums used in the estimator.</p></li>
 <li><p><code>model</code>: If <code>estimator="glmm"</code>, an object of class <code>merMod</code>, which is the generalized linear model used to calculate the estimate.</p></li>
 <li><p><code>d_time_used</code>: A <code>data.table</code> containing the amount of observation time used for each individual included in the matching process.</p></li>
+<li><p><code>convergence</code>: A <code>list</code> containing three numbers: <code>A_n</code> (the number of pairs of pairs that contain at least one overlapping individual, if ordered pairs are considered), <code>E_n</code> (the number of possible pairs of pairs, if ordered pairs are considered) and <code>ratio</code> (A_n / E_n^2). All of these numbers are estimated with respect to the pairs actually used.</p></li>
 <li><p><code>sizes</code>: A <code>list</code> containing various numbers describing the used sample sizes.</p></li>
 </ul><p>If <code>bootstrap=TRUE</code> was used, the output additionally contains:</p>
 <ul><li><p><code>ci</code>: A numeric vector of length 2, containing the confidence interval.</p></li>
@@ -183,20 +185,31 @@
 <span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">sym_pair_matching</span><span class="op">(</span><span class="fu">Surv</span><span class="op">(</span><span class="va">start</span>, <span class="va">stop</span>, <span class="va">Y</span><span class="op">)</span> <span class="op">~</span> <span class="va">A</span>, data<span class="op">=</span><span class="va">data</span>, id<span class="op">=</span><span class="st">".id"</span>,</span></span>
 <span class="r-in"><span>                         risk_period<span class="op">=</span><span class="fl">40</span>, pairs<span class="op">=</span><span class="st">"all"</span>, estimator<span class="op">=</span><span class="st">"moments"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Symmetric Pair Matching using an estimating equation based estimator</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Formula: Surv(start, stop, Y) ~ A </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Risk period: 40 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ──────────────────────────────────────────────────────────────</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Symmetric Pair Matching Design</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ──────────────────────────────────────────────────────────────</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Design</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Risk period                      40</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Pairing strategy                 All possible pairs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Estimator                        Estimating equations</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   No. individuals in data = 500 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   No. exposed individuals = 334 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   No. unique exposure times = 334 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   No. exposed individuals with event(s) = 334 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   47252 symmetric pairs were created</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   95.84% of the included observation time was used</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Sample</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Individuals                      500</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Exposed individuals              334</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Exposure episodes                334</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Individuals with &gt;=1 event       334</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Exposed + event                  334</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Symmetric pairs                  47,252</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Observation time used            95.84%</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Final estimate: 2.468 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Effect estimate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   log(RR)    RR</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   0.903      2.468</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Estimated using: exp(0.5 * log(676/111))</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Estimation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Estimating equation: exp{1/2 log(676 / 111)}</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   |A_n| / |E_n|^2: 5.388323e-12</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ──────────────────────────────────────────────────────────────</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

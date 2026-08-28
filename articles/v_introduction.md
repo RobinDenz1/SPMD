@@ -187,20 +187,31 @@ the results using the associated
 ``` r
 
 summary(out)
-#> Symmetric Pair Matching using an estimating equation based estimator
-#>   Formula: Surv(start, stop, Y) ~ A 
-#>   Risk period: 30 
+#> ──────────────────────────────────────────────────────────────
+#> Symmetric Pair Matching Design
+#> ──────────────────────────────────────────────────────────────
+#> Design
+#>   Risk period                      30
+#>   Pairing strategy                 All possible pairs
+#>   Estimator                        Estimating equations
 #> 
-#>   No. individuals in data = 500 
-#>   No. exposed individuals = 339 
-#>   No. unique exposure times = 339 
-#>   No. exposed individuals with event(s) = 339 
-#>   51233 symmetric pairs were created
-#>   94.21% of the included observation time was used
+#> Sample
+#>   Individuals                      500
+#>   Exposed individuals              339
+#>   Exposure episodes                339
+#>   Individuals with >=1 event       339
+#>   Exposed + event                  339
+#>   Symmetric pairs                  51,233
+#>   Observation time used            94.21%
 #> 
-#> Final estimate: 2.343 
+#> Effect estimate
+#>   log(RR)    RR
+#>   0.851      2.343
 #> 
-#> Estimated using: exp(0.5 * log(225/41))
+#> Estimation
+#>   Estimating equation: exp{1/2 log(225 / 41)}
+#>   |A_n| / |E_n|^2: 4.492573e-12
+#> ──────────────────────────────────────────────────────────────
 ```
 
 ## Creating the Matched Pairs
@@ -432,23 +443,33 @@ out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                          pairs="all", estimator="moments", risk_period=30,
                          bootstrap=TRUE, n_boot=1000)
 summary(out)
-#> Symmetric Pair Matching using an estimating equation based estimator
-#>   Formula: Surv(start, stop, Y) ~ A 
-#>   Risk period: 30 
+#> ──────────────────────────────────────────────────────────────
+#> Symmetric Pair Matching Design
+#> ──────────────────────────────────────────────────────────────
+#> Design
+#>   Risk period                      30
+#>   Pairing strategy                 All possible pairs
+#>   Estimator                        Estimating equations
 #> 
-#>   No. individuals in data = 500 
-#>   No. exposed individuals = 339 
-#>   No. unique exposure times = 339 
-#>   No. exposed individuals with event(s) = 339 
-#>   51233 symmetric pairs were created
-#>   94.21% of the included observation time was used
+#> Sample
+#>   Individuals                      500
+#>   Exposed individuals              339
+#>   Exposure episodes                339
+#>   Individuals with >=1 event       339
+#>   Exposed + event                  339
+#>   Symmetric pairs                  51,233
+#>   Observation time used            94.21%
 #> 
-#> Final estimate: 2.343 
-#> 95% CI: [1.356; 3.855]
-#> P-Value: 0.006 
+#> Effect estimate
+#>   log(RR)    RR         SE         95% CI          P-value
+#>   0.851      2.343      0.649      1.356 – 3.855   0.006
 #> 
-#> Estimated using: exp(0.5 * log(225/41))
-#> Bootstrap CI based on 1000 bootstrap replications
+#> Bootstrap: 1,000 replicates
+#> 
+#> Estimation
+#>   Estimating equation: exp{1/2 log(225 / 41)}
+#>   |A_n| / |E_n|^2: 4.492573e-12
+#> ──────────────────────────────────────────────────────────────
 ```
 
 Here, we first draw `n_boot` random samples with replacement from all

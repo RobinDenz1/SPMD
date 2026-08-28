@@ -280,20 +280,31 @@ we can show the results using the associated <code><a href="https://rdrr.io/r/ba
 method:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Symmetric Pair Matching using an estimating equation based estimator</span></span>
-<span><span class="co">#&gt;   Formula: Surv(start, stop, Y) ~ A </span></span>
-<span><span class="co">#&gt;   Risk period: 30 </span></span>
+<span><span class="co">#&gt; ──────────────────────────────────────────────────────────────</span></span>
+<span><span class="co">#&gt; Symmetric Pair Matching Design</span></span>
+<span><span class="co">#&gt; ──────────────────────────────────────────────────────────────</span></span>
+<span><span class="co">#&gt; Design</span></span>
+<span><span class="co">#&gt;   Risk period                      30</span></span>
+<span><span class="co">#&gt;   Pairing strategy                 All possible pairs</span></span>
+<span><span class="co">#&gt;   Estimator                        Estimating equations</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   No. individuals in data = 500 </span></span>
-<span><span class="co">#&gt;   No. exposed individuals = 339 </span></span>
-<span><span class="co">#&gt;   No. unique exposure times = 339 </span></span>
-<span><span class="co">#&gt;   No. exposed individuals with event(s) = 339 </span></span>
-<span><span class="co">#&gt;   51233 symmetric pairs were created</span></span>
-<span><span class="co">#&gt;   94.21% of the included observation time was used</span></span>
+<span><span class="co">#&gt; Sample</span></span>
+<span><span class="co">#&gt;   Individuals                      500</span></span>
+<span><span class="co">#&gt;   Exposed individuals              339</span></span>
+<span><span class="co">#&gt;   Exposure episodes                339</span></span>
+<span><span class="co">#&gt;   Individuals with &gt;=1 event       339</span></span>
+<span><span class="co">#&gt;   Exposed + event                  339</span></span>
+<span><span class="co">#&gt;   Symmetric pairs                  51,233</span></span>
+<span><span class="co">#&gt;   Observation time used            94.21%</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Final estimate: 2.343 </span></span>
+<span><span class="co">#&gt; Effect estimate</span></span>
+<span><span class="co">#&gt;   log(RR)    RR</span></span>
+<span><span class="co">#&gt;   0.851      2.343</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Estimated using: exp(0.5 * log(225/41))</span></span></code></pre></div>
+<span><span class="co">#&gt; Estimation</span></span>
+<span><span class="co">#&gt;   Estimating equation: exp{1/2 log(225 / 41)}</span></span>
+<span><span class="co">#&gt;   |A_n| / |E_n|^2: 4.492573e-12</span></span>
+<span><span class="co">#&gt; ──────────────────────────────────────────────────────────────</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="creating-the-matched-pairs">Creating the Matched Pairs<a class="anchor" aria-label="anchor" href="#creating-the-matched-pairs"></a>
@@ -505,23 +516,33 @@ bootstrapping, which is implemented into the
 <span>                         pairs<span class="op">=</span><span class="st">"all"</span>, estimator<span class="op">=</span><span class="st">"moments"</span>, risk_period<span class="op">=</span><span class="fl">30</span>,</span>
 <span>                         bootstrap<span class="op">=</span><span class="cn">TRUE</span>, n_boot<span class="op">=</span><span class="fl">1000</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Symmetric Pair Matching using an estimating equation based estimator</span></span>
-<span><span class="co">#&gt;   Formula: Surv(start, stop, Y) ~ A </span></span>
-<span><span class="co">#&gt;   Risk period: 30 </span></span>
+<span><span class="co">#&gt; ──────────────────────────────────────────────────────────────</span></span>
+<span><span class="co">#&gt; Symmetric Pair Matching Design</span></span>
+<span><span class="co">#&gt; ──────────────────────────────────────────────────────────────</span></span>
+<span><span class="co">#&gt; Design</span></span>
+<span><span class="co">#&gt;   Risk period                      30</span></span>
+<span><span class="co">#&gt;   Pairing strategy                 All possible pairs</span></span>
+<span><span class="co">#&gt;   Estimator                        Estimating equations</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   No. individuals in data = 500 </span></span>
-<span><span class="co">#&gt;   No. exposed individuals = 339 </span></span>
-<span><span class="co">#&gt;   No. unique exposure times = 339 </span></span>
-<span><span class="co">#&gt;   No. exposed individuals with event(s) = 339 </span></span>
-<span><span class="co">#&gt;   51233 symmetric pairs were created</span></span>
-<span><span class="co">#&gt;   94.21% of the included observation time was used</span></span>
+<span><span class="co">#&gt; Sample</span></span>
+<span><span class="co">#&gt;   Individuals                      500</span></span>
+<span><span class="co">#&gt;   Exposed individuals              339</span></span>
+<span><span class="co">#&gt;   Exposure episodes                339</span></span>
+<span><span class="co">#&gt;   Individuals with &gt;=1 event       339</span></span>
+<span><span class="co">#&gt;   Exposed + event                  339</span></span>
+<span><span class="co">#&gt;   Symmetric pairs                  51,233</span></span>
+<span><span class="co">#&gt;   Observation time used            94.21%</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Final estimate: 2.343 </span></span>
-<span><span class="co">#&gt; 95% CI: [1.356; 3.855]</span></span>
-<span><span class="co">#&gt; P-Value: 0.006 </span></span>
+<span><span class="co">#&gt; Effect estimate</span></span>
+<span><span class="co">#&gt;   log(RR)    RR         SE         95% CI          P-value</span></span>
+<span><span class="co">#&gt;   0.851      2.343      0.649      1.356 – 3.855   0.006</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Estimated using: exp(0.5 * log(225/41))</span></span>
-<span><span class="co">#&gt; Bootstrap CI based on 1000 bootstrap replications</span></span></code></pre></div>
+<span><span class="co">#&gt; Bootstrap: 1,000 replicates</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Estimation</span></span>
+<span><span class="co">#&gt;   Estimating equation: exp{1/2 log(225 / 41)}</span></span>
+<span><span class="co">#&gt;   |A_n| / |E_n|^2: 4.492573e-12</span></span>
+<span><span class="co">#&gt; ──────────────────────────────────────────────────────────────</span></span></code></pre></div>
 <p>Here, we first draw <code>n_boot</code> random samples with
 replacement from all individuals, where the size of the samples is equal
 to the number of unique individuals in the dataset. Then, we apply the

@@ -111,23 +111,33 @@
 <span>                          id<span class="op">=</span><span class="st">".id"</span>, risk_period<span class="op">=</span><span class="fl">40</span>, pairs<span class="op">=</span><span class="st">"all"</span>,</span>
 <span>                          estimator<span class="op">=</span><span class="st">"moments"</span>, bootstrap<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spmd</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Symmetric Pair Matching using an estimating equation based estimator</span></span>
-<span><span class="co">#&gt;   Formula: Surv(start, stop, Y) ~ A </span></span>
-<span><span class="co">#&gt;   Risk period: 40 </span></span>
+<span><span class="co">#&gt; ──────────────────────────────────────────────────────────────</span></span>
+<span><span class="co">#&gt; Symmetric Pair Matching Design</span></span>
+<span><span class="co">#&gt; ──────────────────────────────────────────────────────────────</span></span>
+<span><span class="co">#&gt; Design</span></span>
+<span><span class="co">#&gt;   Risk period                      40</span></span>
+<span><span class="co">#&gt;   Pairing strategy                 All possible pairs</span></span>
+<span><span class="co">#&gt;   Estimator                        Estimating equations</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   No. individuals in data = 500 </span></span>
-<span><span class="co">#&gt;   No. exposed individuals = 339 </span></span>
-<span><span class="co">#&gt;   No. unique exposure times = 339 </span></span>
-<span><span class="co">#&gt;   No. exposed individuals with event(s) = 339 </span></span>
-<span><span class="co">#&gt;   49247 symmetric pairs were created</span></span>
-<span><span class="co">#&gt;   96.57% of the included observation time was used</span></span>
+<span><span class="co">#&gt; Sample</span></span>
+<span><span class="co">#&gt;   Individuals                      500</span></span>
+<span><span class="co">#&gt;   Exposed individuals              339</span></span>
+<span><span class="co">#&gt;   Exposure episodes                339</span></span>
+<span><span class="co">#&gt;   Individuals with &gt;=1 event       339</span></span>
+<span><span class="co">#&gt;   Exposed + event                  339</span></span>
+<span><span class="co">#&gt;   Symmetric pairs                  49,247</span></span>
+<span><span class="co">#&gt;   Observation time used            96.57%</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Final estimate: 2.457 </span></span>
-<span><span class="co">#&gt; 95% CI: [1.596; 3.718]</span></span>
-<span><span class="co">#&gt; P-Value: 0.001 </span></span>
+<span><span class="co">#&gt; Effect estimate</span></span>
+<span><span class="co">#&gt;   log(RR)    RR         SE         95% CI          P-value</span></span>
+<span><span class="co">#&gt;   0.899      2.457      0.542      1.596 – 3.718   0.001</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Estimated using: exp(0.5 * log(489/81))</span></span>
-<span><span class="co">#&gt; Bootstrap CI based on 1000 bootstrap replications</span></span></code></pre></div>
+<span><span class="co">#&gt; Bootstrap: 1,000 replicates</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Estimation</span></span>
+<span><span class="co">#&gt;   Estimating equation: exp{1/2 log(489 / 81)}</span></span>
+<span><span class="co">#&gt;   |A_n| / |E_n|^2: 4.872991e-12</span></span>
+<span><span class="co">#&gt; ──────────────────────────────────────────────────────────────</span></span></code></pre></div>
 <p>The true effect is 2.5 (see <code><a href="reference/sim_example_data.html">?sim_example_data</a></code>), so the estimate is actually very close.</p>
 </div>
 <div class="section level2">

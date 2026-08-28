@@ -58,8 +58,9 @@
 </dl></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Since symmetric pair matching by design cannot use all data, it is important to understand what data is actually being used. First, all individuals who were never exposed are discarded, since they can never be used. Secondly, all exposures that occur <code>risk_period</code> time units before the individuals observation end (right-censoring) can also not be used, since then we would be unable to observe the full event count. Furthermore, when using <code>estimator="moments"</code>, individuals that never experienced an event cannot meaningfully contribute to the estimation, since event counts are multiplied across individuals. Additionally, only individuals who can be matched to someone else can be included, although this is usually not a problem in practice, since we do not match on any covariates directly.</p>
+    <p>Since symmetric pair matching by design cannot use all data, it is important to understand what data is actually being used. First, all individuals who were never exposed are discarded, since they can never be used. Furthermore, when using <code>estimator="moments"</code>, individuals that never experienced an event cannot meaningfully contribute to the estimation, since event counts are multiplied across individuals. Additionally, only individuals who can be matched to someone else can be included, although this is usually not a problem in practice, since we do not match on any covariates directly.</p>
 <p>Finally, when an exposure instance of an individual is included in the matched data, only the <code>risk_period</code> time units after exposure and at the control time directly enter the calculations, the rest of the individuals observation time remains unused. When using <code>pairs="one"</code>, this means that very little of the actual observation time of included units is used. To check how much is used, the percentage of the total time used amongst the ever included indiviiduals is included in the output. It may be used to get a rough idea how to specify <code>n_pairs</code> when using <code>pairs="random"</code>.</p>
+<p>When <code>estimator="moments"</code> is used, the output also shows the estimating equation used, as well as the ratio \(|A_n| / |E_n|^2\), where \(|A_n|\) is the number of pairs of pairs that share at least one individual and \(|E_n|\) is the number of all possible pairs (both counting ordered pairs). The ratio should be close to 0, otherwise pair-dependence might have influenced the estimates. See appendix B of the main paper.</p>
     </div>
     <div class="section level2">
     <h2 id="author">Author<a class="anchor" aria-label="anchor" href="#author"></a></h2>
@@ -67,11 +68,11 @@
     </div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Returns <code>NULL</code>.</p>
+    <p>Returns an object of class <code>summary.SPMD</code>. This object stores some of the information of the original <code>SPMD</code> object in a more convenient fashion.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="sym_pair_matching.html">sym_pair_matching</a></code></p></div>
+    <div class="dont-index"><p><code><a href="sym_pair_matching.html">sym_pair_matching</a></code>, <code><a href="plot.SPMD.html">plot.SPMD</a></code></p></div>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -98,20 +99,31 @@
 <span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="sym_pair_matching.html">sym_pair_matching</a></span><span class="op">(</span><span class="fu">Surv</span><span class="op">(</span><span class="va">start</span>, <span class="va">stop</span>, <span class="va">Y</span><span class="op">)</span> <span class="op">~</span> <span class="va">A</span>, data<span class="op">=</span><span class="va">data</span>, id<span class="op">=</span><span class="st">".id"</span>,</span></span>
 <span class="r-in"><span>                         risk_period<span class="op">=</span><span class="fl">40</span>, pairs<span class="op">=</span><span class="st">"all"</span>, estimator<span class="op">=</span><span class="st">"moments"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Symmetric Pair Matching using an estimating equation based estimator</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Formula: Surv(start, stop, Y) ~ A </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Risk period: 40 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ──────────────────────────────────────────────────────────────</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Symmetric Pair Matching Design</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ──────────────────────────────────────────────────────────────</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Design</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Risk period                      40</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Pairing strategy                 All possible pairs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Estimator                        Estimating equations</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   No. individuals in data = 100 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   No. exposed individuals = 68 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   No. unique exposure times = 68 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   No. exposed individuals with event(s) = 68 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   1931 symmetric pairs were created</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   70.45% of the included observation time was used</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Sample</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Individuals                      100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Exposed individuals              68</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Exposure episodes                68</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Individuals with &gt;=1 event       68</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Exposed + event                  68</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Symmetric pairs                  1,931</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Observation time used            70.45%</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Final estimate: 1.5 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Effect estimate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   log(RR)    RR</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   0.405      1.500</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Estimated using: exp(0.5 * log(9/4))</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Estimation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Estimating equation: exp{1/2 log(9 / 4)}</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   |A_n| / |E_n|^2: 1.56274e-08</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ──────────────────────────────────────────────────────────────</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

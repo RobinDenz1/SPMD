@@ -323,6 +323,9 @@ Returns a `SPMD` object, containing the following objects:
 
 - `d_matches`: A `data.table` containing the matched pairs.
 
+- `d_events`: A `data.table` containing the events and associated `id`s
+  from all relevant individuals.
+
 - `inputs`: A `list` containing the arguments supplied by the user.
 
 - `est`: A single number containing the estimated relative risk.
@@ -338,6 +341,13 @@ Returns a `SPMD` object, containing the following objects:
 
 - `d_time_used`: A `data.table` containing the amount of observation
   time used for each individual included in the matching process.
+
+- `convergence`: A `list` containing three numbers: `A_n` (the number of
+  pairs of pairs that contain at least one overlapping individual, if
+  ordered pairs are considered), `E_n` (the number of possible pairs of
+  pairs, if ordered pairs are considered) and `ratio` (A_n / E_n^2). All
+  of these numbers are estimated with respect to the pairs actually
+  used.
 
 - `sizes`: A `list` containing various numbers describing the used
   sample sizes.
@@ -382,18 +392,29 @@ data <- sim_example_data(n=500)
 out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                          risk_period=40, pairs="all", estimator="moments")
 summary(out)
-#> Symmetric Pair Matching using an estimating equation based estimator
-#>   Formula: Surv(start, stop, Y) ~ A 
-#>   Risk period: 40 
+#> ──────────────────────────────────────────────────────────────
+#> Symmetric Pair Matching Design
+#> ──────────────────────────────────────────────────────────────
+#> Design
+#>   Risk period                      40
+#>   Pairing strategy                 All possible pairs
+#>   Estimator                        Estimating equations
 #> 
-#>   No. individuals in data = 500 
-#>   No. exposed individuals = 334 
-#>   No. unique exposure times = 334 
-#>   No. exposed individuals with event(s) = 334 
-#>   47252 symmetric pairs were created
-#>   95.84% of the included observation time was used
+#> Sample
+#>   Individuals                      500
+#>   Exposed individuals              334
+#>   Exposure episodes                334
+#>   Individuals with >=1 event       334
+#>   Exposed + event                  334
+#>   Symmetric pairs                  47,252
+#>   Observation time used            95.84%
 #> 
-#> Final estimate: 2.468 
+#> Effect estimate
+#>   log(RR)    RR
+#>   0.903      2.468
 #> 
-#> Estimated using: exp(0.5 * log(676/111))
+#> Estimation
+#>   Estimating equation: exp{1/2 log(676 / 111)}
+#>   |A_n| / |E_n|^2: 5.388323e-12
+#> ──────────────────────────────────────────────────────────────
 ```
