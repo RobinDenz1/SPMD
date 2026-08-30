@@ -210,7 +210,7 @@ summary(out)
 #> 
 #> Estimation
 #>   Estimating equation: exp{1/2 log(225 / 41)}
-#>   |A_n| / |E_n|^2: 4.492573e-12
+#>   |A_n| / |E_n|^2: 0.0117922
 #> ──────────────────────────────────────────────────────────────
 ```
 
@@ -468,7 +468,7 @@ summary(out)
 #> 
 #> Estimation
 #>   Estimating equation: exp{1/2 log(225 / 41)}
-#>   |A_n| / |E_n|^2: 4.492573e-12
+#>   |A_n| / |E_n|^2: 0.0117922
 #> ──────────────────────────────────────────────────────────────
 ```
 
@@ -521,7 +521,7 @@ exposure times in a pair. In the latter case, both individuals inside
 the pair are censored at the minimum censoring time when calculating
 $`X_{a2}`$ and $`X_{b2}`$. This way, the time effects still cancel out.
 For more information and required assumptions regarding censoring,
-please consult the associated paper (Denz et al. 202X).
+please consult the associated paper (Denz et al. 2026).
 
 ### Bounds of the risk period
 

@@ -14,7 +14,7 @@ sym_pair_matching(formula, data, id, risk_period, bounds="[)",
                   n_pairs=100000, batch_size=max(5000, n_pairs * 2),
                   rand_max_iter=100, bootstrap=FALSE, n_boot=1000,
                   conf_level=0.95, n_cores=1, progressbar=TRUE,
-                  ...)
+                  convergence=TRUE, ...)
 ```
 
 ## Arguments
@@ -146,6 +146,12 @@ sym_pair_matching(formula, data, id, risk_period, bounds="[)",
   Either `TRUE` or `FALSE`, specifying whether a progressbar should be
   shown when `bootstrap=TRUE`. This currently only works if
   `n_cores > 1`.
+
+- convergence:
+
+  Either `TRUE` or `FALSE`, specifying whether to calculate convergence
+  related statistics. Those are calculated by default, but may be turned
+  off to save some computation time.
 
 - ...:
 
@@ -415,6 +421,6 @@ summary(out)
 #> 
 #> Estimation
 #>   Estimating equation: exp{1/2 log(676 / 111)}
-#>   |A_n| / |E_n|^2: 5.388323e-12
+#>   |A_n| / |E_n|^2: 0.01203079
 #> ──────────────────────────────────────────────────────────────
 ```
