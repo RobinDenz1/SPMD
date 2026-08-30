@@ -261,7 +261,7 @@ Bootstrapping may become fairly computationally expensive, particularly with lar
 
 ## Censoring
 
-Right-censoring is directly supported by this package. The underlying algorithm uses pairs in which no observation period is censored, and pairs in which the right-censoring occurs after the larger of the two exposure times in a pair. In the latter case, both individuals inside the pair are censored at the minimum censoring time when calculating $X_{a2}$ and $X_{b2}$. This way, the time effects still cancel out. For more information and required assumptions regarding censoring, please consult the associated paper (Denz et al. 202X).
+Right-censoring is directly supported by this package. The underlying algorithm uses pairs in which no observation period is censored, and pairs in which the right-censoring occurs after the larger of the two exposure times in a pair. In the latter case, both individuals inside the pair are censored at the minimum censoring time when calculating $X_{a2}$ and $X_{b2}$. This way, the time effects still cancel out. For more information and required assumptions regarding censoring, please consult the associated paper (Denz et al. 2026).
 
 ## Bounds of the risk period
 

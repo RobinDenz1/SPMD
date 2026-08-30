@@ -82,7 +82,7 @@
       
       Estimation
         Estimating equation: exp{1/2 log(12 / 1)}
-        |A_n| / |E_n|^2: 2.9824e-08
+        |A_n| / |E_n|^2: 0.007456
       ──────────────────────────────────────────────────────────────
 
 # pairs='random', estimator='moments', bootstrap=TRUE
@@ -115,7 +115,7 @@
       
       Estimation
         Estimating equation: exp{1/2 log(12 / 1)}
-        |A_n| / |E_n|^2: 2.9824e-08
+        |A_n| / |E_n|^2: 0.007456
       ──────────────────────────────────────────────────────────────
 
 # pairs='all', estimator='moments'
@@ -146,7 +146,7 @@
       
       Estimation
         Estimating equation: exp{1/2 log(1,895 / 174)}
-        |A_n| / |E_n|^2: 5.093083e-13
+        |A_n| / |E_n|^2: 0.007507649
       ──────────────────────────────────────────────────────────────
 
 # pairs='one', estimator='glmm'
@@ -203,7 +203,7 @@
       
       Estimation
         Estimating equation: exp{1/2 log(5 / 0)}
-        |A_n| / |E_n|^2: 8.938272e-08
+        |A_n| / |E_n|^2: 0.008044444
       ──────────────────────────────────────────────────────────────
 
 # pairs='all', estimator='moments', with bootstrap
@@ -234,6 +234,6 @@
       
       Estimation
         Estimating equation: exp{1/2 log(1,895 / 174)}
-        |A_n| / |E_n|^2: 5.093083e-13
+        |A_n| / |E_n|^2: 0.007507649
       ──────────────────────────────────────────────────────────────
 

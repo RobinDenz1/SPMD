@@ -13,7 +13,7 @@ sym_pair_matching(formula, data, id, risk_period, bounds="[)",
                   n_pairs=100000, batch_size=max(5000, n_pairs * 2),
                   rand_max_iter=100, bootstrap=FALSE, n_boot=1000,
                   conf_level=0.95, n_cores=1, progressbar=TRUE,
-                  ...)
+                  convergence=TRUE, ...)
 }
 \arguments{
   \item{formula}{
@@ -60,6 +60,9 @@ A single integer, specifying the number of processing cores that should be used 
   }
   \item{progressbar}{
 Either \code{TRUE} or \code{FALSE}, specifying whether a progressbar should be shown when \code{bootstrap=TRUE}. This currently only works if \code{n_cores > 1}.
+  }
+  \item{convergence}{
+Either \code{TRUE} or \code{FALSE}, specifying whether to calculate convergence related statistics. Those are calculated by default, but may be turned off to save some computation time.
   }
   \item{...}{
 Further arguments passed to \code{\link[lme4]{glmer}} when using \code{estimator="glmm"}, ignored otherwise.

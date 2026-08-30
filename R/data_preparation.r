@@ -44,7 +44,6 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
 
   # add outcome event count to it
   d_matches <- add_event_count(dt_index=d_matches, dt_events=d_events,
-                               risk_period=risk_period,
                                bounds=bounds)
 
   stopifnotm(sum(d_matches$.n_events)!=0, "There were no events in the ",
@@ -69,6 +68,7 @@ get_exposure_times <- function(data) {
   data[, .A_shift := shift(.A, type="lag", fill=0), by=.id]
   d_exp <- data[.A==TRUE & .A_shift==FALSE][, c(".id", ".start", ".max_t")]
   setnames(d_exp, old=".start", new=".time")
+  data[, .A_shift := NULL]
 
   return(d_exp)
 }
@@ -114,13 +114,14 @@ preprocess_treat <- function(treat) {
 #' @importFrom data.table setnames
 #' @importFrom data.table :=
 #' @importFrom data.table fifelse
+#' @importFrom data.table copy
 prepare_start_stop <- function(data, start, stop, id, exposure, outcome,
                                remove_unexposed=TRUE, remove_noevents=TRUE) {
 
   .A <- .Y <- .id <- .start <- .max_t <- .stop <- .exposed <-
     .has_event <- NULL
 
-  data <- as.data.table(data)
+  data <- copy(as.data.table(data))
 
   # rename important columns
   setnames(data, old=c(start, stop, id, exposure, outcome),
@@ -218,7 +219,7 @@ matches2counts <- function(data, bootstrap) {
 #' @importFrom data.table :=
 #' @importFrom data.table .I
 #' @importFrom data.table .EACHI
-add_event_count <- function(dt_index, dt_events, risk_period, bounds) {
+add_event_count <- function(dt_index, dt_events, bounds) {
 
   row_id <- .end_time <- .time <- .id <- . <- .n_events <- NULL
 
@@ -258,9 +259,47 @@ add_event_count <- function(dt_index, dt_events, risk_period, bounds) {
 ## get required information from Surv() formula
 parse_surv_form <- function(formula) {
 
-  vars <- all.vars(formula)
+  # check that formula is actually a formula
+  stopifnotm(inherits(formula, "formula"),
+             "'formula' must be a formula of the form Surv(start, stop, ",
+             "outcome) ~ exposure.")
 
-  out <- list(start=vars[1], stop=vars[2], outcome=vars[3],
-              exposure=vars[4])
+  # extract formula components
+  lhs <- formula[[2]]
+  rhs <- formula[[3]]
+
+  # check that the left-hand side is Surv(...)
+  stopifnotm(is.call(lhs) && identical(lhs[[1]], as.name("Surv")),
+    "'formula' must have a Surv() object on the left-hand side, ",
+    "i.e. Surv(start, stop, outcome) ~ exposure."
+  )
+
+  # check number of arguments to Surv()
+  stopifnotm(length(lhs) == 4L, "'Surv()' must contain exactly three ",
+             "arguments: start, stop, and outcome.")
+
+  # check that all Surv() arguments are simple variable names
+  surv_vars <- lhs[-1]
+
+  stopifnotm(all(vapply(surv_vars, is.name, logical(1))),
+    "The start, stop, and outcome arguments of 'Surv()' ",
+    "must each be a variable name."
+  )
+
+  # Check that the RHS is a single variable
+  stopifnotm(is.name(rhs),
+    "'exposure' must be a single variable name; ",
+    "transformations, interactions, and multiple exposure variables ",
+    "are not supported."
+  )
+
+  # Return variable names
+  out <- list(
+    start = as.character(surv_vars[[1]]),
+    stop = as.character(surv_vars[[2]]),
+    outcome = as.character(surv_vars[[3]]),
+    exposure = as.character(rhs)
+  )
+
   return(out)
 }

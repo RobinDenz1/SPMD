@@ -196,7 +196,8 @@ print.summary.SPMD <- function(x, ...) {
     cat("\nEstimation\n")
     cat("  Estimating equation: ", x$estimating_equation, "\n", sep="")
 
-    if (x$object$inputs$estimator=="moments") {
+    if (x$object$inputs$estimator=="moments" &&
+        x$object$inputs$convergence==TRUE) {
       cat("  |A_n| / |E_n|^2: ", x$convergence$ratio, "\n", sep="")
     }
   }
@@ -204,4 +205,3 @@ print.summary.SPMD <- function(x, ...) {
   cat(line, "\n", sep = "")
   invisible(x)
 }
-

@@ -57,7 +57,6 @@ one_boot_iter <- function(ids, d_exp, d_events, pairs, n_pairs, risk_period,
 
   # add outcome event count to it
   d_matches_i <- add_event_count(dt_index=d_matches_i, dt_events=d_events,
-                                 risk_period=risk_period,
                                  bounds=bounds)
 
   if (sum(d_matches_i$.n_events)==0) {
@@ -159,10 +158,14 @@ get_boot_p_value <- function(boot_samples, null=1) {
 }
 
 ## calculate convergence statistics
+# NOTE: A_n as calculated here is actually the ordered pair quantity defined
+#       in the consistency proof divided by 4 and E_n^2 is the ordered pair
+#       denominator divided by 4, so the ratio is correct, but the single
+#       quantities are on a different scale than in the proof
 #' @importFrom data.table rbindlist
 get_convergence_stats <- function(d_counts) {
 
-  .id1 <- .id2 <- id <- d1 <- d2 <- i.N <- NULL
+  . <- .id1 <- .id2 <- id <- d1 <- d2 <- i.N <- NULL
 
   # degree of each individual
   deg <- rbindlist(list(
@@ -176,7 +179,7 @@ get_convergence_stats <- function(d_counts) {
                   , sum((d1 - 1L) + (d2 - 1L))]
 
   # number of pairs of pairs
-  E_n <- nrow(d_counts)^2
+  E_n <- nrow(d_counts)
   out <- list(A_n=A_n, E_n=E_n, ratio=A_n / (E_n^2))
 
   return(out)
@@ -200,7 +203,7 @@ warnifnotm <- function(assert, ...) {
 ## input checks for the sym_pair_matching() function
 check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
                               estimator, bootstrap, n_boot, conf_level,
-                              bounds, batch_size, rand_max_iter) {
+                              bounds, batch_size, rand_max_iter, convergence) {
 
   stopifnotm(is.data.frame(data), "'data' must be a data.frame like ",
              "object (tibbles, data.table, etc.).")
@@ -219,7 +222,7 @@ check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
   stopifnotm((is.null(n_pairs) || (length(n_pairs)==1 && is.numeric(n_pairs) &&
                                      n_pairs >= 1)),
              "'n_pairs' must be either NULL or a positive integer.")
-  stopifnotm(!(pairs=="random" && is.null(n_pairs)),
+  stopifnotm(!((pairs=="random1" | pairs=="random2") && is.null(n_pairs)),
              "'n_pairs' must be specified when pairs='random'.")
   stopifnotm((length(estimator)==1 && is.character(estimator) &&
                 estimator %in% c("none", "moments", "glmm")),
@@ -241,6 +244,8 @@ check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
   stopifnotm((length(rand_max_iter)==1 && is.numeric(rand_max_iter) &&
                 round(rand_max_iter)==rand_max_iter && rand_max_iter > 0),
              "'rand_max_iter' must be a single integer > 0.")
+  stopifnotm((length(convergence)==1 && is.logical(convergence)),
+             "'convergence' must be either TRUE or FALSE.")
 
   # check if all variables named in formula are in data
   for (i in seq_len(4)) {

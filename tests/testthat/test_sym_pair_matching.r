@@ -235,3 +235,12 @@ test_that("bootstrap, n_cores = 2, pairs = 'one', moments", {
   expect_true(length(out2$boot_est)==5)
   expect_true(is.numeric(out2$boot_est))
 })
+
+test_that("not using convergence statistics", {
+
+  out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
+                           id=".id", pairs="one", estimator="moments",
+                           risk_period=40, convergence=FALSE)
+  expect_equal(round(out$est, 2), 2.24)
+  expect_snapshot_output(summary(out))
+})

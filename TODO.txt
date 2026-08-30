@@ -1,6 +1,7 @@
 
 # TODOs
 - what should be done if some bootstrap estimates are not finite?
+- fix notation throughout documentation so that it is aligned with notation in the paper
 
 # further features
  - allow adjustment for time-dependent confounders
@@ -14,7 +15,15 @@ For the paper:
 - more explicitly mention method failures with rare events
 	-> those happen, but as shown in appendix, if the event is rare enough for the
 	   method to fail, other methods also produce biased results
-- investigate bootstrap confidence interval coverage using simulation
+- more simulations
+	- investigate bootstrap confidence interval coverage using simulation
+	- investigate assumption violations
+		- \theta varying over individuals
+		- individually varying time effects
+		- presence of a time-varying confounder
+		- interaction between time and A
+		- interaction between time and U
+		- terminal event
 - add illustrative example
 - maybe discuss how the estimand changes under effect heterogeneity
 - in the discussion, state conditions when SPM is preferable to SCCS more clearly

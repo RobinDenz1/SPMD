@@ -8,5 +8,6 @@
 ^docs$
 ^pkgdown$
 ^\.github$
+^simulation$
 ^cran-comments\.md$
 ^CRAN-SUBMISSION$

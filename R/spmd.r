@@ -6,7 +6,7 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                               n_pairs=100000, batch_size=max(5000, n_pairs * 2),
                               rand_max_iter=100, bootstrap=FALSE, n_boot=1000,
                               conf_level=0.95, n_cores=1, progressbar=TRUE,
-                              ...) {
+                              convergence=TRUE, ...) {
 
   requireNamespace("data.table", quietly=TRUE)
 
@@ -17,7 +17,8 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                     risk_period=risk_period, pairs=pairs, n_pairs=n_pairs,
                     estimator=estimator, bootstrap=bootstrap, n_boot=n_boot,
                     conf_level=conf_level, bounds=bounds,
-                    rand_max_iter=rand_max_iter, batch_size=batch_size)
+                    rand_max_iter=rand_max_iter, batch_size=batch_size,
+                    convergence=convergence)
 
   # create matched dataset
   l_data <- get_full_data(data=data,
@@ -46,7 +47,8 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                           n_boot=n_boot,
                           conf_level=conf_level,
                           rand_max_iter=rand_max_iter,
-                          batch_size=batch_size))
+                          batch_size=batch_size,
+                          convergence=convergence))
   # analyse data
   if (estimator=="moments") {
 
@@ -115,15 +117,17 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                                 risk_period=risk_period)
 
   # convergence stats when re-using pairs
-  if (pairs!="one" && estimator=="moments") {
-    convergence <- get_convergence_stats(out$d_counts)
+  if (pairs!="one" && estimator=="moments" && convergence==TRUE) {
+    est_convergence <- get_convergence_stats(out$d_counts)
+  } else if (convergence) {
+    est_convergence <- list(A_n=0, E_n=nrow(out$d_counts), ratio=0)
   } else {
-    convergence <- list(A_n=0, E_n=nrow(out$d_counts)^2, ratio=0)
+    est_convergence <- NULL
   }
 
   # add to output
   out$d_time_used <- d_time_used
-  out$convergence <- convergence
+  out$convergence <- est_convergence
   out$sizes <- list(n_total=n_total, n_exposed=n_exposed,
                     n_exposed_time=n_exposed_time,
                     n_exposures=n_exposures,
