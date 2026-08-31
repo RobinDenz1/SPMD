@@ -246,11 +246,9 @@ example, individual <code>.id = 2</code> experienced an event at exactly
 in this example dataset. This data format has two main advantages.
 First, it allows usage of continuous time. Secondly, it is much more
 memory efficient than the full long-format, because we usually have to
-store way less rows directly. To create such datasets, the
-<code>tmerge()</code> function of the <code>survival</code> package, or
-the <code>merge_start_stop()</code> function from the
-<code>MatchTime</code> package (see <a href="https://robindenz1.github.io/MatchTime/" class="external-link uri">https://robindenz1.github.io/MatchTime/</a>) may be
-used.</p>
+store way less rows directly. To create such datasets, users may use the
+provided <code><a href="../reference/prepare_spmd_data.html">prepare_spmd_data()</a></code> function, or the classic
+<code>tmerge()</code> function of the <code>survival</code> package.</p>
 </div>
 <div class="section level2">
 <h2 id="general-syntax">General Syntax<a class="anchor" aria-label="anchor" href="#general-syntax"></a>
@@ -377,8 +375,8 @@ not be used in any of the possible matches. Although using all possible
 matches is statistically very efficient, it is very heavy
 computationally. The upper limit of possible matches grows very fast and
 can be calculated as</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mrow><mi>n</mi><mo>⋅</mo><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><mn>2</mn></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">
-\frac{n \cdot (n-1)}{2},
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mrow><mi>n</mi><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><mn>2</mn></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\frac{n (n-1)}{2},
 </annotation></semantics></math></p>
 <p>where
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
@@ -467,16 +465,17 @@ estimator based on a generalized linear mixed Poisson model
 <p>Given
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>
 pairs of individuals, the estimator is defined as:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mi>m</mi></msub><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mrow><mi mathvariant="normal">ln</mi><mo>⁡</mo></mrow><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><mfrac><mn>1</mn><mi>m</mi></mfrac><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>m</mi></munderover><msub><mi>X</mi><mrow><mi>b</mi><mn>1</mn></mrow></msub><msub><mi>X</mi><mrow><mi>a</mi><mn>2</mn></mrow></msub></mrow><mrow><mfrac><mn>1</mn><mi>m</mi></mfrac><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>m</mi></munderover><msub><mi>X</mi><mrow><mi>a</mi><mn>1</mn></mrow></msub><msub><mi>X</mi><mrow><mi>b</mi><mn>2</mn></mrow></msub></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">
-\hat{\theta}_m = \frac{1}{2} \ln\! \left(\frac{\frac{1}{m}\sum_{i = 1}^m X_{b1} X_{a2}}{\frac{1}{m}\sum_{i = 1}^m X_{a1} X_{b2}}\right),
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mi>m</mi></msub><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mrow><mi mathvariant="normal">ln</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><mfrac><mn>1</mn><mi>m</mi></mfrac><munderover><mo>∑</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>m</mi></munderover><msub><mi>X</mi><mrow><mi>b</mi><mn>1</mn><mi>j</mi></mrow></msub><msub><mi>X</mi><mrow><mi>a</mi><mn>2</mn><mi>j</mi></mrow></msub></mrow><mrow><mfrac><mn>1</mn><mi>m</mi></mfrac><munderover><mo>∑</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>m</mi></munderover><msub><mi>X</mi><mrow><mi>a</mi><mn>1</mn><mi>j</mi></mrow></msub><msub><mi>X</mi><mrow><mi>b</mi><mn>2</mn><mi>j</mi></mrow></msub></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\hat{\theta}_m = \frac{1}{2} \ln \left(\frac{\displaystyle \frac{1}{m}\sum_{j = 1}^m X_{b1j} X_{a2j}}{\displaystyle\frac{1}{m}\sum_{j = 1}^m X_{a1j} X_{b2j}}\right),
 </annotation></semantics></math></p>
 <p>where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mrow><mi>a</mi><mn>1</mn></mrow></msub><annotation encoding="application/x-tex">X_{a1}</annotation></semantics></math>,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mrow><mi>a</mi><mn>2</mn></mrow></msub><annotation encoding="application/x-tex">X_{a2}</annotation></semantics></math>,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mrow><mi>b</mi><mn>1</mn></mrow></msub><annotation encoding="application/x-tex">X_{b1}</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mrow><mi>a</mi><mn>1</mn><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">X_{a1j}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mrow><mi>a</mi><mn>2</mn><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">X_{a2j}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mrow><mi>b</mi><mn>1</mn><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">X_{b1j}</annotation></semantics></math>
 and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mrow><mi>b</mi><mn>2</mn></mrow></msub><annotation encoding="application/x-tex">X_{b2}</annotation></semantics></math>
-denote the observed event counts in each “index” inside a pair.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mrow><mi>b</mi><mn>2</mn><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">X_{b2j}</annotation></semantics></math>
+denote the observed event counts in each “index” inside a pair
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>.
 Essentially, we average over individual level products of events in both
 the denominator and numerator. By taking <code><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp()</a></code> of the
 resulting
@@ -588,9 +587,9 @@ algorithm uses pairs in which no observation period is censored, and
 pairs in which the right-censoring occurs after the larger of the two
 exposure times in a pair. In the latter case, both individuals inside
 the pair are censored at the minimum censoring time when calculating
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mrow><mi>a</mi><mn>2</mn></mrow></msub><annotation encoding="application/x-tex">X_{a2}</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mrow><mi>a</mi><mn>2</mn><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">X_{a2j}</annotation></semantics></math>
 and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mrow><mi>b</mi><mn>2</mn></mrow></msub><annotation encoding="application/x-tex">X_{b2}</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mrow><mi>b</mi><mn>2</mn><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">X_{b2j}</annotation></semantics></math>.
 This way, the time effects still cancel out. For more information and
 required assumptions regarding censoring, please consult the associated
 paper (Denz et al. 2026).</p>

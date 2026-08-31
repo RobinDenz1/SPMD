@@ -190,7 +190,7 @@ considered invalid. Under the assumption that individual and time
 effects are multiplicative, the following equation holds for each valid
 pair:
 
-\$\$\theta = \frac{1}{2}\log\left(\frac{\lambda\_{b1}
+\$\$\displaystyle \theta = \frac{1}{2}\ln\left(\frac{\lambda\_{b1}
 \lambda\_{a2}}{\lambda\_{a1} \lambda\_{b2}}\right),\$\$
 
 where the four \\\lambda\\s are the event rates for each row (see
@@ -211,7 +211,10 @@ hazards model using the survival package. Each row should correspond to
 a time duration (defined by a `start` and `stop` time value) in which no
 covariates changed. Covariate changes should occur at `start` and events
 should occur exactly at `stop`. Events are expected to be binary and
-only binary exposures are supported.
+only binary exposures are supported. A simple convenience function to
+create such data from raw exposure and event times is given in this
+package through
+[`prepare_spmd_data`](https://robindenz1.github.io/SPMD/reference/prepare_spmd_data.md).
 
 Ideally, the exposure specified on the RHS of the `formula` argument is
 coded as a logical variable, where `TRUE` corresponds to the "exposed"
@@ -276,8 +279,8 @@ using `estimator="glmm"`, or when the `data` is extremly large.
 This package implements two kinds of estimators. The main one
 (`estimator="moments"`) is simply:
 
-\$\$\hat{\theta}\_n = \frac{1}{2}\log\left(\frac{\sum_i X\_{b1}
-X\_{a2}}{\sum_i X\_{a1} X\_{b2}}\right),\$\$
+\$\$\displaystyle \hat{\theta}\_n = \frac{1}{2}\ln\left(\frac{\sum_j
+X\_{b1j} X\_{a2j}}{\sum_j X\_{a1j} X\_{b2j}}\right),\$\$
 
 where \\X\\ represents the event counts observed in the `risk_period`
 time units after `time` in each `group` (exact definitions of the
@@ -372,7 +375,8 @@ If `bootstrap=TRUE` was used, the output additionally contains:
 ## See also
 
 [`summary.SPMD`](https://robindenz1.github.io/SPMD/reference/summary.SPMD.md),
-[`plot.SPMD`](https://robindenz1.github.io/SPMD/reference/plot.SPMD.md)
+[`plot.SPMD`](https://robindenz1.github.io/SPMD/reference/plot.SPMD.md),
+[`prepare_spmd_data`](https://robindenz1.github.io/SPMD/reference/prepare_spmd_data.md)
 
 ## References
 

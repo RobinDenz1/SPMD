@@ -13,5 +13,11 @@
 
   Plot a `SPMD` object
 
+- [`prepare_spmd_data()`](https://robindenz1.github.io/SPMD/reference/prepare_spmd_data.md)
+  :
+
+  Prepare data for
+  [`sym_pair_matching()`](https://robindenz1.github.io/SPMD/reference/sym_pair_matching.md)
+
 - [`sim_example_data()`](https://robindenz1.github.io/SPMD/reference/sim_example_data.md)
   : Simulate Some Simple Example Data

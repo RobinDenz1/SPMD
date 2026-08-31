@@ -150,10 +150,10 @@ individual `.id = 2` experienced an event at exactly $`t = 623`$ in this
 example dataset. This data format has two main advantages. First, it
 allows usage of continuous time. Secondly, it is much more memory
 efficient than the full long-format, because we usually have to store
-way less rows directly. To create such datasets, the `tmerge()` function
-of the `survival` package, or the `merge_start_stop()` function from the
-`MatchTime` package (see <https://robindenz1.github.io/MatchTime/>) may
-be used.
+way less rows directly. To create such datasets, users may use the
+provided
+[`prepare_spmd_data()`](https://robindenz1.github.io/SPMD/reference/prepare_spmd_data.md)
+function, or the classic `tmerge()` function of the `survival` package.
 
 ## General Syntax
 
@@ -312,7 +312,7 @@ computationally. The upper limit of possible matches grows very fast and
 can be calculated as
 
 ``` math
-\frac{n \cdot (n-1)}{2},
+\frac{n (n-1)}{2},
 ```
 
 where $`n`$ is the number of unique individual / exposure instances. Due
@@ -402,15 +402,16 @@ a generalized linear mixed Poisson model (`estimator="glmm"`).
 Given $`m`$ pairs of individuals, the estimator is defined as:
 
 ``` math
-\hat{\theta}_m = \frac{1}{2} \ln\! \left(\frac{\frac{1}{m}\sum_{i = 1}^m X_{b1} X_{a2}}{\frac{1}{m}\sum_{i = 1}^m X_{a1} X_{b2}}\right),
+\hat{\theta}_m = \frac{1}{2} \ln \left(\frac{\displaystyle \frac{1}{m}\sum_{j = 1}^m X_{b1j} X_{a2j}}{\displaystyle\frac{1}{m}\sum_{j = 1}^m X_{a1j} X_{b2j}}\right),
 ```
 
-where $`X_{a1}`$, $`X_{a2}`$, $`X_{b1}`$ and $`X_{b2}`$ denote the
-observed event counts in each “index” inside a pair. Essentially, we
-average over individual level products of events in both the denominator
-and numerator. By taking [`exp()`](https://rdrr.io/r/base/Log.html) of
-the resulting $`\hat{\theta}_m`$, we obtain an estimate of the causal
-risk ratio. In this package, this estimator can be used by setting
+where $`X_{a1j}`$, $`X_{a2j}`$, $`X_{b1j}`$ and $`X_{b2j}`$ denote the
+observed event counts in each “index” inside a pair $`j`$. Essentially,
+we average over individual level products of events in both the
+denominator and numerator. By taking
+[`exp()`](https://rdrr.io/r/base/Log.html) of the resulting
+$`\hat{\theta}_m`$, we obtain an estimate of the causal risk ratio. In
+this package, this estimator can be used by setting
 `estimator="moments"`.
 
 ### Generalized linear mixed model based estimator
@@ -519,8 +520,8 @@ algorithm uses pairs in which no observation period is censored, and
 pairs in which the right-censoring occurs after the larger of the two
 exposure times in a pair. In the latter case, both individuals inside
 the pair are censored at the minimum censoring time when calculating
-$`X_{a2}`$ and $`X_{b2}`$. This way, the time effects still cancel out.
-For more information and required assumptions regarding censoring,
+$`X_{a2j}`$ and $`X_{b2j}`$. This way, the time effects still cancel
+out. For more information and required assumptions regarding censoring,
 please consult the associated paper (Denz et al. 2026).
 
 ### Bounds of the risk period

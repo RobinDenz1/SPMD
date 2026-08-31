@@ -93,6 +93,10 @@ with Automatic Adjustment for Time Effects". arXiv Preprint. doi:
 ## Examples
 
 ``` r
+library(data.table)
+library(simDAG)
+library(SPMD)
+
 set.seed(1234)
 
 # simulate data with no exposure effect
