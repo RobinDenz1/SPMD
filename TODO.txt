@@ -1,7 +1,7 @@
 
 # TODOs
 - what should be done if some bootstrap estimates are not finite?
-- fix notation throughout documentation so that it is aligned with notation in the paper
+- print warning if estimates are infinite or undefined
 
 # further features
  - allow adjustment for time-dependent confounders

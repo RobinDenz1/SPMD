@@ -87,13 +87,13 @@ In the symmetric pair matching design, we form pairs of individuals who were at 
 
 Here, \code{a} acts as control for the exposure period of \code{b} at \eqn{t = 50} and similarly, \code{b} later acts as control for the exposure period of \code{a} at \eqn{t = 100}. If this sort of pairing is not possible, for example because the two exposures are too close together in time or because of another exposure period in the required control time, the pairing is considered invalid. Under the assumption that individual and time effects are multiplicative, the following equation holds for each valid pair:
 
-\deqn{\theta = \frac{1}{2}\log\left(\frac{\lambda_{b1} \lambda_{a2}}{\lambda_{a1} \lambda_{b2}}\right),}
+\deqn{\displaystyle \theta = \frac{1}{2}\ln\left(\frac{\lambda_{b1} \lambda_{a2}}{\lambda_{a1} \lambda_{b2}}\right),}
 
 where the four \eqn{\lambda}s are the event rates for each row (see \code{index}) of the pairing and \eqn{\theta} is the natural log of the multiplicative effect of interest. This means that, under some mild assumptions, both individual-level effects (e.g. any time-fixed confounders) and time effects cancel out. However, since we do not onserve the rates directly, but only event counts in the \code{risk_period} after \code{time}, we have to use related estimators. All of this is described in more detail in the associated paper.
 
 \strong{\emph{Required Data}}:
 
-This function expects \code{data} to be supplied in the start-stop or counting process format. Essentially, it is expected that the \code{data} is formatted in the same way that would be needed to fit a Cox proportional hazards model using the \pkg{survival} package. Each row should correspond to a time duration (defined by a \code{start} and \code{stop} time value) in which no covariates changed. Covariate changes should occur at \code{start} and events should occur exactly at \code{stop}. Events are expected to be binary and only binary exposures are supported.
+This function expects \code{data} to be supplied in the start-stop or counting process format. Essentially, it is expected that the \code{data} is formatted in the same way that would be needed to fit a Cox proportional hazards model using the \pkg{survival} package. Each row should correspond to a time duration (defined by a \code{start} and \code{stop} time value) in which no covariates changed. Covariate changes should occur at \code{start} and events should occur exactly at \code{stop}. Events are expected to be binary and only binary exposures are supported. A simple convenience function to create such data from raw exposure and event times is given in this package through \code{\link{prepare_spmd_data}}.
 
 Ideally, the exposure specified on the RHS of the \code{formula} argument is coded as a logical variable, where \code{TRUE} corresponds to the "exposed" time and \code{FALSE} corresponds to the "unexposed" time. If this is not the case, this function will coerce it to this type internally using the following rules:
 
@@ -113,7 +113,7 @@ We recommend trying \code{pairs="all"} first. If that is infeasible, we recommen
 
 This package implements two kinds of estimators. The main one (\code{estimator="moments"}) is simply:
 
-\deqn{\hat{\theta}_n = \frac{1}{2}\log\left(\frac{\sum_i X_{b1} X_{a2}}{\sum_i X_{a1} X_{b2}}\right),}
+\deqn{\displaystyle \hat{\theta}_n = \frac{1}{2}\ln\left(\frac{\sum_j X_{b1j} X_{a2j}}{\sum_j X_{a1j} X_{b2j}}\right),}
 
 where \eqn{X} represents the event counts observed in the \code{risk_period} time units after \code{time} in each \code{group} (exact definitions of the interval can be changed using the \code{bounds} argument). This estimator requires minimal assumptions, but usually requires lots of pairs to be build. With \code{pairs="one"}, it may not work extremly well. Another option is to use a generalized linear mixed Poisson model (\code{estimator="glmm"}). Here, we estimate one fixed effect per group and assign one random effect per group / pair combination. This requires more assumptions, but may be more efficient with \code{pairs="one"}. However, it is also much slower computationally and often does not converge. We recommend using \code{estimator="moments"}.
 
@@ -156,7 +156,7 @@ If \code{bootstrap=TRUE} was used, the output additionally contains:
 
 }
 \seealso{
-\code{\link{summary.SPMD}}, \code{\link{plot.SPMD}}
+\code{\link{summary.SPMD}}, \code{\link{plot.SPMD}}, \code{\link{prepare_spmd_data}}
 }
 \references{
 Denz, Robin, Filippo Saatkamp, Katharina Meiszl and Nina Timmesfeld (2026). "The Symmetric Pair Matching Design: A Self-Controlled Method with Automatic Adjustment for Time Effects". arXiv Preprint. doi: 10.48550/arXiv.2608.25979.

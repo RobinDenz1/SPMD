@@ -46,6 +46,10 @@ Gillespie, Daniel T. 1976. “A General Method for Numerically Simulating the St
 Denz, Robin, Filippo Saatkamp, Katharina Meiszl and Nina Timmesfeld (2026). "The Symmetric Pair Matching Design: A Self-Controlled Method with Automatic Adjustment for Time Effects". arXiv Preprint. doi: 10.48550/arXiv.2608.25979.
 }
 \examples{
+library(data.table)
+library(simDAG)
+library(SPMD)
+
 set.seed(1234)
 
 # simulate data with no exposure effect

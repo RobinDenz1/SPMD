@@ -6,4 +6,5 @@ reference:
     - sym_pair_matching
     - summary.SPMD
     - plot.SPMD
+    - prepare_spmd_data
     - sim_example_data

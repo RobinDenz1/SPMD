@@ -111,7 +111,7 @@ head(data)
 
 This function internally uses the `simDAG` package to simulate this data (Denz & Timmesfeld 2026). Here, each person is identified by a unique person identifier contained in the `.id` column. A person may have multiple rows, where each row corresponds to a period of time (defined by the `start` and `stop` columns) in which no variables changed for that individual. For example, the first row of this dataset shows that from 0 to 249, individual with `.id = 1` was unexposed (exposure is denoted by column `A`) and had no event (the outcome is shown in column `Y`). Exactly at $t = 249$, the same person is then exposed for the first time and stays exposed until $t = 289$. In other words, the exposure, and potentially other covariates, are coded so that the intervals are `left-closed` or `right-open`, often denoted using `[)`.
 
-The outcome events should be coded slightly differently. Events are assumed to happen exactly at the time denoted by `stop`. For example, individual `.id = 2` experienced an event at exactly $t = 623$ in this example dataset. This data format has two main advantages. First, it allows usage of continuous time. Secondly, it is much more memory efficient than the full long-format, because we usually have to store way less rows directly. To create such datasets, the `tmerge()` function of the `survival` package, or the `merge_start_stop()` function from the `MatchTime` package (see https://robindenz1.github.io/MatchTime/) may be used.
+The outcome events should be coded slightly differently. Events are assumed to happen exactly at the time denoted by `stop`. For example, individual `.id = 2` experienced an event at exactly $t = 623$ in this example dataset. This data format has two main advantages. First, it allows usage of continuous time. Secondly, it is much more memory efficient than the full long-format, because we usually have to store way less rows directly. To create such datasets, users may use the provided `prepare_spmd_data()` function, or the classic `tmerge()` function of the `survival` package.
 
 # General Syntax
 
@@ -177,7 +177,7 @@ plot(out)
 Note that even though all possible matches were generated, the plot still includes some white areas. These are observation times that could not be used in any of the possible matches. Although using all possible matches is statistically very efficient, it is very heavy computationally. The upper limit of possible matches grows very fast and can be calculated as
 
 $$
-\frac{n \cdot (n-1)}{2},
+\frac{n (n-1)}{2},
 $$
 
 where $n$ is the number of unique individual / exposure instances. Due to this fast growth, it might not even be possible computationally to generate all pairs with large $n$. Luckily, we do not actually need to do this. It is perfectly acceptable to use a fixed large number of randomly chosen pairs instead.
@@ -225,10 +225,10 @@ After having created the symmetric pair matches, we still have to apply an estim
 Given $m$ pairs of individuals, the estimator is defined as:
 
 $$
-\hat{\theta}_m = \frac{1}{2} \ln\! \left(\frac{\frac{1}{m}\sum_{i = 1}^m X_{b1} X_{a2}}{\frac{1}{m}\sum_{i = 1}^m X_{a1} X_{b2}}\right),
+\hat{\theta}_m = \frac{1}{2} \ln \left(\frac{\displaystyle \frac{1}{m}\sum_{j = 1}^m X_{b1j} X_{a2j}}{\displaystyle\frac{1}{m}\sum_{j = 1}^m X_{a1j} X_{b2j}}\right),
 $$
 
-where $X_{a1}$, $X_{a2}$, $X_{b1}$ and $X_{b2}$ denote the observed event counts in each "index" inside a pair. Essentially, we average over individual level products of events in both the denominator and numerator. By taking `exp()` of the resulting $\hat{\theta}_m$, we obtain an estimate of the causal risk ratio. In this package, this estimator can be used by setting `estimator="moments"`.
+where $X_{a1j}$, $X_{a2j}$, $X_{b1j}$ and $X_{b2j}$ denote the observed event counts in each "index" inside a pair $j$. Essentially, we average over individual level products of events in both the denominator and numerator. By taking `exp()` of the resulting $\hat{\theta}_m$, we obtain an estimate of the causal risk ratio. In this package, this estimator can be used by setting `estimator="moments"`.
 
 ## Generalized linear mixed model based estimator
 
@@ -261,7 +261,7 @@ Bootstrapping may become fairly computationally expensive, particularly with lar
 
 ## Censoring
 
-Right-censoring is directly supported by this package. The underlying algorithm uses pairs in which no observation period is censored, and pairs in which the right-censoring occurs after the larger of the two exposure times in a pair. In the latter case, both individuals inside the pair are censored at the minimum censoring time when calculating $X_{a2}$ and $X_{b2}$. This way, the time effects still cancel out. For more information and required assumptions regarding censoring, please consult the associated paper (Denz et al. 2026).
+Right-censoring is directly supported by this package. The underlying algorithm uses pairs in which no observation period is censored, and pairs in which the right-censoring occurs after the larger of the two exposure times in a pair. In the latter case, both individuals inside the pair are censored at the minimum censoring time when calculating $X_{a2j}$ and $X_{b2j}$. This way, the time effects still cancel out. For more information and required assumptions regarding censoring, please consult the associated paper (Denz et al. 2026).
 
 ## Bounds of the risk period
 
