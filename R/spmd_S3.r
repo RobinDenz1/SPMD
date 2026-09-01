@@ -114,7 +114,7 @@ summary.SPMD <- function(object, ...) {
       p_value = p_value
     ),
     convergence = object$convergence,
-    bootstrap = list(n = boot_n),
+    bootstrap = list(n = boot_n, n_na=object$n_boot_na),
     estimating_equation = estimating_equation,
     object = object
   )
@@ -186,7 +186,11 @@ print.summary.SPMD <- function(x, ...) {
   }
 
   # Bootstrap
-  if (x$bootstrap$n > 0) {
+  if (x$bootstrap$n > 0 && x$bootstrap$n_na > 0) {
+    cat(sprintf("\nBootstrap: %s replicates %s%s%s\n",
+                format(x$bootstrap$n, big.mark = ","), "(",
+                format(x$bootstrap$n_na, big.mark = ","), " NA or Inf)"))
+  } else if (x$bootstrap$n > 0) {
     cat(sprintf("\nBootstrap: %s replicates\n",
                 format(x$bootstrap$n, big.mark = ",")))
   }

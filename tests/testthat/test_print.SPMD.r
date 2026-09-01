@@ -4,8 +4,10 @@ data <- sim_example_data(n=800)
 
 test_that("pairs='one', estimator='moments'", {
 
-  out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+  out <- suppressWarnings(
+    sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                            risk_period=40, pairs="one", estimator="moments")
+  )
   expect_snapshot(print(out))
 })
 

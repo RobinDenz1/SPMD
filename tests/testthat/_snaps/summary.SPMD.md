@@ -111,7 +111,7 @@
         log(RR)    RR         SE         95% CI          P-value
         1.242      3.464      NaN        1.414 – Inf     0.1
       
-      Bootstrap: 10 replicates
+      Bootstrap: 10 replicates (5 NA or Inf)
       
       Estimation
         Estimating equation: exp{1/2 log(12 / 1)}

@@ -62,6 +62,11 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
     out$boot_est <- l_est$boot_est
     out$model <- NULL
 
+    # warn if NA or Inf
+    warnifnotm(!(is.na(log(out$est)) || is.infinite(log(out$est))),
+               "The final estimate is NA or not finite. Estimation likely",
+               "failed due to rare events.")
+
   } else if (estimator=="glmm") {
 
     l_est <- estimate_glmm(data=l_data$d_matches, ...)
@@ -98,6 +103,16 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
       na.rm=TRUE, names=FALSE
     )
     out$p_value <- get_boot_p_value(out_boot)
+    out$n_boot_na <- sum(is.na(log(out_boot)) | is.infinite(log(out_boot)))
+  }
+
+  # warn if any NA or Inf in bootstrap estimates
+  if (bootstrap && out$n_boot_na > 0) {
+    warning(out$n_boot_na, " bootstrap estimates were",
+            " NA or infinite, which may happen with estimator='moments'",
+            " if either the denominator or the numerator is 0. With",
+            " estimator='glmm' it might be due to failed convergence.",
+            " Proceed with caution.", call.=FALSE)
   }
 
   ## calculate some further statistics

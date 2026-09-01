@@ -1,8 +1,4 @@
 
-# TODOs
-- what should be done if some bootstrap estimates are not finite?
-- print warning if estimates are infinite or undefined
-
 # further features
  - allow adjustment for time-dependent confounders
  - allow estimation by strata

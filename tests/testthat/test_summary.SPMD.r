@@ -4,8 +4,10 @@ data <- sim_example_data(n=800)
 
 test_that("pairs='one', estimator='moments'", {
 
-  out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+  out <- suppressWarnings(
+    sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                            risk_period=40, pairs="one", estimator="moments")
+  )
   expect_snapshot(summary(out))
 })
 
@@ -28,9 +30,11 @@ test_that("pairs='random', estimator='moments'", {
 test_that("pairs='random', estimator='moments', bootstrap=TRUE", {
 
   set.seed(1234)
-  out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+  out <- suppressWarnings(
+    sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                            risk_period=40, pairs="random1", estimator="moments",
                            n_pairs=500, bootstrap=TRUE, n_boot=10)
+  )
   expect_snapshot(summary(out))
 })
 
@@ -51,9 +55,11 @@ test_that("pairs='one', estimator='glmm'", {
 test_that("pairs='random', estimator='glmm'", {
 
   set.seed(2344)
-  out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+  out <- suppressWarnings(
+    sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                            risk_period=40, pairs="random2", estimator="moments",
                            n_pairs=300)
+  )
   expect_snapshot(summary(out))
 })
 

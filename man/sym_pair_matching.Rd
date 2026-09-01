@@ -152,6 +152,7 @@ If \code{bootstrap=TRUE} was used, the output additionally contains:
   \item{\code{se}: A single number containing the estimated standard error.}
   \item{\code{boot_est}: A numeric vector containing the bootstrapped estimates.}
   \item{\code{p_value}: A single number containing the estimated p-value.}
+  \item{\code{n_boot_na}: A single number specifying the number of bootstrap estimates that were either \code{NA} or not finite.}
 }
 
 }
