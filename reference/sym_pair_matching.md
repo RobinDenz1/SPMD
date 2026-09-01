@@ -372,6 +372,9 @@ If `bootstrap=TRUE` was used, the output additionally contains:
 
 - `p_value`: A single number containing the estimated p-value.
 
+- `n_boot_na`: A single number specifying the number of bootstrap
+  estimates that were either `NA` or not finite.
+
 ## See also
 
 [`summary.SPMD`](https://robindenz1.github.io/SPMD/reference/summary.SPMD.md),

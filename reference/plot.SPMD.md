@@ -97,6 +97,7 @@ data <- sim_example_data(n=500, rr=3)
 # using each person in one match
 out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                          risk_period=40, pairs="one", estimator="moments")
+#> Warning: The final estimate is NA or not finite. Estimation likely failed due to rare events.
 plot(out)
 
 
