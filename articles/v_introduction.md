@@ -549,6 +549,26 @@ time and are shared across individuals, the time scale should be the
 calender time. If, on the other hand, the time trends are anchored to
 time since a diagnosis, than time zero should be the date of diagnosis.
 
+### Overlapping risk periods
+
+It is possible to extend the definition of “valid pairs”. Consider two
+individuals, $`a`$ and $`b`$ with one exposure time each at $`t = 100`$
+and $`t = 120`$ respectively. Suppose `risk_period = 40`. Using the
+definition we gave earlier, this pair should not be valid, because the
+periods $`[100, 140]`$ and $`[120, 160]`$ overlap. As long as they don’t
+overlap entirely, however, we still may use the non-overlapping parts by
+setting `allow_overlap=TRUE`. This is described in more detail in the
+appendix of the main article (Denz et al. 2026). Usage of such pairs may
+lead to a gain in efficiency, but also increases computational time. We
+recommend using `allow_overlap=TRUE` whenever `risk_period` is large
+with respect to the total observation time and keeping it at `FALSE`
+whenever `pairs="all"` is infeasible.
+
+Note that if multiple exposure periods per individual are present, a
+maximum of one overlap is supported, e.g. if two risk periods of
+individual $`a`$ overlap with one of individual $`b`$, it is discarded,
+even if some non-overlapping time remains.
+
 ## References
 
 Denz, Robin, Filippo Saatkamp, Katharina Meiszl and Nina Timmesfeld

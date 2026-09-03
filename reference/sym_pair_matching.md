@@ -12,9 +12,10 @@ and vignette.
 sym_pair_matching(formula, data, id, risk_period, bounds="[)",
                   estimator="moments", pairs="random2",
                   n_pairs=100000, batch_size=max(5000, n_pairs * 2),
-                  rand_max_iter=100, bootstrap=FALSE, n_boot=1000,
-                  conf_level=0.95, n_cores=1, progressbar=TRUE,
-                  convergence=TRUE, ...)
+                  rand_max_iter=100, allow_overlap=FALSE,
+                  bootstrap=FALSE, n_boot=1000, conf_level=0.95,
+                  n_cores=1, progressbar=TRUE, convergence=TRUE,
+                  ...)
 ```
 
 ## Arguments
@@ -112,6 +113,17 @@ sym_pair_matching(formula, data, id, risk_period, bounds="[)",
   number, or that through chance the algorithm gets stuck. This ensures
   that it eventually terminates (see details). Ignored if
   `pairs!="random1"`.
+
+- allow_overlap:
+
+  Either `TRUE` or `FALSE` (default), specifying whether the use of
+  pairs with partially overlapping exposure periods should be allowed.
+  If allowed, only the non-overlapping parts of such pairs are used in
+  any calculations, ensuring that no contaminated time is used. Due to
+  usage of more pairs, this might lead to an increase in efficiency. It
+  does, however, increase computational time and is unlikely to have a
+  large impact if `risk_period` is small with respect to the total
+  observation time.
 
 - bootstrap:
 
