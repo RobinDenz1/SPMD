@@ -3,7 +3,8 @@
 ## the final dataset needed for further analysis
 get_full_data <- function(data, start, stop, id, exposure, outcome,
                           pairs, n_pairs, risk_period, remove_noevents,
-                          bounds, rand_max_iter, batch_size) {
+                          bounds, rand_max_iter, batch_size,
+                          allow_overlap) {
   .time <- .max_t <- overlap <- .id <- NULL
 
   # small preparations
@@ -36,15 +37,21 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
   # perform matching
   d_matches <- match_pairs(data=d_exp, pairs=pairs, risk_period=risk_period,
                            n_pairs=n_pairs, max_iter=rand_max_iter,
-                           batch_size=batch_size, bounds=bounds)
+                           batch_size=batch_size, bounds=bounds,
+                           allow_overlap=allow_overlap)
 
   stopifnotm(nrow(d_matches)!=0, "Could not create any valid matches.")
 
   d_matches <- expand_pair_matches(d_matches, risk_period=risk_period)
 
+  # fix overlapping intervals, if needed
+  if (allow_overlap) {
+    d_matches <- fix_overlap(d_matches, bounds=bounds, risk_period=risk_period)
+  }
+
   # add outcome event count to it
   d_matches <- add_event_count(dt_index=d_matches, dt_events=d_events,
-                               bounds=bounds)
+                               bounds=bounds, allow_overlap=allow_overlap)
 
   stopifnotm(sum(d_matches$.n_events)!=0, "There were no events in the ",
              "risk_period of any of the individuals",
@@ -195,6 +202,42 @@ expand_pair_matches <- function(data, risk_period) {
   return(data)
 }
 
+## fix the interval start and endpoints for pairs with overlapping
+## risk periods
+#' @importFrom data.table :=
+fix_overlap <- function(d_pairs, bounds, risk_period) {
+
+  .t1 <- .t2 <- .time <- .id_pair <- .has_overlap <- .group <-
+    .end_time <- .any_len_0 <- NULL
+
+  # get exposure times
+  d_pairs[, .t1 := .time[1], by=.id_pair]
+  d_pairs[, .t2 := .time[3], by=.id_pair]
+
+  # identify overlapping individuals
+  if (bounds=="[]") {
+    d_pairs[, .has_overlap := (.t2 - .t1) <= risk_period]
+  } else {
+    d_pairs[, .has_overlap := (.t2 - .t1) < risk_period]
+  }
+
+  # for individuals with overlap, fix observation period for the earlier
+  # comparison to [t1, t2] and to [t1 + risk_period, t2] for the latter
+  d_pairs[.group <= 2 & .has_overlap==TRUE, .end_time := .t2]
+  d_pairs[.group >= 3 & .has_overlap==TRUE, .time := .t1 + risk_period]
+
+  # if any length = 0 intervals were produced, remove the pair
+  d_pairs[, .any_len_0 := any(.time >= .end_time), by=.id_pair]
+  d_pairs <- subset(d_pairs, .any_len_0==FALSE)
+
+  # clean up
+  d_pairs[, .t1 := NULL]
+  d_pairs[, .t2 := NULL]
+  d_pairs[, .any_len_0 := NULL]
+
+  return(d_pairs)
+}
+
 ## get a data.table containing four columns of event counts for
 ## each matched pair
 #' @importFrom data.table data.table
@@ -219,19 +262,88 @@ matches2counts <- function(data, bootstrap) {
 #' @importFrom data.table :=
 #' @importFrom data.table .I
 #' @importFrom data.table .EACHI
-add_event_count <- function(dt_index, dt_events, bounds) {
+add_event_count <- function(dt_index, dt_events, bounds, allow_overlap=FALSE) {
 
-  row_id <- .end_time <- .time <- .id <- . <- .n_events <- NULL
+  row_id <- .end_time <- .time <- .id <- . <- .n_events <- .group <-
+    .has_overlap <- NULL
 
   dt_index <- copy(dt_index)
 
   # unique row identifier
   dt_index[, row_id := .I]
-
-  # key events table
   setkey(dt_events, .id, .time)
 
-  # count matching events per row
+  # count matching events per row and attach counts
+  if (allow_overlap) {
+
+    # break into three parts to handle bounds appropriately
+    dt_index1 <- subset(dt_index, .has_overlap==FALSE)
+    dt_index2 <- subset(dt_index, .has_overlap & .group <= 2)
+    dt_index3 <- subset(dt_index, .has_overlap & .group > 2)
+
+    # no overlap problems, handle as usual
+    out1 <- count_events(dt_events=dt_events, dt_index=dt_index1, bounds=bounds)
+    dt_index1[, .n_events := out1$n_events]
+
+    # handle overlap issues for earlier time period
+    # NOTE: If [ is in front, this suggests that the exposure happens before
+    #       the event, so when the second exposure time cuts the earlier
+    #       risk_period short, events that happen exactly at that time should
+    #       be counted as under the second exposure, not as control and
+    #       vice versa
+    bounds2 <- switch(
+      bounds,
+      "()" = "(]",
+      "(]" = "()",
+      "[)" = "[]",
+      "[]" = "[)",
+    )
+    out2 <- count_events(dt_events=dt_events, dt_index=dt_index2,
+                         bounds=bounds2)
+    dt_index2[, .n_events := out2$n_events]
+
+    # handle overlap issues for later time period
+    # NOTE: If bounds end with ], events exactly at the end are counted towards
+    #       exposure, so they cannot be also counted towards the control period
+    #       that starts immediately afterwards. Similarly, if bounds end with ),
+    #       the event must go somewhere -> counted in control afterwards
+    bounds3 <- switch(
+      bounds,
+      "()" = "[)",
+      "(]" = "(]",
+      "[)" = "[)",
+      "[]" = "(]",
+    )
+    out3 <- count_events(dt_events=dt_events, dt_index=dt_index3,
+                         bounds=bounds3)
+    dt_index3[, .n_events := out3$n_events]
+
+    # put together
+    dt_index <- rbindlist(list(dt_index1, dt_index2, dt_index3))
+    dt_index[, .has_overlap := NULL]
+
+  } else {
+    out <- count_events(dt_events=dt_events, dt_index=dt_index, bounds=bounds)
+    dt_index[, .n_events := out$n_events]
+  }
+
+  # rows with no matches get NA -> replace with 0
+  dt_index[is.na(.n_events), .n_events := 0L]
+
+  # cleanup
+  dt_index[, c("row_id") := NULL]
+
+  return(dt_index)
+}
+
+## given a data.table of events and a data.table of time periods,
+## count the number of events in the time periods
+#' @importFrom data.table :=
+#' @importFrom data.table .N
+count_events <- function(dt_events, dt_index, bounds) {
+
+  . <- .id <- .time <- .end_time <- NULL
+
   out <- switch(
     bounds,
     "()" = dt_events[dt_index, on=.(.id, .time > .time, .time < .end_time),
@@ -243,17 +355,7 @@ add_event_count <- function(dt_index, dt_events, bounds) {
     "[]" = dt_events[dt_index, on=.(.id, .time >= .time, .time <= .end_time),
                      .(n_events = .N), by=.EACHI],
   )
-
-  # attach counts
-  dt_index[, .n_events := out$n_events]
-
-  # rows with no matches get NA -> replace with 0
-  dt_index[is.na(.n_events), .n_events := 0L]
-
-  # cleanup
-  dt_index[, c("row_id") := NULL]
-
-  return(dt_index)
+  return(out)
 }
 
 ## get required information from Surv() formula

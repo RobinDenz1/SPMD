@@ -11,9 +11,10 @@ This function can be used to perform symmetric pair matching, which is a self-co
 sym_pair_matching(formula, data, id, risk_period, bounds="[)",
                   estimator="moments", pairs="random2",
                   n_pairs=100000, batch_size=max(5000, n_pairs * 2),
-                  rand_max_iter=100, bootstrap=FALSE, n_boot=1000,
-                  conf_level=0.95, n_cores=1, progressbar=TRUE,
-                  convergence=TRUE, ...)
+                  rand_max_iter=100, allow_overlap=FALSE,
+                  bootstrap=FALSE, n_boot=1000, conf_level=0.95,
+                  n_cores=1, progressbar=TRUE, convergence=TRUE,
+                  ...)
 }
 \arguments{
   \item{formula}{
@@ -45,6 +46,9 @@ A single positive integer, specifying the number of candidate pair matches that 
   }
   \item{rand_max_iter}{
 A single positive integer, specifying the maximum number of allowed iterations for generating random matches when \code{pairs="random1"}. Since the algorithm is iterative and does not generate all possible matches, it is possible that \code{n_pairs} is larger than the maximum possible number, or that through chance the algorithm gets stuck. This ensures that it eventually terminates (see details). Ignored if \code{pairs!="random1"}.
+  }
+  \item{allow_overlap}{
+Either \code{TRUE} or \code{FALSE} (default), specifying whether the use of pairs with partially overlapping exposure periods should be allowed. If allowed, only the non-overlapping parts of such pairs are used in any calculations, ensuring that no contaminated time is used. Due to usage of more pairs, this might lead to an increase in efficiency. It does, however, increase computational time and is unlikely to have a large impact if \code{risk_period} is small with respect to the total observation time.
   }
   \item{bootstrap}{
 Either \code{TRUE} or \code{FALSE}, specifying whether bootstrapping should be performed to estimate confidence intervals. The bootstrapping is done on an individual level, before forming pairs, so that all parts of the analysis are included. This is necessary for correct estimation, but it might lead to long computation times. Especially when using \code{pairs="all"}, \code{pairs="random1"} or \code{pairs="random2"} with a large \code{n_pairs} value, it might take a long time.

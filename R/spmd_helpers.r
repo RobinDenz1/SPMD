@@ -38,7 +38,7 @@ get_times_used <- function(d_matches, data, risk_period) {
 ## a single iteration of a full bootstrap procedure
 one_boot_iter <- function(ids, d_exp, d_events, pairs, n_pairs, risk_period,
                           bounds, estimator, batch_size, rand_max_iter,
-                          ...) {
+                          allow_overlap, ...) {
 
   # get bootstrap sample
   ids_i <- sample(x=ids, size=length(ids), replace=TRUE)
@@ -47,7 +47,8 @@ one_boot_iter <- function(ids, d_exp, d_events, pairs, n_pairs, risk_period,
   # perform matching
   d_matches_i <- match_pairs(data=d_exp_i, pairs=pairs, risk_period=risk_period,
                              n_pairs=n_pairs, max_iter=rand_max_iter,
-                             batch_size=batch_size, bounds=bounds)
+                             batch_size=batch_size, bounds=bounds,
+                             allow_overlap=allow_overlap)
 
   if (nrow(d_matches_i)==0) {
     return(NA)
@@ -55,9 +56,14 @@ one_boot_iter <- function(ids, d_exp, d_events, pairs, n_pairs, risk_period,
 
   d_matches_i <- expand_pair_matches(d_matches_i, risk_period=risk_period)
 
+  if (allow_overlap) {
+    d_matches_i <- fix_overlap(d_matches_i, bounds=bounds,
+                               risk_period=risk_period)
+  }
+
   # add outcome event count to it
   d_matches_i <- add_event_count(dt_index=d_matches_i, dt_events=d_events,
-                                 bounds=bounds)
+                                 bounds=bounds, allow_overlap=allow_overlap)
 
   if (sum(d_matches_i$.n_events)==0) {
     return(NA)
@@ -80,7 +86,7 @@ one_boot_iter <- function(ids, d_exp, d_events, pairs, n_pairs, risk_period,
 perform_bootstrapping <- function(d_exp, d_events, estimator, pairs, n_pairs,
                                   risk_period, bounds, n_boot,
                                   n_cores, progressbar, batch_size,
-                                  rand_max_iter, ...) {
+                                  rand_max_iter, allow_overlap, ...) {
   # includable ids
   ids <- unique(d_exp$.id)
 
@@ -93,7 +99,9 @@ perform_bootstrapping <- function(d_exp, d_events, estimator, pairs, n_pairs,
                               risk_period=risk_period,
                               bounds=bounds, batch_size=batch_size,
                               rand_max_iter=rand_max_iter,
-                              estimator=estimator, ...)
+                              estimator=estimator,
+                              allow_overlap=allow_overlap,
+                              ...)
     }
   # using multiple processing cores
   } else {
@@ -132,7 +140,8 @@ perform_bootstrapping <- function(d_exp, d_events, estimator, pairs, n_pairs,
       one_boot_iter(ids=ids, d_exp=d_exp, d_events=d_events, pairs=pairs,
                     n_pairs=n_pairs, risk_period=risk_period,
                     bounds=bounds, estimator=estimator, batch_size=batch_size,
-                    rand_max_iter=rand_max_iter, ...)
+                    rand_max_iter=rand_max_iter, allow_overlap=allow_overlap,
+                    ...)
     }
     on.exit(close(pb))
     on.exit(parallel::stopCluster(cl))

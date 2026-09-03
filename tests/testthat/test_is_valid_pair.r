@@ -47,6 +47,12 @@ test_that("general test cases", {
   out <- is_valid_pair(.id=10, .id2=12, .time=10, .time2=50, risk_period=30,
                        .max_t=75, .max_t2=70, bounds="[]")
   expect_true(out)
+
+  # allow_overlap works
+  out <- is_valid_pair(.id=2, .id2=3, .time=20, .time2=50, risk_period=40,
+                       .max_t=1000, .max_t2=1000, bounds="(]",
+                       allow_overlap=TRUE)
+  expect_true(out)
 })
 
 test_that("works with NA", {

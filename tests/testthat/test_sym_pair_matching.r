@@ -250,3 +250,56 @@ test_that("not using convergence statistics", {
   expect_equal(round(out$est, 2), 2.24)
   expect_snapshot_output(summary(out))
 })
+
+test_that("allow_pairs works with all pair types", {
+
+  set.seed(123443)
+  data <- sim_example_data(n=100)
+
+  # no overlap - all
+  out1 <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
+                            id=".id", pairs="all", estimator="moments",
+                            risk_period=40)
+
+  # with overlap - all
+  out2 <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
+                            id=".id", pairs="all", estimator="moments",
+                            risk_period=40, allow_overlap=TRUE)
+
+  expect_true(nrow(out1$d_counts) < nrow(out2$d_counts))
+
+  # without overlap - one
+  out3 <- suppressWarnings(
+    sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
+                            id=".id", pairs="one", estimator="moments",
+                            risk_period=40, allow_overlap=FALSE)
+  )
+
+  # with overlap - one
+  out4 <- suppressWarnings(
+    sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
+                      id=".id", pairs="one", estimator="moments",
+                      risk_period=40, allow_overlap=TRUE)
+  )
+
+  # should be the same
+  out3$inputs$allow_overlap <- TRUE
+  setkey(out4$d_matches, .id_pair, .group)
+  expect_equal(out3, out4)
+
+  # with overlap - random1
+  out5 <- suppressWarnings(
+    sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
+                      id=".id", pairs="random1", estimator="moments",
+                      risk_period=40, allow_overlap=TRUE, n_pairs=1000)
+  )
+
+  # with overlap - random2
+  out6 <- suppressWarnings(
+    sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
+                      id=".id", pairs="random2", estimator="moments",
+                      risk_period=40, allow_overlap=TRUE, n_pairs=1000)
+  )
+
+  expect_true(nrow(out5$d_counts) == nrow(out6$d_counts))
+})

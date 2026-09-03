@@ -463,3 +463,34 @@ test_that("handles fractional event times", {
 
   expect_equal(out$.n_events, 4L)
 })
+
+test_that("bounds are handled correctly with overlap", {
+
+  d_input <- data.table(.id=c(1, 2, 2, 1), .time=c(40, 40, 80, 80),
+                        .max_t=c(1000, 1000, 1000, 1000),
+                        .id_pair=c(1, 1, 1, 1), .A=c(FALSE, TRUE, FALSE, TRUE),
+                        .group=c(1, 2, 3, 4), .end_time=c(60, 60, 100, 100),
+                        .has_overlap=TRUE)
+
+  # each person has an event before exposure, exactly at exposure,
+  # during the period, directly at the end and afterwards
+  d_events <- data.table(.id=c(1, 1, 1, 1, 1, 2, 2, 2, 2, 2),
+                         .time=c(10, 40, 45, 60, 80,
+                                 75, 80, 92, 100, 110))
+
+  out1 <- add_event_count(dt_index=d_input, dt_events=d_events, bounds="()",
+                          allow_overlap=TRUE)
+  expect_equal(out1$.n_events, c(2, 0, 2, 1))
+
+  out2 <- add_event_count(dt_index=d_input, dt_events=d_events, bounds="(]",
+                          allow_overlap=TRUE)
+  expect_equal(out2$.n_events, c(1, 0, 2, 0))
+
+  out3 <- add_event_count(dt_index=d_input, dt_events=d_events, bounds="[)",
+                          allow_overlap=TRUE)
+  expect_equal(out3$.n_events, c(3, 0, 2, 1))
+
+  out4 <- add_event_count(dt_index=d_input, dt_events=d_events, bounds="[]",
+                          allow_overlap=TRUE)
+  expect_equal(out4$.n_events, c(2, 0, 2, 0))
+})

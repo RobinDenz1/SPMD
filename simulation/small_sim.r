@@ -100,7 +100,7 @@ estimate_rr <- function(data, type) {
     out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                              id=".id", pairs="all", risk_period=30,
                              estimator="moments", bounds="(]",
-                             convergence=FALSE)
+                             convergence=FALSE, allow_overlap=TRUE)
     rr <- out$est
   } else if (type=="sccs") {
     rr <- estimate_sccs(data)

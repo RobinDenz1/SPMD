@@ -4,7 +4,8 @@
 sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                               estimator="moments", pairs="random2",
                               n_pairs=100000, batch_size=max(5000, n_pairs * 2),
-                              rand_max_iter=100, bootstrap=FALSE, n_boot=1000,
+                              rand_max_iter=100, allow_overlap=FALSE,
+                              bootstrap=FALSE, n_boot=1000,
                               conf_level=0.95, n_cores=1, progressbar=TRUE,
                               convergence=TRUE, ...) {
 
@@ -33,7 +34,8 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                           remove_noevents=estimator=="moments",
                           bounds=bounds,
                           rand_max_iter=rand_max_iter,
-                          batch_size=batch_size)
+                          batch_size=batch_size,
+                          allow_overlap=allow_overlap)
 
   # initiate output object
   out <- list(d_matches=l_data$d_matches,
@@ -48,7 +50,8 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                           conf_level=conf_level,
                           rand_max_iter=rand_max_iter,
                           batch_size=batch_size,
-                          convergence=convergence))
+                          convergence=convergence,
+                          allow_overlap=allow_overlap))
   # analyse data
   if (estimator=="moments") {
 
@@ -93,6 +96,7 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
       progressbar=progressbar,
       rand_max_iter=rand_max_iter,
       batch_size=batch_size,
+      allow_overlap=allow_overlap,
       ...
     )
 

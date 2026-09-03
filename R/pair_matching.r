@@ -1,21 +1,23 @@
 
 ## create valid pairs from given data
 match_pairs <- function(data, pairs, risk_period, bounds, n_pairs=NULL,
-                        batch_size=NULL, max_iter=NULL) {
+                        batch_size=NULL, max_iter=NULL, allow_overlap=FALSE) {
 
   if (pairs=="one") {
     d_pairs <- generate_one_pairing(data=data, risk_period=risk_period,
-                                    bounds=bounds)
+                                    bounds=bounds, allow_overlap=allow_overlap)
   } else if (pairs=="all") {
     d_pairs <- generate_all_pairs(data=data, risk_period=risk_period,
-                                  bounds=bounds)
+                                  bounds=bounds, allow_overlap=allow_overlap)
   } else if (pairs=="random1") {
     d_pairs <- generate_random_pairs_mem(data=data, risk_period=risk_period,
                                          n_pairs=n_pairs, batch_size=batch_size,
-                                         max_iter=max_iter, bounds=bounds)
+                                         max_iter=max_iter, bounds=bounds,
+                                         allow_overlap=allow_overlap)
   } else if (pairs=="random2") {
     d_pairs <- generate_random_pairs(data=data, risk_period=risk_period,
-                                     n_pairs=n_pairs, bounds=bounds)
+                                     n_pairs=n_pairs, bounds=bounds,
+                                     allow_overlap=allow_overlap)
   }
 
   return(d_pairs)
@@ -28,10 +30,13 @@ match_pairs <- function(data, pairs, risk_period, bounds, n_pairs=NULL,
 #       thus be used. If both ends are included, however, touching intervals
 #       would overlap at the "touch point", thus making them invalid
 is_valid_pair <- function(.id, .id2, .time, .time2, .max_t, .max_t2,
-                          risk_period, bounds, check_censoring=TRUE) {
+                          risk_period, bounds, check_censoring=TRUE,
+                          allow_overlap=FALSE) {
 
   # check overlap of risk periods
-  if (bounds=="[]") {
+  if (allow_overlap) {
+    out <- .id==.id2 | .time==.time2
+  } else if (bounds=="[]") {
     out <- .id==.id2 | (abs(.time - .time2) <= risk_period)
   } else {
     out <- .id==.id2 | (abs(.time - .time2) < risk_period)
@@ -59,7 +64,8 @@ is_valid_pair <- function(.id, .id2, .time, .time2, .max_t, .max_t2,
 #' @importFrom data.table .N
 #' @importFrom data.table .I
 #' @importFrom data.table setnames
-generate_all_pairs <- function(data, risk_period, bounds) {
+generate_all_pairs <- function(data, risk_period, bounds,
+                               allow_overlap=FALSE) {
 
   .idx <- . <- .id <- .id2 <- .time <- .time2 <- .id_pair <- NULL
 
@@ -83,7 +89,8 @@ generate_all_pairs <- function(data, risk_period, bounds) {
 
   # keep only valid pairs
   d_pairs <- remove_invalid_matches(d_pairs=d_pairs, d_exp=data,
-                                    risk_period=risk_period, bounds=bounds)
+                                    risk_period=risk_period, bounds=bounds,
+                                    allow_overlap=allow_overlap)
   d_pairs[, .id_pair := seq_len(.N)]
 
   return(d_pairs)
@@ -91,10 +98,11 @@ generate_all_pairs <- function(data, risk_period, bounds) {
 
 ## generates a set of n random (valid) pairs
 #' @importFrom data.table .N
-generate_random_pairs <- function(data, risk_period, bounds, n_pairs) {
+generate_random_pairs <- function(data, risk_period, bounds, n_pairs,
+                                  allow_overlap=FALSE) {
 
   d_pairs <- generate_all_pairs(data=data, risk_period=risk_period,
-                                bounds=bounds)
+                                bounds=bounds, allow_overlap=allow_overlap)
 
   if (n_pairs > nrow(d_pairs)) {
     warning("Cannot generate ", format(n_pairs, scientific=FALSE),
@@ -116,7 +124,7 @@ generate_random_pairs <- function(data, risk_period, bounds, n_pairs) {
 #' @importFrom data.table .I
 generate_random_pairs_mem <- function(data, n_pairs, risk_period, bounds,
                                       batch_size=max(5000L, n_pairs * 2L),
-                                      max_iter=100L) {
+                                      max_iter=100L, allow_overlap=FALSE) {
   . <- .id_pair <- NULL
 
   n <- nrow(data)
@@ -216,7 +224,7 @@ generate_random_pairs_mem <- function(data, n_pairs, risk_period, bounds,
     # remove invalid ones
     cand <- remove_invalid_matches(d_pairs=cand, d_exp=data,
                                    risk_period=risk_period,
-                                   bounds=bounds)
+                                   bounds=bounds, allow_overlap=allow_overlap)
     if (nrow(cand)==0) {
       next
     }
@@ -236,7 +244,8 @@ generate_random_pairs_mem <- function(data, n_pairs, risk_period, bounds,
 #' @importFrom data.table setnames
 #' @importFrom data.table .N
 #' @importFrom data.table :=
-generate_one_pairing <- function(data, risk_period, bounds) {
+generate_one_pairing <- function(data, risk_period, bounds,
+                                 allow_overlap=FALSE) {
 
   .time <- .id_pair <- .max_t <- NULL
 
@@ -260,7 +269,8 @@ generate_one_pairing <- function(data, risk_period, bounds) {
   # check if all are valid
   n_prev <- nrow(d_pairs)
   d_pairs <- remove_invalid_matches(d_pairs=d_pairs, d_exp=data,
-                                    risk_period=risk_period, bounds=bounds)
+                                    risk_period=risk_period, bounds=bounds,
+                                    allow_overlap=allow_overlap)
 
   if (n_prev != nrow(d_pairs)) {
     stop("Matching failed. Use random matches (pairs='random1' / ",
@@ -277,7 +287,8 @@ generate_one_pairing <- function(data, risk_period, bounds) {
 #' @importFrom data.table .N
 #' @importFrom data.table setnames
 #' @importFrom data.table dcast
-remove_invalid_matches <- function(d_pairs, d_exp, risk_period, bounds) {
+remove_invalid_matches <- function(d_pairs, d_exp, risk_period, bounds,
+                                   allow_overlap=FALSE) {
 
   . <- .id <- .id2 <- .time <- .time2 <- .n_exp1 <- .n_exp2 <- .num <-
     is_valid <- .max_t <- .max_t2 <- NULL
@@ -288,19 +299,25 @@ remove_invalid_matches <- function(d_pairs, d_exp, risk_period, bounds) {
     d_pairs <- subset(d_pairs, is_valid_pair(
       .id=.id, .id2=.id2, .time=.time, .time2=.time2,
       .max_t=.max_t, .max_t2=.max_t2, risk_period=risk_period,
-      bounds=bounds
+      bounds=bounds, allow_overlap=allow_overlap
       )
     )
 
   # otherwise, more is needed
   } else {
 
+    # NOTE: Overlap is only allowed in the specific pair we look at,
+    #       e.g. if a risk period overlaps with two risk periods at the same
+    #       time, it is discarded, even if small parts of it could theoretically
+    #       be used
+
     # apply first check
     d_pairs <- subset(d_pairs, is_valid_pair(.id=.id, .id2=.id2, .time=.time,
                                              .time2=.time2, .max_t=.max_t,
                                              .max_t2=.max_t2,
                                              risk_period=risk_period,
-                                             bounds=bounds))
+                                             bounds=bounds,
+                                             allow_overlap=allow_overlap))
     # merge n exposures per id to it
     d_n_exp <- d_exp[, .(.n_exp1 = .N), by=.id]
 
@@ -339,7 +356,8 @@ remove_invalid_matches <- function(d_pairs, d_exp, risk_period, bounds) {
       d_pairs[!is_valid_pair(.id=.id, .id2=.id2, .time=.time,
                              .time2=get(times_id2[k]), .max_t=.max_t,
                              .max_t2=.max_t2, risk_period=risk_period,
-                             bounds=bounds, check_censoring=FALSE),
+                             bounds=bounds, check_censoring=FALSE,
+                             allow_overlap=FALSE),
               is_valid := FALSE]
     }
 
@@ -348,7 +366,7 @@ remove_invalid_matches <- function(d_pairs, d_exp, risk_period, bounds) {
       d_pairs[!is_valid_pair(.id=.id, .id2=.id2, .time=get(times_id1[k]),
                              .time2=.time2, .max_t=.max_t, .max_t2=.max_t2,
                              risk_period=risk_period, bounds=bounds,
-                             check_censoring=FALSE),
+                             check_censoring=FALSE, allow_overlap=FALSE),
               is_valid := FALSE]
     }
 
