@@ -245,14 +245,14 @@ inspected directly using:
 
 head(out$d_matches)
 #> Key: <.id_pair, .group>
-#>      .id .time .max_t .id_pair     .A .group .end_time .n_events
-#>    <int> <num>  <num>    <int> <lgcl>  <num>     <num>     <int>
-#> 1:     3    12   1000        1  FALSE      1        42         0
-#> 2:   114    12   1000        1   TRUE      2        42         0
-#> 3:   114   249   1000        1  FALSE      3       279         0
-#> 4:     3   249   1000        1   TRUE      4       279         0
-#> 5:   319    12   1000        2  FALSE      1        42         0
-#> 6:   493    12   1000        2   TRUE      2        42         0
+#>      .id .time .min_t .max_t .id_pair     .A .group .end_time .n_events
+#>    <int> <num>  <num>  <num>    <int> <lgcl>  <num>     <num>     <int>
+#> 1:     3    12      0   1000        1  FALSE      1        42         0
+#> 2:   114    12      0   1000        1   TRUE      2        42         0
+#> 3:   114   249      0   1000        1  FALSE      3       279         0
+#> 4:     3   249      0   1000        1   TRUE      4       279         0
+#> 5:   319    12      0   1000        2  FALSE      1        42         0
+#> 6:   493    12      0   1000        2   TRUE      2        42         0
 ```
 
 We can also inspect the used times of the matches visually, using the

@@ -327,14 +327,14 @@ which can be inspected directly using:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">out</span><span class="op">$</span><span class="va">d_matches</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Key: &lt;.id_pair, .group&gt;</span></span>
-<span><span class="co">#&gt;      .id .time .max_t .id_pair     .A .group .end_time .n_events</span></span>
-<span><span class="co">#&gt;    &lt;int&gt; &lt;num&gt;  &lt;num&gt;    &lt;int&gt; &lt;lgcl&gt;  &lt;num&gt;     &lt;num&gt;     &lt;int&gt;</span></span>
-<span><span class="co">#&gt; 1:     3    12   1000        1  FALSE      1        42         0</span></span>
-<span><span class="co">#&gt; 2:   114    12   1000        1   TRUE      2        42         0</span></span>
-<span><span class="co">#&gt; 3:   114   249   1000        1  FALSE      3       279         0</span></span>
-<span><span class="co">#&gt; 4:     3   249   1000        1   TRUE      4       279         0</span></span>
-<span><span class="co">#&gt; 5:   319    12   1000        2  FALSE      1        42         0</span></span>
-<span><span class="co">#&gt; 6:   493    12   1000        2   TRUE      2        42         0</span></span></code></pre></div>
+<span><span class="co">#&gt;      .id .time .min_t .max_t .id_pair     .A .group .end_time .n_events</span></span>
+<span><span class="co">#&gt;    &lt;int&gt; &lt;num&gt;  &lt;num&gt;  &lt;num&gt;    &lt;int&gt; &lt;lgcl&gt;  &lt;num&gt;     &lt;num&gt;     &lt;int&gt;</span></span>
+<span><span class="co">#&gt; 1:     3    12      0   1000        1  FALSE      1        42         0</span></span>
+<span><span class="co">#&gt; 2:   114    12      0   1000        1   TRUE      2        42         0</span></span>
+<span><span class="co">#&gt; 3:   114   249      0   1000        1  FALSE      3       279         0</span></span>
+<span><span class="co">#&gt; 4:     3   249      0   1000        1   TRUE      4       279         0</span></span>
+<span><span class="co">#&gt; 5:   319    12      0   1000        2  FALSE      1        42         0</span></span>
+<span><span class="co">#&gt; 6:   493    12      0   1000        2   TRUE      2        42         0</span></span></code></pre></div>
 <p>We can also inspect the used times of the matches visually, using the
 associated <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">

@@ -227,6 +227,9 @@ only binary exposures are supported. A simple convenience function to
 create such data from raw exposure and event times is given in this
 package through
 [`prepare_spmd_data`](https://robindenz1.github.io/SPMD/reference/prepare_spmd_data.md).
+Follow-up does not have to start at 0, it is allowed that individual
+observation periods start and end at different times. The time itself
+should, however, be coded as numeric variables.
 
 Ideally, the exposure specified on the RHS of the `formula` argument is
 coded as a logical variable, where `TRUE` corresponds to the "exposed"

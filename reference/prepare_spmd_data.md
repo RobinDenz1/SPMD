@@ -11,7 +11,8 @@ function.
 ``` r
 prepare_spmd_data(exposures, events, obs_start, obs_end,
                   id, time, risk_period, exposure_name="A",
-                  event_name="Y")
+                  event_name="Y", convert_date=TRUE,
+                  units="days")
 ```
 
 ## Arguments
@@ -77,6 +78,25 @@ prepare_spmd_data(exposures, events, obs_start, obs_end,
 
   A single character string specifying how the event indicator in the
   output data should be named.
+
+- convert_date:
+
+  Either `TRUE` (default) or `FALSE`, specifying whether `Date` like
+  objects should be converted to numeric values. If `TRUE`, the smallest
+  datetime in `start` is used as time 0. All other values in both
+  `start` and `stop` then resemble the time elapsed since this point in
+  time (in `units`). We recommend keeping this at `TRUE`, because
+  [`sym_pair_matching`](https://robindenz1.github.io/SPMD/reference/sym_pair_matching.md)
+  requires numeric time values. Ignore if the supplied time values are
+  already numeric.
+
+- units:
+
+  A single character string passed to the argument of the same name in
+  [`difftime`](https://rdrr.io/r/base/difftime.html). It defines the
+  units of time since the artificial time zero. Only used if
+  `convert_date=TRUE` and if the supplied time values are `Date` like
+  objects, ignored otherwise.
 
 ## Details
 
