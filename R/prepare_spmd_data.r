@@ -8,14 +8,16 @@
 #' @importFrom data.table setnames
 #' @export
 prepare_spmd_data <- function(exposures, events, obs_start, obs_end, id, time,
-                              risk_period, exposure_name="A", event_name="Y") {
+                              risk_period, exposure_name="A", event_name="Y",
+                              convert_date=TRUE, units="days") {
 
   start <- .observed <- NULL
 
   check_inputs_prepare_data(exposures=exposures, events=events,
                             obs_start=obs_start, obs_end=obs_end, id=id,
                             time=time, risk_period=risk_period,
-                            exposure_name=exposure_name, event_name=event_name)
+                            exposure_name=exposure_name, event_name=event_name,
+                            convert_date=convert_date)
 
   # prepare exposures
   exposures <- copy(as.data.table(exposures))
@@ -82,6 +84,12 @@ prepare_spmd_data <- function(exposures, events, obs_start, obs_end, id, time,
     out[, .observed := NULL]
   }
 
+  if (convert_date && is_date(out$start)) {
+    min_time <- min(out$start)
+    out[, start := as.vector(difftime(start, min_time, units=units))]
+    out[, stop := as.vector(difftime(stop, min_time, units=units))]
+  }
+
   return(out)
 }
 
@@ -89,7 +97,7 @@ prepare_spmd_data <- function(exposures, events, obs_start, obs_end, id, time,
 #' @importFrom data.table uniqueN
 check_inputs_prepare_data <- function(exposures, events, obs_start, obs_end,
                                       id, time, risk_period, exposure_name,
-                                      event_name) {
+                                      event_name, convert_date) {
 
   stopifnotm(length(id)==1 && is.character(id),
              "'id' must be a single character string.")
@@ -102,13 +110,12 @@ check_inputs_prepare_data <- function(exposures, events, obs_start, obs_end,
   stopifnotm(length(unique(c(id, event_name, exposure_name)))==3,
              "'id', 'exposure_name' and 'event_name' must be distinct.")
   stopifnotm(is.data.frame(obs_start) ||
-             (length(obs_start)==1 && (is.numeric(obs_start) |
-                                       inherits(obs_start, "Date"))),
+             (length(obs_start)==1 &&
+                (is.numeric(obs_start) | is_date(obs_start))),
              "'obs_start' must either be a single number / Date or a ",
              "data.frame containing one entry for each 'id' in 'exposures'.")
   stopifnotm(is.data.frame(obs_end) ||
-               (length(obs_end)==1 && (is.numeric(obs_end) |
-                                         inherits(obs_end, "Date"))),
+               (length(obs_end)==1 && (is.numeric(obs_end) | is_date(obs_end))),
              "'obs_end' must either be a single number / Date or a data.frame",
              "containing one entry for each 'id' in 'exposures'.")
   stopifnotm(is.data.frame(exposures) && nrow(exposures),
@@ -126,6 +133,8 @@ check_inputs_prepare_data <- function(exposures, events, obs_start, obs_end,
   stopifnotm(length(risk_period)==1 && is.numeric(risk_period) &&
              risk_period > 0,
              "'risk_period' must be a single number > 0.")
+  stopifnotm(length(convert_date)==1 && is.logical(convert_date),
+             "'convert_date' must be either TRUE or FALSE.")
 
   if (is.data.frame(obs_start)) {
     stopifnotm(id %in% colnames(obs_start),

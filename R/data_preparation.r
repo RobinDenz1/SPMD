@@ -73,7 +73,8 @@ get_exposure_times <- function(data) {
   .A_shift <- .A <- .id <- NULL
 
   data[, .A_shift := shift(.A, type="lag", fill=0), by=.id]
-  d_exp <- data[.A==TRUE & .A_shift==FALSE][, c(".id", ".start", ".max_t")]
+  d_exp <- data[.A==TRUE & .A_shift==FALSE][, c(".id", ".start", ".min_t",
+                                                ".max_t")]
   setnames(d_exp, old=".start", new=".time")
   data[, .A_shift := NULL]
 
@@ -126,7 +127,7 @@ prepare_start_stop <- function(data, start, stop, id, exposure, outcome,
                                remove_unexposed=TRUE, remove_noevents=TRUE) {
 
   .A <- .Y <- .id <- .start <- .max_t <- .stop <- .exposed <-
-    .has_event <- NULL
+    .has_event <- .min_t <- NULL
 
   data <- copy(as.data.table(data))
 
@@ -149,8 +150,9 @@ prepare_start_stop <- function(data, start, stop, id, exposure, outcome,
   # sort by .id and .start
   setkey(data, .id, .start)
 
-  # calculate maximum observation time per person
+  # calculate minimum and maximum observation time per person
   data[, .max_t := max(.stop), by=.id]
+  data[, .min_t := min(.start), by=.id]
 
   if (remove_unexposed) {
     data[, .exposed := sum(.A) > 0, by=.id]
@@ -184,10 +186,12 @@ expand_pair_matches <- function(data, risk_period) {
   data2[, .A := FALSE]
 
   data <- rbind(data, data2)
-  data3 <- data[, c(".id2", ".time2", ".max_t2", ".id_pair", ".A"), with=FALSE]
-  setnames(data3, old=c(".id2", ".time2", ".max_t2"),
-           new=c(".id", ".time", ".max_t"))
-  data <- rbind(data[, -c(".id2", ".time2", ".max_t2")], data3)
+  data3 <- data[, c(".id2", ".time2", ".min_t2", ".max_t2", ".id_pair", ".A"),
+                with=FALSE]
+  setnames(data3,
+           old=c(".id2", ".time2", ".min_t2", ".max_t2"),
+           new=c(".id", ".time", ".min_t", ".max_t"))
+  data <- rbind(data[, -c(".id2", ".time2", ".min_t2", ".max_t2")], data3)
 
   # assign all needed ids
   setkey(data, .id_pair, .time, .A)
@@ -261,7 +265,7 @@ matches2counts <- function(data, bootstrap) {
 #' @importFrom data.table copy
 #' @importFrom data.table :=
 #' @importFrom data.table .I
-#' @importFrom data.table .EACHI
+#' @importFrom data.table rbindlist
 add_event_count <- function(dt_index, dt_events, bounds, allow_overlap=FALSE) {
 
   row_id <- .end_time <- .time <- .id <- . <- .n_events <- .group <-
@@ -340,6 +344,7 @@ add_event_count <- function(dt_index, dt_events, bounds, allow_overlap=FALSE) {
 ## count the number of events in the time periods
 #' @importFrom data.table :=
 #' @importFrom data.table .N
+#' @importFrom data.table .EACHI
 count_events <- function(dt_events, dt_index, bounds) {
 
   . <- .id <- .time <- .end_time <- NULL

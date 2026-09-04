@@ -358,11 +358,26 @@ test_that("Date times are handled correctly", {
     obs_end = as.Date("2024-01-15"),
     id = "id",
     time = "time",
-    risk_period = 4
+    risk_period = 4,
+    convert_date = FALSE
   )
 
   expect_s3_class(out$start, "Date")
   expect_s3_class(out$stop, "Date")
   expect_equal(out$start[1], as.Date("2024-01-01"))
   expect_equal(out$stop[4], as.Date("2024-01-15"))
+
+  out <- prepare_spmd_data(
+    exposures = exposures,
+    events = events,
+    obs_start = as.Date("2024-01-01"),
+    obs_end = as.Date("2024-01-15"),
+    id = "id",
+    time = "time",
+    risk_period = 4,
+    convert_date = TRUE
+  )
+
+  expect_equal(out$start, c(0, 4, 7, 8))
+  expect_equal(out$stop, c(4, 7, 8, 14))
 })

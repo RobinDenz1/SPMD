@@ -6,6 +6,7 @@ test_that("extracts exposure starts correctly", {
     .start = c(0, 10, 20, 0, 10, 20),
     .stop = c(10, 20, 30, 10, 20, 30),
     .A = c(FALSE, TRUE, TRUE, FALSE, FALSE, TRUE),
+    .min_t = 0,
     .max_t = c(30, 30, 30, 30, 30, 30)
   )
 
@@ -14,6 +15,7 @@ test_that("extracts exposure starts correctly", {
   expected <- data.table(
     .id = c(1, 2),
     .time = c(10, 20),
+    .min_t = c(0, 0),
     .max_t = c(30, 30)
   )
 
@@ -27,6 +29,7 @@ test_that("identifies only FALSE-to-TRUE transitions", {
     .start = c(0, 10, 20, 30, 40),
     .stop = c(10, 20, 30, 40, 50),
     .A = c(FALSE, TRUE, TRUE, FALSE, TRUE),
+    .min_t = 0,
     .max_t = 50
   )
 
@@ -35,6 +38,7 @@ test_that("identifies only FALSE-to-TRUE transitions", {
   expected <- data.table(
     .id = c(1, 1),
     .time = c(10, 40),
+    .min_t = 0,
     .max_t = c(50, 50)
   )
 
@@ -48,6 +52,7 @@ test_that("handles individuals with no exposure", {
     .start = c(0, 10, 0, 10),
     .stop = c(10, 20, 10, 20),
     .A = c(FALSE, FALSE, FALSE, TRUE),
+    .min_t = 0,
     .max_t = c(20, 20, 20, 20)
   )
 
@@ -56,6 +61,7 @@ test_that("handles individuals with no exposure", {
   expected <- data.table(
     .id = 2,
     .time = 10,
+    .min_t = 0,
     .max_t = 20
   )
 
@@ -69,6 +75,7 @@ test_that("returns empty data when nobody is exposed", {
     .start = c(0, 10, 0, 10),
     .stop = c(10, 20, 10, 20),
     .A = FALSE,
+    .min_t = 0,
     .max_t = 20
   )
 
@@ -76,7 +83,7 @@ test_that("returns empty data when nobody is exposed", {
 
   expect_equal(nrow(out), 0L)
 
-  expect_named(out, c(".id", ".time", ".max_t"))
+  expect_named(out, c(".id", ".time", ".min_t", ".max_t"))
 })
 
 test_that("handles individuals exposed from the first interval", {
@@ -86,6 +93,7 @@ test_that("handles individuals exposed from the first interval", {
     .start = c(0, 10, 0, 10),
     .stop = c(10, 20, 10, 20),
     .A = c(TRUE, TRUE, FALSE, TRUE),
+    .min_t = 0,
     .max_t = c(20, 20, 20, 20)
   )
 
@@ -97,6 +105,7 @@ test_that("handles individuals exposed from the first interval", {
   expected <- data.table(
     .id = c(1, 2),
     .time = c(0, 10),
+    .min_t = 0,
     .max_t = c(20, 20)
   )
 
@@ -110,6 +119,7 @@ test_that("can identify multiple exposure episodes", {
     .start = seq(0, 50, by = 10),
     .stop = seq(10, 60, by = 10),
     .A = c(FALSE, TRUE, FALSE, TRUE, FALSE, TRUE),
+    .min_t = 0,
     .max_t = 60
   )
 
@@ -118,6 +128,7 @@ test_that("can identify multiple exposure episodes", {
   expected <- data.table(
     .id = c(1, 1, 1),
     .time = c(10, 30, 50),
+    .min_t = 0,
     .max_t = c(60, 60, 60)
   )
 
@@ -131,6 +142,7 @@ test_that("keeps all exposure episodes for an individual", {
     .start = c(0, 10, 20, 30, 0, 10),
     .stop = c(10, 20, 30, 40, 10, 20),
     .A = c(FALSE, TRUE, FALSE, TRUE, FALSE, TRUE),
+    .min_t = 0,
     .max_t = c(40, 40, 40, 40, 20, 20)
   )
 
@@ -147,6 +159,7 @@ test_that("retains .max_t", {
     .start = c(0, 10, 0, 10),
     .stop = c(10, 20, 10, 20),
     .A = c(FALSE, TRUE, FALSE, TRUE),
+    .min_t = 0,
     .max_t = c(100, 100, 200, 200)
   )
 
@@ -162,6 +175,7 @@ test_that("preserves the input data", {
     .start = c(0, 10, 0, 10),
     .stop = c(10, 20, 10, 20),
     .A = c(FALSE, TRUE, FALSE, TRUE),
+    .min_t = 0,
     .max_t = c(20, 20, 20, 20)
   )
 

@@ -4,7 +4,6 @@
  - allow estimation by strata
  - allow matching on time fixed variables
  - allow matching on time varying variables 
- - support pairs with overlapping exposure periods
 
 For the paper:
 

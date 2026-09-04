@@ -29,8 +29,9 @@ match_pairs <- function(data, pairs, risk_period, bounds, n_pairs=NULL,
 #       that touch each other will have no overlapping information and can
 #       thus be used. If both ends are included, however, touching intervals
 #       would overlap at the "touch point", thus making them invalid
-is_valid_pair <- function(.id, .id2, .time, .time2, .max_t, .max_t2,
-                          risk_period, bounds, check_censoring=TRUE,
+is_valid_pair <- function(.id, .id2, .time, .time2, .min_t, .min_t2,
+                          .max_t, .max_t2, risk_period, bounds,
+                          check_censoring=TRUE, check_truncation=TRUE,
                           allow_overlap=FALSE) {
 
   # check overlap of risk periods
@@ -56,7 +57,17 @@ is_valid_pair <- function(.id, .id2, .time, .time2, .max_t, .max_t2,
     complete_followup <- TRUE
   }
 
-  return(!out & complete_followup)
+  # if observation period starts at different times, this checks if
+  # the pair can still be formed
+  if (check_truncation) {
+    complete_start <- fifelse(.time <= .time2,
+                              .min_t <= .time & .min_t2 <= .time,
+                              .min_t <= .time2 & .min_t2 <= .time2)
+  } else {
+    complete_start <- TRUE
+  }
+
+  return(!out & complete_followup & complete_start)
 }
 
 ## generates all possible (and valid) pairings of individuals
@@ -84,8 +95,8 @@ generate_all_pairs <- function(data, risk_period, bounds,
   d_pairs <- data[data, on = .(.idx > .idx), allow.cartesian=TRUE, nomatch=0]
   d_pairs[, .idx := NULL]
   setnames(d_pairs,
-           old=c("i..id", "i..time", "i..max_t"),
-           new=c(".id2", ".time2", ".max_t2"))
+           old=c("i..id", "i..time", "i..min_t", "i..max_t"),
+           new=c(".id2", ".time2", ".min_t2", ".max_t2"))
 
   # keep only valid pairs
   d_pairs <- remove_invalid_matches(d_pairs=d_pairs, d_exp=data,
@@ -143,6 +154,8 @@ generate_random_pairs_mem <- function(data, n_pairs, risk_period, bounds,
     .time = numeric(),
     .id2 = integer(),
     .time2 = numeric(),
+    .min_t = numeric(),
+    .min_t2 = numeric(),
     .max_t = numeric(),
     .max_t2 = numeric()
   )
@@ -215,6 +228,8 @@ generate_random_pairs_mem <- function(data, n_pairs, risk_period, bounds,
       .id2 = data$.id[j],
       .time = data$.time[i],
       .time2 = data$.time[j],
+      .min_t = data$.min_t[i],
+      .min_t2 = data$.min_t[j],
       .max_t = data$.max_t[i],
       .max_t2 = data$.max_t[j],
       i = NULL,
@@ -260,8 +275,8 @@ generate_one_pairing <- function(data, risk_period, bounds,
   # split into two pieces
   d_1 <- data2[seq_len(nrow(data2)/2)]
   d_2 <- data2[seq(nrow(data2)/2+1, nrow(data2))]
-  setnames(d_2, old=c(".id", ".time", ".max_t"),
-           new=c(".id2", ".time2", ".max_t2"))
+  setnames(d_2, old=c(".id", ".time", ".min_t", ".max_t"),
+           new=c(".id2", ".time2", ".min_t2", ".max_t2"))
 
   # put together in one pairwise data.table
   d_pairs <- cbind(d_1, d_2)
@@ -291,13 +306,14 @@ remove_invalid_matches <- function(d_pairs, d_exp, risk_period, bounds,
                                    allow_overlap=FALSE) {
 
   . <- .id <- .id2 <- .time <- .time2 <- .n_exp1 <- .n_exp2 <- .num <-
-    is_valid <- .max_t <- .max_t2 <- NULL
+    is_valid <- .min_t <- .min_t2 <- .max_t <- .max_t2 <- NULL
 
   # skip more complex processing if only one exposure per person
   if (length(unique(d_exp$.id))==nrow(d_exp)) {
 
     d_pairs <- subset(d_pairs, is_valid_pair(
       .id=.id, .id2=.id2, .time=.time, .time2=.time2,
+      .min_t=.min_t, .min_t2=.min_t2,
       .max_t=.max_t, .max_t2=.max_t2, risk_period=risk_period,
       bounds=bounds, allow_overlap=allow_overlap
       )
@@ -315,6 +331,7 @@ remove_invalid_matches <- function(d_pairs, d_exp, risk_period, bounds,
     d_pairs <- subset(d_pairs, is_valid_pair(.id=.id, .id2=.id2, .time=.time,
                                              .time2=.time2, .max_t=.max_t,
                                              .max_t2=.max_t2,
+                                             .min_t=.min_t, .min_t2=.min_t2,
                                              risk_period=risk_period,
                                              bounds=bounds,
                                              allow_overlap=allow_overlap))
@@ -354,10 +371,12 @@ remove_invalid_matches <- function(d_pairs, d_exp, risk_period, bounds,
     # check if exposure period of .id overlaps with any exposure periods of .id2
     for (k in seq_len(length(times_id2))) {
       d_pairs[!is_valid_pair(.id=.id, .id2=.id2, .time=.time,
-                             .time2=get(times_id2[k]), .max_t=.max_t,
-                             .max_t2=.max_t2, risk_period=risk_period,
+                             .time2=get(times_id2[k]),
+                             .min_t=.min_t, .min_t2=.min_t2,
+                             .max_t=.max_t, .max_t2=.max_t2,
+                             risk_period=risk_period,
                              bounds=bounds, check_censoring=FALSE,
-                             allow_overlap=FALSE),
+                             allow_overlap=FALSE, check_truncation=FALSE),
               is_valid := FALSE]
     }
 
@@ -365,8 +384,10 @@ remove_invalid_matches <- function(d_pairs, d_exp, risk_period, bounds,
     for (k in seq_len(length(times_id1))) {
       d_pairs[!is_valid_pair(.id=.id, .id2=.id2, .time=get(times_id1[k]),
                              .time2=.time2, .max_t=.max_t, .max_t2=.max_t2,
+                             .min_t=.min_t, .min_t2=.min_t2,
                              risk_period=risk_period, bounds=bounds,
-                             check_censoring=FALSE, allow_overlap=FALSE),
+                             check_censoring=FALSE, allow_overlap=FALSE,
+                             check_truncation=FALSE),
               is_valid := FALSE]
     }
 
@@ -374,7 +395,8 @@ remove_invalid_matches <- function(d_pairs, d_exp, risk_period, bounds,
     d_pairs <- subset(d_pairs, is_valid==TRUE)
 
     # put pairs back together
-    cnames <- c(".id", ".time", ".id2", ".time2", ".max_t", ".max_t2")
+    cnames <- c(".id", ".time", ".id2", ".time2", ".min_t", ".min_t2",
+                ".max_t", ".max_t2")
     d_pairs <- rbind(d_pairs[, cnames, with=FALSE],
                      d_pairs1[, cnames, with=FALSE])
   }

@@ -10,7 +10,8 @@ This function may be used to transform raw information about exposure, event and
 \usage{
 prepare_spmd_data(exposures, events, obs_start, obs_end,
                   id, time, risk_period, exposure_name="A",
-                  event_name="Y")
+                  event_name="Y", convert_date=TRUE,
+                  units="days")
 }
 \arguments{
   \item{exposures}{
@@ -39,6 +40,12 @@ A single character string specifying how the exposure indicator in the output da
   }
   \item{event_name}{
 A single character string specifying how the event indicator in the output data should be named.
+  }
+  \item{convert_date}{
+Either \code{TRUE} (default) or \code{FALSE}, specifying whether \code{Date} like objects should be converted to numeric values. If \code{TRUE}, the smallest datetime in \code{start} is used as time 0. All other values in both \code{start} and \code{stop} then resemble the time elapsed since this point in time (in \code{units}). We recommend keeping this at \code{TRUE}, because \code{\link{sym_pair_matching}} requires numeric time values. Ignore if the supplied time values are already numeric.
+  }
+  \item{units}{
+A single character string passed to the argument of the same name in \code{\link{difftime}}. It defines the units of time since the artificial time zero. Only used if \code{convert_date=TRUE} and if the supplied time values are \code{Date} like objects, ignored otherwise.
   }
 }
 \details{

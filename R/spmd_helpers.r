@@ -209,10 +209,16 @@ warnifnotm <- function(assert, ...) {
   }
 }
 
+## checks if a vector is a Date
+is_date <- function(x) {
+  return(inherits(x, c("Date", "POSIXt")))
+}
+
 ## input checks for the sym_pair_matching() function
 check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
                               estimator, bootstrap, n_boot, conf_level,
-                              bounds, batch_size, rand_max_iter, convergence) {
+                              bounds, batch_size, rand_max_iter, convergence,
+                              allow_overlap) {
 
   stopifnotm(is.data.frame(data), "'data' must be a data.frame like ",
              "object (tibbles, data.table, etc.).")
@@ -255,6 +261,11 @@ check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
              "'rand_max_iter' must be a single integer > 0.")
   stopifnotm((length(convergence)==1 && is.logical(convergence)),
              "'convergence' must be either TRUE or FALSE.")
+  stopifnotm((length(allow_overlap)==1 && is.logical(allow_overlap)),
+             "'allow_overlap' must be either TRUE or FALSE.")
+  stopifnotm(!(is_date(data[[formula[[1]]]]) || is_date(data[[formula[[2]]]])),
+             "The intervals coded by 'start' and 'stop' must be numeric.",
+             "Date like values are not supported.")
 
   # check if all variables named in formula are in data
   for (i in seq_len(4)) {

@@ -19,7 +19,7 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                     estimator=estimator, bootstrap=bootstrap, n_boot=n_boot,
                     conf_level=conf_level, bounds=bounds,
                     rand_max_iter=rand_max_iter, batch_size=batch_size,
-                    convergence=convergence)
+                    convergence=convergence, allow_overlap=allow_overlap)
 
   # create matched dataset
   l_data <- get_full_data(data=data,
