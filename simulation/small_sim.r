@@ -75,12 +75,14 @@ create_data <- function(n, scenario, theta, multiple_A=FALSE,
   # define DAG
   dag <- empty_dag() +
     node("X", type="rnorm", mean=0, sd=1) +
+    node_td("L", type="next_time", event_duration=50,
+            prob_fun=0.001) +
     node_td("A", type="next_time", model="cox", event_duration=30,
-            formula= ~ X*log(2), surv_dist=fa,
+            formula= ~ X*log(2) + L*log(5), surv_dist=fa,
             basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
             as_integer=TRUE, immunity_duration=immunity_duration_A) +
     node_td("Y", type="next_time", model="cox", event_duration=1,
-            formula= ~ X*log(2) + A*eval(theta), surv_dist=fy,
+            formula= ~ X*log(2) + A*eval(theta) + L*log(5), surv_dist=fy,
             basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
             as_integer=TRUE, immunity_duration=immunity_duration_Y)
 
@@ -100,7 +102,7 @@ estimate_rr <- function(data, type) {
     out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                              id=".id", pairs="all", risk_period=30,
                              estimator="moments", bounds="(]",
-                             convergence=FALSE, allow_overlap=TRUE)
+                             convergence=FALSE, allow_overlap=FALSE)
     rr <- out$est
   } else if (type=="sccs") {
     rr <- estimate_sccs(data)
@@ -127,7 +129,7 @@ sim %<>% set_levels(
   #n = c(5000, 10000, 20000),
   theta = log(2.5),
   n = 20000,
-  multiple_A = c(TRUE, FALSE),
+  multiple_A = FALSE,
   multiple_Y = TRUE
 )
 

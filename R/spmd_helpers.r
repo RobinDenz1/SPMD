@@ -152,6 +152,7 @@ perform_bootstrapping <- function(d_exp, d_events, estimator, pairs, n_pairs,
 }
 
 ## estimates a p-value from bootstrapped samples
+#' @importFrom data.table fifelse
 get_boot_p_value <- function(boot_samples, null=1) {
   p_lower <- mean(boot_samples <= null)
   p_upper <- mean(boot_samples >= null)
@@ -171,6 +172,7 @@ get_boot_p_value <- function(boot_samples, null=1) {
 #       in the consistency proof divided by 4 and E_n^2 is the ordered pair
 #       denominator divided by 4, so the ratio is correct, but the single
 #       quantities are on a different scale than in the proof
+#' @importFrom data.table :=
 #' @importFrom data.table rbindlist
 get_convergence_stats <- function(d_counts) {
 

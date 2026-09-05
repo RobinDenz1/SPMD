@@ -1,13 +1,17 @@
 
 ## main function to apply the symmetric pair matching design
+#' @importFrom data.table :=
+#' @importFrom data.table uniqueN
 #' @export
 sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                               estimator="moments", pairs="random2",
                               n_pairs=100000, batch_size=max(5000, n_pairs * 2),
                               rand_max_iter=100, allow_overlap=FALSE,
-                              bootstrap=FALSE, n_boot=1000,
-                              conf_level=0.95, n_cores=1, progressbar=TRUE,
-                              convergence=TRUE, ...) {
+                              bootstrap=FALSE, n_boot=1000, conf_level=0.95,
+                              n_cores=1, progressbar=TRUE, convergence=TRUE,
+                              ...) {
+
+  . <- .id <- .max_t <- .time <- .censored <- .had_overlap <- NULL
 
   requireNamespace("data.table", quietly=TRUE)
 
@@ -121,19 +125,28 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
 
   ## calculate some further statistics
   # some numbers describing the sample sizes used
-  n_total <- length(unique(data$.id))
+  n_total <- uniqueN(data$.id)
   n_exposed <- l_data$n_exposed
-  n_exposed_time <- length(unique(l_data$d_exp$.id))
-  n_has_event <- length(unique(l_data$d_events$.id))
-  n_exposed_and_event <- length(intersect(l_data$d_exp$.id,
-                                          l_data$d_events$.id))
+  n_exposed_time <- uniqueN(l_data$d_exp$.id)
+  n_has_event <- uniqueN(l_data$d_events$.id)
+  n_exposed_and_event <- length(
+    intersect(l_data$d_exp$.id, l_data$d_events$.id)
+  )
   n_exposures <- l_data$n_exposures
   n_events <- nrow(l_data$d_events)
+  n_had_overlap <- sum(out$d_matches$.had_overlap) / 4
+
+  out$d_matches[, .censored := any((.time + risk_period) > .max_t), by=.id]
+  n_censored <- sum(out$d_matches$.censored)
 
   # amount of observation time used from included individuals
   d_time_used <- get_times_used(d_matches=l_data$d_matches,
                                 data=l_data$data,
                                 risk_period=risk_period)
+
+  # little cleanup of d_matches
+  out$d_matches[, .had_overlap := NULL]
+  out$d_matches[, .censored := NULL]
 
   # convergence stats when re-using pairs
   if (pairs!="one" && estimator=="moments" && convergence==TRUE) {
@@ -147,12 +160,15 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
   # add to output
   out$d_time_used <- d_time_used
   out$convergence <- est_convergence
-  out$sizes <- list(n_total=n_total, n_exposed=n_exposed,
+  out$sizes <- list(n_total=n_total,
+                    n_exposed=n_exposed,
                     n_exposed_time=n_exposed_time,
                     n_exposures=n_exposures,
                     n_events=n_events,
                     n_has_event=n_has_event,
-                    n_exposed_and_event=n_exposed_and_event)
+                    n_exposed_and_event=n_exposed_and_event,
+                    n_censored=n_censored,
+                    n_had_overlap=n_had_overlap)
   class(out) <- "SPMD"
 
   return(out)

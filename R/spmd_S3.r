@@ -102,7 +102,9 @@ summary.SPMD <- function(object, ...) {
       individuals_with_event = sizes$n_has_event,
       exposed_with_event = sizes$n_exposed_and_event,
       symmetric_pairs = n_pairs,
-      observation_time_used = time_used
+      observation_time_used = time_used,
+      pairs_with_overlap = sizes$n_overlap,
+      pairs_with_censoring = sizes$n_censored
     ),
 
     estimate = list(
@@ -114,7 +116,7 @@ summary.SPMD <- function(object, ...) {
       p_value = p_value
     ),
     convergence = object$convergence,
-    bootstrap = list(n = boot_n, n_na=object$n_boot_na),
+    bootstrap = list(n=boot_n, n_na=object$n_boot_na),
     estimating_equation = estimating_equation,
     object = object
   )

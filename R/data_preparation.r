@@ -266,10 +266,11 @@ matches2counts <- function(data, bootstrap) {
 #' @importFrom data.table :=
 #' @importFrom data.table .I
 #' @importFrom data.table rbindlist
+#' @importFrom data.table setnames
 add_event_count <- function(dt_index, dt_events, bounds, allow_overlap=FALSE) {
 
   row_id <- .end_time <- .time <- .id <- . <- .n_events <- .group <-
-    .has_overlap <- NULL
+    .has_overlap <- .had_overlap <- NULL
 
   dt_index <- copy(dt_index)
 
@@ -324,11 +325,12 @@ add_event_count <- function(dt_index, dt_events, bounds, allow_overlap=FALSE) {
 
     # put together
     dt_index <- rbindlist(list(dt_index1, dt_index2, dt_index3))
-    dt_index[, .has_overlap := NULL]
+    setnames(dt_index, old=".has_overlap", new=".had_overlap")
 
   } else {
     out <- count_events(dt_events=dt_events, dt_index=dt_index, bounds=bounds)
     dt_index[, .n_events := out$n_events]
+    dt_index[, .had_overlap := FALSE]
   }
 
   # rows with no matches get NA -> replace with 0
