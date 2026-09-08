@@ -18,16 +18,16 @@ estimate_moments <- function(data, bootstrap=FALSE, n_boot=1000,
     p_value <- get_boot_p_value(boot)
     n_boot_na <- sum(is.na(log(boot)) | is.infinite(log(boot)))
 
-    l_sums <- list(X2_X4=sum(d_counts$X2_X4),
-                   X1_X3=sum(d_counts$X1_X3))
+    l_sums <- list(Xb1_Xa2=sum(d_counts$Xb1_Xa2),
+                   Xa1_Xb2=sum(d_counts$Xa1_Xb2))
   } else {
-    l_sums <- list(X2_X4=sum(d_counts$X2 * d_counts$X4),
-                   X1_X3=sum(d_counts$X1 * d_counts$X3))
+    l_sums <- list(Xb1_Xa2=sum(d_counts$Xb1 * d_counts$Xa2),
+                   Xa1_Xb2=sum(d_counts$Xa1 * d_counts$Xb2))
     se <- ci <- boot <- p_value <- n_boot_na <- NULL
   }
 
   # point estimate
-  est <- exp(0.5 * log(l_sums$X2_X4 / l_sums$X1_X3))
+  est <- exp(0.5 * log(l_sums$Xb1_Xa2 / l_sums$Xa1_Xb2))
 
   out <- list(d_counts=d_counts, l_sums=l_sums, est=est, se=se,
               ci=ci, boot_est=boot, p_value=p_value, n_boot_na=n_boot_na)
@@ -41,10 +41,10 @@ estimate_moments <- function(data, bootstrap=FALSE, n_boot=1000,
 #' @importFrom data.table setDTthreads
 get_boot_moments <- function(d_counts, data, n_boot, n_cores, progressbar) {
 
-  X2_X4 <- X2 <- X4 <- X1_X3 <- X1 <- X3 <- NULL
+  Xb1_Xa2 <- Xa1 <- Xa2 <- Xa1_Xb2 <- Xb1 <- Xb2 <- NULL
 
-  d_counts[, X2_X4 := X2 * X4]
-  d_counts[, X1_X3 := X1 * X3]
+  d_counts[, Xb1_Xa2 := Xb1 * Xa2]
+  d_counts[, Xa1_Xb2 := Xa1 * Xb2]
 
   # data.table storing person weights
   d_W <- data.table(.id=unique(data$.id))
@@ -127,8 +127,8 @@ one_boot_iter_moments <- function(d_W, d_counts, n) {
   W <- d_counts$W1 * d_counts$W2
 
   # bootstrap estimate
-  out <- exp(0.5 * log(sum(W * d_counts$X2_X4) /
-                       sum(W * d_counts$X1_X3)))
+  out <- exp(0.5 * log(sum(W * d_counts$Xb1_Xa2) /
+                       sum(W * d_counts$Xa1_Xb2)))
   return(out)
 }
 

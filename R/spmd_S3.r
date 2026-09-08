@@ -80,9 +80,9 @@ summary.SPMD <- function(object, ...) {
   if (inputs$estimator=="moments") {
     estimating_equation <- paste0(
       "exp{1/2 log(",
-      format(object$l_sums$X2_X4, big.mark = ","),
+      format(object$l_sums$Xb1_Xa2, big.mark = ","),
       " / ",
-      format(object$l_sums$X1_X3, big.mark = ","),
+      format(object$l_sums$Xa1_Xb2, big.mark = ","),
       ")}"
     )
   }

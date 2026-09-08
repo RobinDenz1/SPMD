@@ -48,7 +48,7 @@ fbasehaz_A2 <- function(t) {
 
 ## generate a dataset following the required DGP for both scenarios
 create_data <- function(n, scenario, theta, multiple_A=FALSE,
-                        multiple_Y=TRUE) {
+                        multiple_Y=TRUE, beta_L_A=0, beta_L_Y=0) {
 
   # no time effects
   if (scenario==1) {
@@ -74,15 +74,15 @@ create_data <- function(n, scenario, theta, multiple_A=FALSE,
 
   # define DAG
   dag <- empty_dag() +
-    node("X", type="rnorm", mean=0, sd=1) +
+    node("U", type="rnorm", mean=0, sd=1) +
     node_td("L", type="next_time", event_duration=50,
             prob_fun=0.001) +
     node_td("A", type="next_time", model="cox", event_duration=30,
-            formula= ~ X*log(2) + L*log(5), surv_dist=fa,
+            formula= ~ U*log(2) + L*beta_L_A, surv_dist=fa,
             basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
             as_integer=TRUE, immunity_duration=immunity_duration_A) +
     node_td("Y", type="next_time", model="cox", event_duration=1,
-            formula= ~ X*log(2) + A*eval(theta) + L*log(5), surv_dist=fy,
+            formula= ~ U*log(2) + A*eval(theta) + L*beta_L_Y, surv_dist=fy,
             basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
             as_integer=TRUE, immunity_duration=immunity_duration_Y)
 
@@ -93,17 +93,22 @@ create_data <- function(n, scenario, theta, multiple_A=FALSE,
 }
 
 ## get RR estimate using different methods
-estimate_rr <- function(data, type) {
+estimate_rr <- function(data, type, include_ci=FALSE) {
 
   if (type=="cox") {
-    mod <- coxph(Surv(start, stop, Y) ~ A + X, data=data)
+    mod <- coxph(Surv(start, stop, Y) ~ A + U, data=data)
     rr <- as.vector(exp(coef(mod)["ATRUE"]))
   } else if (type=="spmd") {
     out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                              id=".id", pairs="all", risk_period=30,
                              estimator="moments", bounds="(]",
-                             convergence=FALSE, allow_overlap=FALSE)
+                             convergence=FALSE, allow_overlap=FALSE,
+                             bootstrap=include_ci)
     rr <- out$est
+
+    if (include_ci) {
+      rr <- c(rr, out$ci)
+    }
   } else if (type=="sccs") {
     rr <- estimate_sccs(data)
   } else if (type=="sccs_spline_5") {
@@ -118,47 +123,155 @@ estimate_rr <- function(data, type) {
   return(rr)
 }
 
-# main simulation
-sim <- new_sim()
+## main function to run the entire Monte-Carlo simulation study
+run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
+                           multiple_A, multiple_Y, beta_L_Y=0, beta_L_A=0,
+                           conf_int=FALSE, n_cores=8, seed=2134) {
 
-sim %<>% set_levels(
-  estimator = c("cox", "spmd", "cco", "ctc", "sccs", "sccs_spline_5",
-                "sccs_spline_15"),
-  scenario = c(1, 2),
-  #theta = log(c(0.7, 1, 1.5, 2.5, 5)),
-  #n = c(5000, 10000, 20000),
-  theta = log(2.5),
-  n = 20000,
-  multiple_A = FALSE,
-  multiple_Y = TRUE
-)
+  # annoying needed fix, because otherwise run() fails
+  # due to scoping issues
+  global_funs <- ls(envir = .GlobalEnv)
+  global_funs <- global_funs[
+    vapply(global_funs, function(x) is.function(get(x, envir=.GlobalEnv)),
+           logical(1))
+  ]
 
-sim %<>% set_script(function() {
-  batch({
-    data <- create_data(n=L$n, scenario=L$scenario, theta=L$theta,
-                        multiple_Y=L$multiple_Y, multiple_A=L$multiple_A)
+  for (name in global_funs) {
+    assign(name, get(name, envir=.GlobalEnv), envir=environment())
+  }
+
+  # new simulation object
+  sim <- new_sim()
+
+  # set main parameters
+  sim %<>% set_levels(
+    estimator = method,
+    scenario = scenario,
+    theta = theta,
+    n = n_sim,
+    multiple_A = multiple_A,
+    multiple_Y = multiple_Y,
+    beta_L_Y = beta_L_Y,
+    beta_L_A = beta_L_A,
+    conf_int = conf_int
+  )
+
+  # define the simulation script
+  sim %<>% set_script(function() {
+    batch({
+      data <- create_data(n=L$n, scenario=L$scenario, theta=L$theta,
+                          multiple_Y=L$multiple_Y, multiple_A=L$multiple_A,
+                          beta_L_Y=L$beta_L_Y, beta_L_A=L$beta_L_A)
+    })
+    rr_hat <- estimate_rr(data=data, type=L$estimator, include_ci=L$conf_int)
+
+    if (L$conf_int) {
+      out <- list("rr_hat"=rr_hat[1],
+                  "ci_lower"=rr_hat[2],
+                  "ci_upper"=rr_hat[3])
+    } else {
+      out <- list("rr_hat"=rr_hat)
+    }
+
+    return(out)
   })
-  rr_hat <- estimate_rr(data=data, type=L$estimator)
-  return(list("rr_hat"=rr_hat))
-})
 
-sim %<>% set_config(
-  num_sim = 1000,
-  packages = c("data.table", "SPMD", "survival", "simDAG",
-               "MatchTime", "splines"),
-  batch_levels = c("n", "scenario", "theta", "multiple_Y", "multiple_A"),
-  parallel = TRUE,
+  # set configurations
+  sim %<>% set_config(
+    num_sim = n_repeats,
+    packages = c("data.table", "SPMD", "survival", "simDAG",
+                 "MatchTime", "splines"),
+    batch_levels = c("n", "scenario", "theta", "multiple_Y", "multiple_A",
+                     "beta_L_A", "beta_L_Y"),
+    parallel = n_cores > 1,
+    n_cores = n_cores,
+    seed = seed
+  )
+
+  # run simulation
+  sim %<>% run()
+
+  return(sim)
+}
+
+## varying n, theta
+sim1 <- run_simulation(
+  n_sim = c(5000, 10000, 20000),
+  n_repeats = 1000,
+  method = c("spmd", "cco", "ctc", "sccs", "sccs_spline_5", "sccs_spline_15"),
+  scenario = c(1, 2),
+  theta = log(c(0.7, 1, 1.5, 2.5, 5)),
+  multiple_A = FALSE,
+  multiple_Y= TRUE,
   n_cores = 8,
-  seed = 42,
-  return_batch_id = TRUE
+  seed = 42
 )
+saveRDS(sim1$results, "sim1_results.Rds")
 
-sim %<>% run()
+## allowing multiple exposure periods per person
+sim2 <- run_simulation(
+  n_sim = 20000,
+  n_repeats = 1000,
+  method = c("spmd", "cco", "ctc", "sccs", "sccs_spline_5", "sccs_spline_15"),
+  scenario = c(1, 2),
+  theta = log(2.5),
+  multiple_A = TRUE,
+  multiple_Y= TRUE,
+  n_cores = 8,
+  seed = 42
+)
+saveRDS(sim2$results, "sim2_results.Rds")
 
-saveRDS(sim$results, "sim_results.Rds")
+## varying n, theta with a terminal event
+sim3 <- run_simulation(
+  n_sim = c(10000, 20000),
+  n_repeats = 1000,
+  method = c("spmd", "cco", "ctc", "sccs", "sccs_spline_5", "sccs_spline_15"),
+  scenario = c(1, 2),
+  theta = log(c(0.7, 1, 2.5)),
+  multiple_A = FALSE,
+  multiple_Y= FALSE,
+  n_cores = 8,
+  seed = 42
+)
+saveRDS(sim3$results, "sim3_results.Rds")
+
+## with time-varying outcome predictor / exposure predictor / confounder
+sim4 <- run_simulation(
+  n_sim = 20000,
+  n_repeats = 1000,
+  method = c("spmd", "cco", "ctc", "sccs", "sccs_spline_5", "sccs_spline_15"),
+  scenario = c(1, 2),
+  theta = log(2.5),
+  multiple_A = FALSE,
+  multiple_Y= TRUE,
+  beta_L_Y = log(c(1, 3, 5)),
+  beta_L_A = log(c(1, 3, 5)),
+  n_cores = 8,
+  seed = 42
+)
+saveRDS(sim4$results, "sim4_results.Rds")
+
+## bootstrap CI coverage
+sim5 <- run_simulation(
+  n_sim = 20000,
+  n_repeats = 1000,
+  method = "spmd",
+  scenario = c(1, 2),
+  theta = log(c(1, 2.5)),
+  multiple_A = FALSE,
+  multiple_Y= TRUE,
+  conf_int = TRUE,
+  n_cores = 8,
+  seed = 42
+)
+saveRDS(sim5$results, "sim5_results.Rds")
+
+
+
 
 # some simulation data pre-processing
-plotdata <- sim$results
+plotdata <- sim5$results
 plotdata$scenario <- paste0("Scenario ", plotdata$scenario)
 plotdata$estimator <- factor(
   plotdata$estimator,

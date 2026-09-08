@@ -252,10 +252,10 @@ matches2counts <- function(data, bootstrap) {
   data <- data.table(
     .id1 = data[.group==1]$.id,
     .id2 = data[.group==2]$.id,
-    X1 = data[.group==1]$.n_events,
-    X2 = data[.group==2]$.n_events,
-    X3 = data[.group==3]$.n_events,
-    X4 = data[.group==4]$.n_events
+    Xa1 = data[.group==1]$.n_events,
+    Xb1 = data[.group==2]$.n_events,
+    Xb2 = data[.group==3]$.n_events,
+    Xa2 = data[.group==4]$.n_events
   )
 
   return(data)
