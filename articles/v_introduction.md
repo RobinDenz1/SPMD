@@ -549,6 +549,14 @@ time and are shared across individuals, the time scale should be the
 calender time. If, on the other hand, the time trends are anchored to
 time since a diagnosis, than time zero should be the date of diagnosis.
 
+Note that it is not necessary that each individual starts at $`t = 0`$.
+Later observation starts are supported by the package, one only needs to
+supply a start-stop dataset where the first time period starts at the
+individual-specific observation start. When doing this, it is important
+to be sure that individuals are currently free of exposure at their
+observation start, possibly delaying the observation start by another
+`risk_period` time units to be sure.
+
 ### Overlapping risk periods
 
 It is possible to extend the definition of “valid pairs”. Consider two

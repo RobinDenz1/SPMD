@@ -621,6 +621,14 @@ time and are shared across individuals, the time scale should be the
 calender time. If, on the other hand, the time trends are anchored to
 time since a diagnosis, than time zero should be the date of
 diagnosis.</p>
+<p>Note that it is not necessary that each individual starts at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">t = 0</annotation></semantics></math>.
+Later observation starts are supported by the package, one only needs to
+supply a start-stop dataset where the first time period starts at the
+individual-specific observation start. When doing this, it is important
+to be sure that individuals are currently free of exposure at their
+observation start, possibly delaying the observation start by another
+<code>risk_period</code> time units to be sure.</p>
 </div>
 <div class="section level3">
 <h3 id="overlapping-risk-periods">Overlapping risk periods<a class="anchor" aria-label="anchor" href="#overlapping-risk-periods"></a>
