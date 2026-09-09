@@ -430,10 +430,11 @@ summary(out)
 #> 
 #> Sample
 #>   Individuals                      500
-#>   Exposed individuals              334
-#>   Exposure episodes                334
-#>   Individuals with >=1 event       334
+#>   Exposed individuals (total)      484
+#>   Exposure episodes (total)        484
+#>   Individuals with >=1 event       338
 #>   Exposed + event                  334
+#>   Exposure episodes (included)     334
 #>   Symmetric pairs                  47,252
 #>   Observation time used            95.84%
 #> 
