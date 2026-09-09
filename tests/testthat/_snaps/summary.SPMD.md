@@ -13,10 +13,11 @@
       
       Sample
         Individuals                      800
-        Exposed individuals              535
-        Exposure episodes                535
-        Individuals with >=1 event       535
+        Exposed individuals (total)      774
+        Exposure episodes (total)        774
+        Individuals with >=1 event       540
         Exposed + event                  535
+        Exposure episodes (included)     535
         Symmetric pairs                  267
         Observation time used            8.00%
       
@@ -43,10 +44,11 @@
       
       Sample
         Individuals                      800
-        Exposed individuals              774
-        Exposure episodes                774
-        Individuals with >=1 event       535
+        Exposed individuals (total)      774
+        Exposure episodes (total)        774
+        Individuals with >=1 event       540
         Exposed + event                  535
+        Exposure episodes (included)     774
         Symmetric pairs                  385
         Observation time used            8.00%
       
@@ -69,10 +71,11 @@
       
       Sample
         Individuals                      800
-        Exposed individuals              535
-        Exposure episodes                535
-        Individuals with >=1 event       535
+        Exposed individuals (total)      774
+        Exposure episodes (total)        774
+        Individuals with >=1 event       540
         Exposed + event                  535
+        Exposure episodes (included)     535
         Symmetric pairs                  500
         Observation time used            12.33%
       
@@ -100,10 +103,11 @@
       
       Sample
         Individuals                      800
-        Exposed individuals              535
-        Exposure episodes                535
-        Individuals with >=1 event       535
+        Exposed individuals (total)      774
+        Exposure episodes (total)        774
+        Individuals with >=1 event       540
         Exposed + event                  535
+        Exposure episodes (included)     535
         Symmetric pairs                  500
         Observation time used            12.33%
       
@@ -133,10 +137,11 @@
       
       Sample
         Individuals                      800
-        Exposed individuals              535
-        Exposure episodes                535
-        Individuals with >=1 event       535
+        Exposed individuals (total)      774
+        Exposure episodes (total)        774
+        Individuals with >=1 event       540
         Exposed + event                  535
+        Exposure episodes (included)     535
         Symmetric pairs                  121,412
         Observation time used            97.91%
       
@@ -164,10 +169,11 @@
       
       Sample
         Individuals                      800
-        Exposed individuals              774
-        Exposure episodes                774
-        Individuals with >=1 event       535
+        Exposed individuals (total)      774
+        Exposure episodes (total)        774
+        Individuals with >=1 event       540
         Exposed + event                  535
+        Exposure episodes (included)     774
         Symmetric pairs                  385
         Observation time used            8.00%
       
@@ -191,10 +197,11 @@
       
       Sample
         Individuals                      800
-        Exposed individuals              535
-        Exposure episodes                535
-        Individuals with >=1 event       535
+        Exposed individuals (total)      774
+        Exposure episodes (total)        774
+        Individuals with >=1 event       540
         Exposed + event                  535
+        Exposure episodes (included)     535
         Symmetric pairs                  300
         Observation time used            10.46%
       
@@ -221,10 +228,11 @@
       
       Sample
         Individuals                      800
-        Exposed individuals              535
-        Exposure episodes                535
-        Individuals with >=1 event       535
+        Exposed individuals (total)      774
+        Exposure episodes (total)        774
+        Individuals with >=1 event       540
         Exposed + event                  535
+        Exposure episodes (included)     535
         Symmetric pairs                  121,412
         Observation time used            97.91%
       

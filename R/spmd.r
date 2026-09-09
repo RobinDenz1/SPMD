@@ -11,7 +11,7 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                               n_cores=1, progressbar=TRUE, convergence=TRUE,
                               ...) {
 
-  . <- .id <- .max_t <- .time <- .censored <- .had_overlap <- NULL
+  . <- .id <- .max_t <- .time <- .censored <- .had_overlap <- V1 <- NULL
 
   requireNamespace("data.table", quietly=TRUE)
 
@@ -126,13 +126,15 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
   ## calculate some further statistics
   # some numbers describing the sample sizes used
   n_total <- uniqueN(data$.id)
-  n_exposed <- l_data$n_exposed
-  n_exposed_time <- uniqueN(l_data$d_exp$.id)
-  n_has_event <- uniqueN(l_data$d_events$.id)
+  n_exposed <- l_data$n_exposed_all
+  n_exposed_included <- l_data$n_exposed
+  n_exposures <- l_data$n_exposures_all
+  n_exposures_included <- l_data$n_exposures
+  n_has_event <- data[, sum(any(get(form_parsed$outcome))), by=id][, sum(V1)]
   n_exposed_and_event <- length(
     intersect(l_data$d_exp$.id, l_data$d_events$.id)
   )
-  n_exposures <- l_data$n_exposures
+
   n_events <- nrow(l_data$d_events)
   n_had_overlap <- sum(out$d_matches$.had_overlap) / 4
 
@@ -162,8 +164,9 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
   out$convergence <- est_convergence
   out$sizes <- list(n_total=n_total,
                     n_exposed=n_exposed,
-                    n_exposed_time=n_exposed_time,
                     n_exposures=n_exposures,
+                    n_exposed_included=n_exposed_included,
+                    n_exposures_included=n_exposures_included,
                     n_events=n_events,
                     n_has_event=n_has_event,
                     n_exposed_and_event=n_exposed_and_event,

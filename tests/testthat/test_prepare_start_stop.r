@@ -62,8 +62,7 @@ test_that("converts exposure to logical", {
     stop = "stop",
     id = "id",
     exposure = "A",
-    outcome = "Y",
-    remove_unexposed = FALSE
+    outcome = "Y"
   )
 
   expect_type(out$.A, "logical")
@@ -109,8 +108,7 @@ test_that("maps zero outcomes to FALSE", {
     stop = "stop",
     id = "id",
     exposure = "A",
-    outcome = "Y",
-    remove_noevents = FALSE
+    outcome = "Y"
   )
 
   expect_equal(out$.Y, c(FALSE, FALSE))
@@ -132,8 +130,7 @@ test_that("maps nonzero outcomes to TRUE", {
     stop = "stop",
     id = "id",
     exposure = "A",
-    outcome = "Y",
-    remove_noevents = FALSE
+    outcome = "Y"
   )
 
   expect_equal(out$.Y, c(TRUE, FALSE, TRUE))
@@ -184,51 +181,6 @@ test_that("calculates maximum observation time per person", {
   expect_equal(out$.max_t, c(50, 50, 50, 30, 30))
 })
 
-test_that("removes unexposed individuals by default", {
-
-  data <- data.frame(
-    id = c(1, 1, 2, 2),
-    start = c(0, 10, 0, 10),
-    stop = c(10, 20, 10, 20),
-    A = c(0, 0, 0, 1),
-    Y = c(0, 1, 1, 0)
-  )
-
-  out <- prepare_start_stop(
-    data = data,
-    start = "start",
-    stop = "stop",
-    id = "id",
-    exposure = "A",
-    outcome = "Y"
-  )
-
-  expect_equal(unique(out$.id), 2)
-})
-
-test_that("retains unexposed individuals when requested", {
-
-  data <- data.frame(
-    id = c(1, 1, 2, 2),
-    start = c(0, 10, 0, 10),
-    stop = c(10, 20, 10, 20),
-    A = c(0, 0, 0, 1),
-    Y = c(0, 1, 1, 0)
-  )
-
-  out <- prepare_start_stop(
-    data = data,
-    start = "start",
-    stop = "stop",
-    id = "id",
-    exposure = "A",
-    outcome = "Y",
-    remove_unexposed = FALSE
-  )
-
-  expect_setequal(unique(out$.id), c(1, 2))
-})
-
 test_that("removes rows with missing values", {
 
   data <- data.frame(
@@ -246,9 +198,7 @@ test_that("removes rows with missing values", {
       stop = "stop",
       id = "id",
       exposure = "A",
-      outcome = "Y",
-      remove_unexposed = FALSE,
-      remove_noevents = FALSE
+      outcome = "Y"
     ),
     "Missing values"
   )

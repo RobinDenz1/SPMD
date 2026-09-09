@@ -99,6 +99,8 @@ summary.SPMD <- function(object, ...) {
       individuals = sizes$n_total,
       exposed = sizes$n_exposed,
       exposure_episodes = sizes$n_exposures,
+      exposed_included = sizes$n_exposed_included,
+      exposure_episodes_included = sizes$n_exposures_included,
       individuals_with_event = sizes$n_has_event,
       exposed_with_event = sizes$n_exposed_and_event,
       symmetric_pairs = n_pairs,
@@ -145,10 +147,11 @@ print.summary.SPMD <- function(x, ...) {
   cat("\nSample\n")
   sample_rows <- c(
     "Individuals" = x$sample$individuals,
-    "Exposed individuals" = x$sample$exposed,
-    "Exposure episodes" = x$sample$exposure_episodes,
+    "Exposed individuals (total)" = x$sample$exposed,
+    "Exposure episodes (total)" = x$sample$exposure_episodes,
     "Individuals with >=1 event" = x$sample$individuals_with_event,
     "Exposed + event" = x$sample$exposed_with_event,
+    "Exposure episodes (included)" = x$sample$exposure_episodes_included,
     "Symmetric pairs" = x$sample$symmetric_pairs
   )
 

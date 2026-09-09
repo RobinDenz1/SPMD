@@ -14,7 +14,7 @@
     "name": "R",
     "url": "https://r-project.org"
   },
-  "runtimePlatform": "R version 4.5.0 (2025-04-11 ucrt)",
+  "runtimePlatform": "R version 4.5.2 (2025-10-31 ucrt)",
   "author": [
     {
       "@type": "Person",
@@ -205,7 +205,7 @@
     },
     "SystemRequirements": null
   },
-  "fileSize": "272.679KB",
+  "fileSize": "350.443KB",
   "citation": [
     {
       "@type": "CreativeWork",
@@ -239,7 +239,7 @@
       "sameAs": "https://doi.org/10.48550/arXiv.2608.25979"
     }
   ],
-  "releaseNotes": "https://github.com/RobinDenz1/SPMD/blob/master/NEWS.md",
+  "releaseNotes": "https://github.com/RobinDenz1/SPMD/blob/main/NEWS.md",
   "readme": "https://github.com/RobinDenz1/SPMD/blob/main/README.md",
   "contIntegration": ["https://github.com/RobinDenz1/SPMD/actions/workflows/R-CMD-check.yaml", "https://app.codecov.io/gh/RobinDenz1/SPMD"],
   "developmentStatus": "https://www.repostatus.org/#wip"

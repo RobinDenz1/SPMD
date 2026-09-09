@@ -16,8 +16,8 @@ For the paper:
 		- \theta varying over individuals
 		- individually varying time effects
 		(x) - presence of a time-varying confounder
-		- interaction between time and A
-		- interaction between time and U
+		(x) - interaction between time and A
+		(x) - interaction between time and U
 		(x) - terminal event
 - add illustrative example
 - maybe discuss how the estimand changes under effect heterogeneity

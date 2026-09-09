@@ -19,6 +19,8 @@ knitr::opts_chunk$set(
 [![](http://cranlogs.r-pkg.org/badges/grand-total/SPMD?color=blue)](https://cran.r-project.org/package=SPMD)
 [![R-CMD-check](https://github.com/RobinDenz1/SPMD/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/RobinDenz1/SPMD/actions/workflows/R-CMD-check.yaml)
 [![Codecov test coverage](https://codecov.io/gh/RobinDenz1/SPMD/graph/badge.svg)](https://app.codecov.io/gh/RobinDenz1/SPMD)
+[![](https://img.shields.io/badge/doi-10.48550/arXiv.2608.25979-green.svg)](https://doi.org/10.48550/arXiv.2608.25979
+)
 <!-- badges: end -->
 
 # SPMD <img src="man/figures/logo.png" height="240" align="right" />

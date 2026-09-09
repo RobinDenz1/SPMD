@@ -48,7 +48,8 @@ fbasehaz_A2 <- function(t) {
 
 ## generate a dataset following the required DGP for both scenarios
 create_data <- function(n, scenario, theta, multiple_A=FALSE,
-                        multiple_Y=TRUE, beta_L_A=0, beta_L_Y=0) {
+                        multiple_Y=TRUE, beta_L_A=0, beta_L_Y=0,
+                        A_time_interact=0, U_time_interact=0) {
 
   # no time effects
   if (scenario==1) {
@@ -73,18 +74,56 @@ create_data <- function(n, scenario, theta, multiple_A=FALSE,
   }
 
   # define DAG
-  dag <- empty_dag() +
-    node("U", type="rnorm", mean=0, sd=1) +
-    node_td("L", type="next_time", event_duration=50,
-            prob_fun=0.001) +
-    node_td("A", type="next_time", model="cox", event_duration=30,
-            formula= ~ U*log(2) + L*beta_L_A, surv_dist=fa,
-            basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
-            as_integer=TRUE, immunity_duration=immunity_duration_A) +
-    node_td("Y", type="next_time", model="cox", event_duration=1,
-            formula= ~ U*log(2) + A*eval(theta) + L*beta_L_Y, surv_dist=fy,
-            basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
-            as_integer=TRUE, immunity_duration=immunity_duration_Y)
+  if (A_time_interact==0 & U_time_interact==0) {
+    dag <- empty_dag() +
+      node("U", type="rnorm", mean=0, sd=1) +
+      node_td("L", type="next_time", event_duration=50,
+              prob_fun=0.001) +
+      node_td("A", type="next_time", model="cox", event_duration=30,
+              formula= ~ U*log(2) + L*beta_L_A, surv_dist=fa,
+              basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
+              as_integer=TRUE, immunity_duration=immunity_duration_A) +
+      node_td("Y", type="next_time", model="cox", event_duration=1,
+              formula= ~ U*log(2) + A*eval(theta) + L*beta_L_Y, surv_dist=fy,
+              basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
+              as_integer=TRUE, immunity_duration=immunity_duration_Y)
+  } else if (A_time_interact != 0) {
+    dag <- empty_dag() +
+      node("U", type="rnorm", mean=0, sd=1) +
+      node_td("L", type="next_time", event_duration=50,
+              prob_fun=0.001) +
+      node_td("A", type="next_time", model="cox", event_duration=30,
+              formula= ~ U*log(2) + L*beta_L_A, surv_dist=fa,
+              basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
+              as_integer=TRUE, immunity_duration=immunity_duration_A) +
+      node_td("Y", type="next_time", model="cox", event_duration=1,
+              formula= ~ U*log(2) + ATRUE*eval(theta) + LTRUE*beta_L_Y +
+                ATRUE:time_cuts_event_count*eval(A_time_interact),
+              surv_dist=fy,
+              basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
+              as_integer=TRUE, immunity_duration=immunity_duration_Y) +
+      node_td("time_cuts", type="next_time", prob_fun=1,
+              event_duration=0, distr_fun=simDAG:::timecuts,
+              distr_fun_args=list(cuts=300), event_count=TRUE)
+  } else if (U_time_interact != 0) {
+    dag <- empty_dag() +
+      node("U", type="rnorm", mean=0, sd=1) +
+      node_td("L", type="next_time", event_duration=50,
+              prob_fun=0.001) +
+      node_td("A", type="next_time", model="cox", event_duration=30,
+              formula= ~ U*log(2) + L*beta_L_A, surv_dist=fa,
+              basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
+              as_integer=TRUE, immunity_duration=immunity_duration_A) +
+      node_td("Y", type="next_time", model="cox", event_duration=1,
+              formula= ~ U*log(2) + ATRUE*eval(theta) + LTRUE*beta_L_Y +
+                U:time_cuts_event_count*eval(U_time_interact),
+              surv_dist=fy,
+              basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
+              as_integer=TRUE, immunity_duration=immunity_duration_Y) +
+      node_td("time_cuts", type="next_time", prob_fun=1,
+              event_duration=0, distr_fun=simDAG:::timecuts,
+              distr_fun_args=list(cuts=300), event_count=TRUE)
+  }
 
   # generate data
   data <- sim_discrete_event(dag, n_sim=n, max_t=1000, censor_at_max_t=TRUE,
@@ -126,6 +165,7 @@ estimate_rr <- function(data, type, include_ci=FALSE) {
 ## main function to run the entire Monte-Carlo simulation study
 run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
                            multiple_A, multiple_Y, beta_L_Y=0, beta_L_A=0,
+                           U_time_interact=0, A_time_interact=0,
                            conf_int=FALSE, n_cores=8, seed=2134) {
 
   # annoying needed fix, because otherwise run() fails
@@ -153,6 +193,8 @@ run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
     multiple_Y = multiple_Y,
     beta_L_Y = beta_L_Y,
     beta_L_A = beta_L_A,
+    U_time_interact = U_time_interact,
+    A_time_interact = A_time_interact,
     conf_int = conf_int
   )
 
@@ -161,7 +203,9 @@ run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
     batch({
       data <- create_data(n=L$n, scenario=L$scenario, theta=L$theta,
                           multiple_Y=L$multiple_Y, multiple_A=L$multiple_A,
-                          beta_L_Y=L$beta_L_Y, beta_L_A=L$beta_L_A)
+                          beta_L_Y=L$beta_L_Y, beta_L_A=L$beta_L_A,
+                          U_time_interact=L$U_time_interact,
+                          A_time_interact=L$A_time_interact)
     })
     rr_hat <- estimate_rr(data=data, type=L$estimator, include_ci=L$conf_int)
 
@@ -182,7 +226,8 @@ run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
     packages = c("data.table", "SPMD", "survival", "simDAG",
                  "MatchTime", "splines"),
     batch_levels = c("n", "scenario", "theta", "multiple_Y", "multiple_A",
-                     "beta_L_A", "beta_L_Y"),
+                     "beta_L_A", "beta_L_Y", "U_time_interact",
+                     "A_time_interact"),
     parallel = n_cores > 1,
     n_cores = n_cores,
     seed = seed
@@ -267,7 +312,20 @@ sim5 <- run_simulation(
 )
 saveRDS(sim5$results, "sim5_results.Rds")
 
-
+# interaction between time and U
+sim5 <- run_simulation(
+  n_sim = 20000,
+  n_repeats = 1000,
+  method = "spmd",
+  scenario = c(1, 2),
+  theta = log(2.5),
+  multiple_A = FALSE,
+  multiple_Y= TRUE,
+  U_time_interact = log(0.5),
+  n_cores = 8,
+  seed = 42
+)
+saveRDS(sim5$results, "sim5_results.Rds")
 
 
 # some simulation data pre-processing

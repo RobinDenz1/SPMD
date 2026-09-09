@@ -5,13 +5,27 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
                           pairs, n_pairs, risk_period, remove_noevents,
                           bounds, rand_max_iter, batch_size,
                           allow_overlap) {
-  .time <- .max_t <- overlap <- .id <- NULL
+
+  .time <- .max_t <- overlap <- .id <- .exposed <- .A <- .has_event <-
+    .Y <- NULL
 
   # small preparations
   data <- prepare_start_stop(data=data, start=start, stop=stop, id=id,
-                             exposure=exposure, outcome=outcome,
-                             remove_unexposed=TRUE,
-                             remove_noevents=remove_noevents)
+                             exposure=exposure, outcome=outcome)
+
+  d_exp_all <- get_exposure_times(data)
+
+  # remove unexposed
+  data[, .exposed := sum(.A) > 0, by=.id]
+  data <- data[.exposed==TRUE]
+  data[, .exposed := NULL]
+
+  # remove individuals without events, if specified
+  if (remove_noevents) {
+    data[, .has_event := sum(.Y) > 0, by=.id]
+    data <- data[.has_event==TRUE]
+    data[, .has_event := NULL]
+  }
 
   # all exposure / event times
   d_exp <- get_exposure_times(data)
@@ -59,7 +73,9 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
              " Estimation is thus impossible.")
 
   out <- list(d_matches=d_matches, data=data, d_exp=d_exp, d_events=d_events,
-              n_exposed=length(unique(d_exp$.id)), n_exposures=nrow(d_exp))
+              n_exposed=uniqueN(d_exp$.id), n_exposures=nrow(d_exp),
+              n_exposed_all=uniqueN(d_exp_all$.id),
+              n_exposures_all=nrow(d_exp_all))
 
   return(out)
 }
@@ -123,8 +139,7 @@ preprocess_treat <- function(treat) {
 #' @importFrom data.table :=
 #' @importFrom data.table fifelse
 #' @importFrom data.table copy
-prepare_start_stop <- function(data, start, stop, id, exposure, outcome,
-                               remove_unexposed=TRUE, remove_noevents=TRUE) {
+prepare_start_stop <- function(data, start, stop, id, exposure, outcome) {
 
   .A <- .Y <- .id <- .start <- .max_t <- .stop <- .exposed <-
     .has_event <- .min_t <- NULL
@@ -153,18 +168,6 @@ prepare_start_stop <- function(data, start, stop, id, exposure, outcome,
   # calculate minimum and maximum observation time per person
   data[, .max_t := max(.stop), by=.id]
   data[, .min_t := min(.start), by=.id]
-
-  if (remove_unexposed) {
-    data[, .exposed := sum(.A) > 0, by=.id]
-    data <- data[.exposed==TRUE]
-    data[, .exposed := NULL]
-  }
-
-  if (remove_noevents) {
-    data[, .has_event := sum(.Y) > 0, by=.id]
-    data <- data[.has_event==TRUE]
-    data[, .has_event := NULL]
-  }
 
   return(data)
 }

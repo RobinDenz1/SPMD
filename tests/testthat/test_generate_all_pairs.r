@@ -184,6 +184,15 @@ test_that("warning with very large amount of possible matches", {
   data <- sim_example_data(n=7000)
   data <- prepare_start_stop(data, start="start", stop="stop", id=".id",
                              exposure="A", outcome="Y")
+
+  data[, .exposed := sum(.A) > 0, by=.id]
+  data <- data[.exposed==TRUE]
+  data[, .exposed := NULL]
+
+  data[, .has_event := sum(.Y) > 0, by=.id]
+  data <- data[.has_event==TRUE]
+  data[, .has_event := NULL]
+
   d_exp <- get_exposure_times(data)
 
   expect_warning(generate_all_pairs(d_exp, risk_period=40, bounds="[]"),

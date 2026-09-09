@@ -1,5 +1,6 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+
 <!-- badges: start -->
 
 [![Project Status: WIP - Initial development is in progress, but there
@@ -10,6 +11,7 @@ public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostat
 [![R-CMD-check](https://github.com/RobinDenz1/SPMD/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/RobinDenz1/SPMD/actions/workflows/R-CMD-check.yaml)
 [![Codecov test
 coverage](https://codecov.io/gh/RobinDenz1/SPMD/graph/badge.svg)](https://app.codecov.io/gh/RobinDenz1/SPMD)
+[![](https://img.shields.io/badge/doi-10.48550/arXiv.2608.25979-green.svg)](https://doi.org/10.48550/arXiv.2608.25979)
 <!-- badges: end -->
 
 # SPMD <img src="man/figures/logo.png" height="240" align="right" />
@@ -99,10 +101,11 @@ summary(spmd)
 #> 
 #> Sample
 #>   Individuals                      500
-#>   Exposed individuals              339
-#>   Exposure episodes                339
-#>   Individuals with >=1 event       339
+#>   Exposed individuals (total)      486
+#>   Exposure episodes (total)        486
+#>   Individuals with >=1 event       342
 #>   Exposed + event                  339
+#>   Exposure episodes (included)     339
 #>   Symmetric pairs                  49,247
 #>   Observation time used            96.57%
 #> 
