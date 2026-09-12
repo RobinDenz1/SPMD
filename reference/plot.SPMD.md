@@ -97,9 +97,9 @@ data <- sim_example_data(n=500, rr=3)
 # using each person in one match
 out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                          risk_period=40, pairs="one", estimator="moments")
-#> Warning: The final estimate is NA or not finite. Estimation likely failed due to rare events.
+#> Error in if (est == 0) {    warning("The estimated RR is exactly 0, because the numerator was 0.",         " Although this is a valid value, it should be interpreted with",         " caution since it is usually a sign of unstable estimates due",         " to rare events or a small sample size.", call. = FALSE)}: missing value where TRUE/FALSE needed
 plot(out)
-
+#> Error: object 'out' not found
 
 # using each person in multiple match
 out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
