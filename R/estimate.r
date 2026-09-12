@@ -29,6 +29,13 @@ estimate_moments <- function(data, bootstrap=FALSE, n_boot=1000,
   # point estimate
   est <- exp(0.5 * log(l_sums$Xb1_Xa2 / l_sums$Xa1_Xb2))
 
+  if (est==0) {
+    warning("The estimated RR is exactly 0, because the numerator was 0.",
+            " Although this is a valid value, it should be interpreted with",
+            " caution since it is usually a sign of unstable estimates due",
+            " to rare events or a small sample size.", call.=FALSE)
+  }
+
   out <- list(d_counts=d_counts, l_sums=l_sums, est=est, se=se,
               ci=ci, boot_est=boot, p_value=p_value, n_boot_na=n_boot_na)
 

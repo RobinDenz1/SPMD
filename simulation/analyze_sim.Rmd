@@ -1,0 +1,409 @@
+---
+title: "SPMD Simulation Results"
+author: "Robin Denz"
+date: '`r Sys.Date()`'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, fig.width=7, fig.height=7)
+```
+
+```{r}
+library(ggplot2)
+library(data.table)
+library(binom)
+```
+
+# Introduction
+
+This script takes in the results generated using the Monte-Carlo simulation and analyzes them, creating the plots and tables shown in the paper and its appendices. To reproduce these results, first execute the `run_simulation.r` script. Only then this markdown document may be created.
+
+```{r}
+# some general data preparations for simulation results
+prepare_sim_results <- function(d_sim) {
+  
+  d_sim <- within(d_sim, {
+    scenario <- paste0("Scenario ", scenario);
+    estimator <- factor(
+      estimator,
+      levels = c("cox", "cco", "ctc", "sccs", "sccs_spline_5",
+                 "sccs_spline_15", "spmd"),
+      labels = c("Cox", "CCO", "CTC", "SCCS", "SCCS\nSpline\n(5)",
+                 "SCCS\nSpline\n(15)", "SPMD")
+    );
+    exp_theta <- exp(theta);
+    exp_theta_f <- factor(
+      exp_theta,
+      levels = c("0.7", "1", "1.5", "2.5", "5"),
+      labels = c(expression(exp(theta)~`=`~0.7),
+                 expression(exp(theta)~`=`~1),
+                 expression(exp(theta)~`=`~1.5),
+                 expression(exp(theta)~`=`~2.5),
+                 expression(exp(theta)~`=`~5))
+    );
+    beta_L_A_f <- factor(
+      exp(beta_L_A),
+      levels = c("1", "3", "5"),
+      labels = c(expression(exp(beta[A])~`=`~1),
+                 expression(exp(beta[A])~`=`~3),
+                 expression(exp(beta[A])~`=`~5))
+    );
+    beta_L_Y_f <- factor(
+      exp(beta_L_Y),
+      levels = c("1", "3", "5"),
+      labels = c(expression(exp(beta[Y])~`=`~1),
+                 expression(exp(beta[Y])~`=`~3),
+                 expression(exp(beta[Y])~`=`~5))
+    );
+    risk_period_f <- factor(
+      risk_period,
+      levels = c("10", "50", "100", "150", "300"),
+      labels = c(expression(tau~`=`~10),
+                 expression(tau~`=`~50),
+                 expression(tau~`=`~100),
+                 expression(tau~`=`~150),
+                 expression(tau~`=`~300))
+    );
+    log_bias_i <- log(rr_hat) - theta;
+    log_mse_i <- (log(rr_hat) - theta)^2;
+  })
+  
+  d_sim <- as.data.table(d_sim)
+  
+  # event and other counts were only made for estimator="spmd", so fill the
+  # rest of the rows with the same (equivalent) info
+  d_sim[, n_events := min(n_events, na.rm=TRUE),
+        by=c("rep_id", "scenario", "theta", "n", "multiple_A", "multiple_Y",
+             "beta_L_Y", "beta_L_A", "U_time_interact", "A_time_interact",
+             "conf_int", "risk_period")]
+  d_sim[, n_exposed_and_event := min(n_exposed_and_event, na.rm=TRUE),
+        by=c("rep_id", "scenario", "theta", "n", "multiple_A", "multiple_Y",
+             "beta_L_Y", "beta_L_A", "U_time_interact", "A_time_interact",
+             "conf_int", "risk_period")]
+  
+  # remove rows where rr = 0
+  d_sim <- subset(d_sim, !(rr_hat==0))
+  
+  return(d_sim)
+}
+
+# read in simulation results
+d_sim1 <- readRDS("./data/sim1_results.Rds")
+d_sim2 <- readRDS("./data/sim2_results.Rds")
+d_sim3 <- readRDS("./data/sim3_results.Rds")
+d_sim4 <- readRDS("./data/sim4_results.Rds")
+d_sim5 <- readRDS("./data/sim5_results.Rds")
+d_sim6 <- readRDS("./data/sim6_results.Rds")
+d_sim7 <- readRDS("./data/sim7_results.Rds")
+d_sim8 <- readRDS("./data/sim8_results.Rds")
+d_sim9 <- readRDS("./data/sim9_results.Rds")
+
+# prepare it for plotting
+d_sim1 <- prepare_sim_results(d_sim1)
+d_sim2 <- prepare_sim_results(d_sim2)
+d_sim3 <- prepare_sim_results(d_sim3)
+d_sim4 <- prepare_sim_results(d_sim4)
+d_sim5 <- prepare_sim_results(d_sim5)
+d_sim6 <- prepare_sim_results(d_sim6)
+d_sim7 <- prepare_sim_results(d_sim7)
+d_sim8 <- prepare_sim_results(d_sim8)
+d_sim9 <- prepare_sim_results(d_sim9)
+```
+
+# Varying $n$ and $\theta$
+
+```{r}
+## simple boxplots for each estimator and scenario
+plot_boxplots_n <- function(data, outliers=FALSE) {
+  ggplot(data=data, aes(y=log_bias_i, x=estimator, fill=estimator)) +
+    geom_hline(yintercept=0, linetype="dashed") +
+    geom_boxplot(outliers=outliers, linewidth=0.3) +
+    facet_grid(cols=vars(scenario), rows=vars(exp_theta_f),
+               labeller = labeller(
+                 exp_theta_f = label_parsed,
+                 scenario = label_value
+               )) +
+    theme_minimal() +
+    theme(legend.position="none",
+          axis.text.x=element_text(size=8)) +
+    labs(x=NULL, y=expression(hat(theta) - theta))
+}
+
+## create a table of bias, MSE and associated MCSE by n / theta / scenario
+get_table_n_theta <- function(d_sim) {
+  
+  d_bias <- copy(as.data.table(d_sim))
+  d_bias <- subset(d_bias, is.finite(rr_hat) & !is.na(rr_hat) & rr_hat!=0)
+
+  d_bias <- d_bias[,
+    .(bias = mean(log(rr_hat) - theta, na.rm=TRUE),
+      bias_mcse = sd(log(rr_hat) - theta, na.rm=TRUE) / sqrt(1000),
+      mse = mean((log(rr_hat) - theta)^2, na.rm=TRUE),
+      mse_mcse = sd((log(rr_hat) - theta)^2, na.rm=TRUE) / sqrt(1000),
+      n_NA = 1000 - .N,
+      n_events = mean(n_events),
+      n_events_exp = mean(n_exposed_and_event)),
+    by=c("n", "exp_theta", "scenario", "estimator")
+  ]
+
+  setkey(d_bias, n, exp_theta, scenario, estimator)
+  return(d_bias)
+}
+```
+
+## $n = 5000$
+
+```{r, results="asis"}
+d_bias1 <- get_table_n_theta(d_sim1)
+knitr::kable(subset(d_bias1, n==5000)[, -"n"], format="html", booktabs=TRUE,
+             digits=3, linesep="", longtable=TRUE)
+```
+
+Boxplots not shown due to convergence issues in many methods.
+
+## $n = 10000$
+
+```{r}
+plot_boxplots_n(subset(d_sim1, n==10000))
+ggsave("./Plots/sim1_n10000.pdf", width=6.5, height=7)
+```
+
+```{r}
+knitr::kable(subset(d_bias1, n==10000)[, -"n"], format="html", booktabs=TRUE,
+             digits=3, linesep="", longtable=TRUE)
+```
+
+## $n = 20000$
+
+```{r}
+plot_boxplots_n(subset(d_sim1, n==20000))
+ggsave("./Plots/sim1_n20000.pdf", width=6.5, height=7)
+```
+
+```{r}
+knitr::kable(subset(d_bias1, n==20000)[, -"n"], format="html", booktabs=TRUE,
+             digits=3, linesep="", longtable=TRUE)
+```
+
+## Runtime
+
+```{r}
+ggplot(subset(d_sim1, estimator=="SPMD"),
+       aes(x=factor(n), y=runtime, fill=factor(exp_theta))) +
+  geom_boxplot(size=0.1, linewidth=0.2) +
+  facet_wrap(~ scenario, ncol=1) +
+  theme_minimal() +
+  theme(legend.position="bottom") +
+  labs(x="n", y="Runtime in seconds", fill=expression(exp(theta)))
+ggsave("./Plots/sim1_runtime.pdf", width=5, height=6)
+```
+
+# Multiple exposure periods per person
+
+## $n = 10000$
+
+```{r}
+plot_boxplots_n(subset(d_sim2, n==10000))
+ggsave("./Plots/sim2_n10000.pdf", width=6, height=6)
+```
+
+```{r}
+d_bias2 <- get_table_n_theta(d_sim2)
+knitr::kable(subset(d_bias2, n==10000)[, -"n"], format="html", booktabs=TRUE,
+             digits=3, linesep="", longtable=TRUE)
+```
+
+## $n = 20000$
+
+```{r}
+plot_boxplots_n(subset(d_sim2, n==20000))
+ggsave("./Plots/sim2_n20000.pdf", width=6, height=6)
+```
+
+```{r}
+knitr::kable(subset(d_bias2, n==20000)[, -"n"], format="html", booktabs=TRUE,
+             digits=3, linesep="", longtable=TRUE)
+```
+
+# Varying $n$ and $\theta$ with a terminal event
+
+## $n = 10000$
+
+```{r}
+plot_boxplots_n(subset(d_sim3, n==10000))
+ggsave("./Plots/sim3_n10000.pdf", width=6, height=6)
+```
+
+```{r}
+d_bias3 <- get_table_n_theta(d_sim3)
+knitr::kable(subset(d_bias3, n==10000)[, -"n"], format="html", booktabs=TRUE,
+             digits=3, linesep="", longtable=TRUE)
+```
+
+## $n = 20000$
+
+```{r}
+plot_boxplots_n(subset(d_sim3, n==20000))
+ggsave("./Plots/sim3_n20000.pdf", width=6, height=6)
+```
+
+```{r}
+knitr::kable(subset(d_bias3, n==20000)[, -"n"], format="html", booktabs=TRUE,
+             digits=3, linesep="", longtable=TRUE)
+```
+
+## With time-varying variable $L_t$
+
+```{r}
+## simple boxplots for each estimator and scenario
+plot_boxplots_beta_L <- function(data, outliers=FALSE) {
+  ggplot(data=data, aes(y=log_bias_i, x=estimator, fill=estimator)) +
+    geom_hline(yintercept=0, linetype="dashed") +
+    geom_boxplot(outliers=outliers, linewidth=0.3) +
+    facet_grid(cols=vars(beta_L_A_f), rows=vars(beta_L_Y_f),
+               labeller = label_parsed) +
+    theme_minimal() +
+    theme(legend.position="none",
+          axis.text.x=element_text(size=7)) +
+    labs(x=NULL, y=expression(hat(theta) - theta))
+}
+
+## create a table of bias, MSE and associated MCSE by n / theta / scenario
+get_table_n_beta <- function(d_sim) {
+  
+  d_bias <- copy(as.data.table(d_sim))
+  d_bias <- subset(d_bias, is.finite(rr_hat) & !is.na(rr_hat))
+  d_bias[, exp_beta_L_A := exp(beta_L_A)]
+  d_bias[, exp_beta_L_Y := exp(beta_L_Y)]
+
+  d_bias <- d_bias[,
+    .(bias = mean(log(rr_hat) - theta, na.rm=TRUE),
+      bias_mcse = sd(log(rr_hat) - theta, na.rm=TRUE) / sqrt(1000),
+      mse = mean((log(rr_hat) - theta)^2, na.rm=TRUE),
+      mse_mcse = sd((log(rr_hat) - theta)^2, na.rm=TRUE) / sqrt(1000),
+      n_NA = 1000 - .N),
+    by=c("n", "exp_beta_L_Y", "exp_beta_L_A", "scenario", "estimator")
+  ]
+
+  setkey(d_bias, n, exp_beta_L_Y, exp_beta_L_A, scenario, estimator)
+  return(d_bias)
+}
+```
+
+## Scenario 1
+
+```{r}
+plot_boxplots_beta_L(subset(d_sim4, scenario=="Scenario 1"))
+ggsave("./Plots/sim4_scenario1.pdf", width=7.5, height=7)
+```
+
+```{r}
+d_bias4 <- get_table_n_beta(d_sim4)
+knitr::kable(d_bias4[, -"n"], format="html", booktabs=TRUE,
+             digits=3, linesep="", longtable=TRUE)
+```
+
+## Scenario 2
+
+```{r}
+plot_boxplots_beta_L(subset(d_sim4, scenario=="Scenario 2"))
+ggsave("./Plots/sim4_scenario2.pdf", width=7.5, height=7)
+```
+
+```{r}
+knitr::kable(d_bias4[, -"n"], format="html", booktabs=TRUE,
+             digits=3, linesep="", longtable=TRUE)
+```
+
+# Bootstrap CI Coverage
+
+```{r}
+d_sim5[, in_ci := exp_theta >= ci_lower & exp_theta <= ci_upper]
+d_sim5[, ci_length := ci_upper - ci_lower]
+
+d_sim5_est <- d_sim5[, .(
+  coverage = sum(in_ci) / .N,
+  coverage_lower = binom.confint(x=sum(in_ci), n=.N, methods="exact")$lower,
+  coverage_upper = binom.confint(x=sum(in_ci), n=.N, methods="exact")$upper,
+  mean_length = mean(ci_length)
+), by=c("n", "scenario", "exp_theta")  
+]
+
+ggplot(d_sim5_est, aes(x=exp_theta, y=coverage)) +
+  geom_hline(yintercept=0.95, linetype="dashed") +
+  geom_errorbar(aes(ymin=coverage_lower, ymax=coverage_upper), width=0.3) +
+  geom_point() +
+  facet_grid(cols=vars(scenario), rows=vars(n)) +
+  theme_minimal() +
+  scale_y_continuous(limits=c(0.85, 1), breaks=seq(0.85, 1, 0.05))
+```
+
+```{r}
+knitr::kable(d_sim5_est)
+```
+
+# Interaction between time and $U$
+
+## $n = 10000$
+
+```{r}
+plot_boxplots_n(subset(d_sim6, n==10000))
+ggsave("./Plots/sim6_n10000.pdf", width=6, height=6)
+```
+
+## $n = 20000$
+
+```{r}
+plot_boxplots_n(subset(d_sim6, n==20000))
+ggsave("./Plots/sim6_n20000.pdf", width=6, height=6)
+```
+
+# Interaction between time and $A$
+
+## $n = 10000$
+
+```{r}
+plot_boxplots_n(subset(d_sim7, n==10000))
+ggsave("./Plots/sim7_n10000.pdf", width=6, height=6)
+```
+
+## $n = 20000$
+
+```{r}
+plot_boxplots_n(subset(d_sim7, n==20000))
+ggsave("./Plots/sim7_n20000.pdf", width=6, height=6)
+```
+
+# Different Baseline hazards per person
+
+```{r}
+ggplot(data=d_sim8, aes(y=log_bias_i, x=estimator, fill=estimator)) +
+  geom_hline(yintercept=0, linetype="dashed") +
+  geom_boxplot(outliers=FALSE, linewidth=0.3) +
+  facet_wrap(~ exp_theta_f, labeller=label_parsed) +
+  theme_minimal() +
+  theme(legend.position="none",
+        axis.text.x=element_text(size=8)) +
+  labs(x=NULL, y=expression(hat(theta) - theta))
+ggsave("./Plots/sim8.pdf", width=6, height=6)
+```
+
+# Varying $\tau$
+
+```{r}
+ggplot(data=subset(d_sim9, risk_period !=10), aes(y=log_bias_i, x=estimator, fill=estimator)) +
+  geom_hline(yintercept=0, linetype="dashed") +
+  geom_boxplot(outliers=FALSE, linewidth=0.3) +
+  facet_grid(cols=vars(scenario), rows=vars(risk_period_f),
+               labeller = labeller(
+                 risk_period_f = label_parsed,
+                 scenario = label_value
+               )) +
+  theme_minimal() +
+  theme(legend.position="none",
+        axis.text.x=element_text(size=8)) +
+  labs(x=NULL, y=expression(hat(theta) - theta))
+ggsave("./Plots/sim9.pdf", width=6, height=6)
+```
+

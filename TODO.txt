@@ -14,11 +14,12 @@ For the paper:
 	(x) - investigate bootstrap confidence interval coverage using simulation
 	- investigate assumption violations
 		- \theta varying over individuals
-		- individually varying time effects
+		(x) - individually varying time effects
 		(x) - presence of a time-varying confounder
 		(x) - interaction between time and A
 		(x) - interaction between time and U
 		(x) - terminal event
 - add illustrative example
 - maybe discuss how the estimand changes under effect heterogeneity
+- more specifically connect the causal estimand with the "other" \theta
 - in the discussion, state conditions when SPM is preferable to SCCS more clearly
