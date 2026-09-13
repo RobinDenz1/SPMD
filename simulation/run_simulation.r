@@ -151,3 +151,18 @@ sim9 <- run_simulation(
   seed = 50
 )
 saveRDS(sim9$results, "./simulation/data/sim9_results.Rds")
+
+## varying n, theta and using partial pairs
+sim10 <- run_simulation(
+  n_sim = c(10000, 20000),
+  n_repeats = n_repeats,
+  method = all_methods,
+  scenario = c(1, 2),
+  theta = log(c(0.7, 1, 2.5)),
+  multiple_A = FALSE,
+  multiple_Y= TRUE,
+  allow_overlap = TRUE,
+  n_cores = 8,
+  seed = 51
+)
+saveRDS(sim10$results, "./simulation/data/sim3_results.Rds")

@@ -96,14 +96,14 @@ get_ctc_data <- function(data, risk_period) {
   d_out[, diff := .Y_time - time]
 
   # check if exposure in each period
-  d_period1 <- d_out[, .(exposure = any(diff >= 0 & diff <= (risk_period - 1)),
+  d_period1 <- d_out[, .(exposure = any(diff >= 0 & diff < risk_period),
                          group = group[1],
                          .Y_time = .Y_time[1]),
                      by=.id]
   d_period1[, period := 1]
 
   d_period0 <- d_out[, .(exposure = any(diff >= risk_period
-                                        & diff <= ((2 * risk_period) - 1)),
+                                        & diff < (2 * risk_period)),
                          group = group[1],
                          .Y_time = .Y_time[1]),
                      by=.id]
@@ -158,12 +158,12 @@ get_cco_data <- function(data, risk_period) {
   d_cases[, diff := .Y_time - time]
 
   # check if exposure in each period
-  d_period1 <- d_cases[, .(exposure = any(diff >= 0 & diff <= (risk_period - 1)),
+  d_period1 <- d_cases[, .(exposure = any(diff >= 0 & diff < risk_period),
                            .Y_time = .Y_time[1]), by=.id]
   d_period1[, period := 1]
 
   d_period0 <- d_cases[, .(exposure = any(diff >= risk_period
-                                          & diff <= ((2 * risk_period) - 1)),
+                                          & diff < (2 * risk_period)),
                            .Y_time = .Y_time[1]), by=.id]
   d_period0[, period := 0]
 

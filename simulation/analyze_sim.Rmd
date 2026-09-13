@@ -295,7 +295,7 @@ get_table_n_beta <- function(d_sim) {
 
 ```{r}
 plot_boxplots_beta_L(subset(d_sim4, scenario=="Scenario 1"))
-ggsave("./Plots/sim4_scenario1.pdf", width=7.5, height=7)
+ggsave("./plots/sim4_scenario1.pdf", width=7.5, height=7)
 ```
 
 ```{r}
@@ -308,7 +308,7 @@ knitr::kable(d_bias4[, -"n"], format="html", booktabs=TRUE,
 
 ```{r}
 plot_boxplots_beta_L(subset(d_sim4, scenario=="Scenario 2"))
-ggsave("./Plots/sim4_scenario2.pdf", width=7.5, height=7)
+ggsave("./plots/sim4_scenario2.pdf", width=7.5, height=7)
 ```
 
 ```{r}
@@ -330,13 +330,14 @@ d_sim5_est <- d_sim5[, .(
 ), by=c("n", "scenario", "exp_theta")  
 ]
 
-ggplot(d_sim5_est, aes(x=exp_theta, y=coverage)) +
+ggplot(d_sim5_est, aes(x=factor(exp_theta), y=coverage)) +
   geom_hline(yintercept=0.95, linetype="dashed") +
   geom_errorbar(aes(ymin=coverage_lower, ymax=coverage_upper), width=0.3) +
   geom_point() +
   facet_grid(cols=vars(scenario), rows=vars(n)) +
   theme_minimal() +
   scale_y_continuous(limits=c(0.85, 1), breaks=seq(0.85, 1, 0.05))
+ggsave("./plots/sim5.pdf", width=6, height=7)
 ```
 
 ```{r}
@@ -391,8 +392,11 @@ ggsave("./Plots/sim8.pdf", width=6, height=6)
 
 # Varying $\tau$
 
+## $n = 10000$
+
 ```{r}
-ggplot(data=subset(d_sim9, risk_period !=10), aes(y=log_bias_i, x=estimator, fill=estimator)) +
+ggplot(data=subset(d_sim9, n==10000),
+       aes(y=log_bias_i, x=estimator, fill=estimator)) +
   geom_hline(yintercept=0, linetype="dashed") +
   geom_boxplot(outliers=FALSE, linewidth=0.3) +
   facet_grid(cols=vars(scenario), rows=vars(risk_period_f),
@@ -404,6 +408,24 @@ ggplot(data=subset(d_sim9, risk_period !=10), aes(y=log_bias_i, x=estimator, fil
   theme(legend.position="none",
         axis.text.x=element_text(size=8)) +
   labs(x=NULL, y=expression(hat(theta) - theta))
-ggsave("./Plots/sim9.pdf", width=6, height=6)
+ggsave("./Plots/sim9_n10000.pdf", width=6, height=6)
 ```
 
+## $n = 20000$
+
+```{r}
+ggplot(data=subset(d_sim9, n==20000),
+       aes(y=log_bias_i, x=estimator, fill=estimator)) +
+  geom_hline(yintercept=0, linetype="dashed") +
+  geom_boxplot(outliers=FALSE, linewidth=0.3) +
+  facet_grid(cols=vars(scenario), rows=vars(risk_period_f),
+               labeller = labeller(
+                 risk_period_f = label_parsed,
+                 scenario = label_value
+               )) +
+  theme_minimal() +
+  theme(legend.position="none",
+        axis.text.x=element_text(size=8)) +
+  labs(x=NULL, y=expression(hat(theta) - theta))
+ggsave("./Plots/sim9_n20000.pdf", width=6, height=6)
+```

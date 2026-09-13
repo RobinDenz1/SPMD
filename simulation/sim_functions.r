@@ -90,11 +90,11 @@ create_data <- function(n, scenario, theta, multiple_A=FALSE,
       node_td("A", type="next_time", model="cox", event_duration=risk_period,
               formula= ~ U*log(2) + L*beta_L_A, surv_dist=fa,
               basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
-              as_integer=TRUE, immunity_duration=immunity_duration_A) +
+              as_integer=FALSE, immunity_duration=immunity_duration_A) +
       node_td("Y", type="next_time", model="cox", event_duration=1,
               formula= ~ U*log(2) + A*eval(theta) + L*beta_L_Y, surv_dist=fy,
               basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
-              as_integer=TRUE, immunity_duration=immunity_duration_Y)
+              as_integer=FALSE, immunity_duration=immunity_duration_Y)
   } else if (A_time_interact != 0) {
     dag <- empty_dag() +
       node("U", type="rnorm", mean=0, sd=1) +
@@ -103,13 +103,13 @@ create_data <- function(n, scenario, theta, multiple_A=FALSE,
       node_td("A", type="next_time", model="cox", event_duration=risk_period,
               formula= ~ U*log(2) + L*beta_L_A, surv_dist=fa,
               basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
-              as_integer=TRUE, immunity_duration=immunity_duration_A) +
+              as_integer=FALSE, immunity_duration=immunity_duration_A) +
       node_td("Y", type="next_time", model="cox", event_duration=1,
               formula= ~ U*log(2) + ATRUE*eval(theta) + LTRUE*beta_L_Y +
                 ATRUE:time_cuts_event_count*eval(A_time_interact),
               surv_dist=fy,
               basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
-              as_integer=TRUE, immunity_duration=immunity_duration_Y) +
+              as_integer=FALSE, immunity_duration=immunity_duration_Y) +
       node_td("time_cuts", type="next_time", prob_fun=1,
               event_duration=0, distr_fun=simDAG:::timecuts,
               distr_fun_args=list(cuts=300), event_count=TRUE)
@@ -121,13 +121,13 @@ create_data <- function(n, scenario, theta, multiple_A=FALSE,
       node_td("A", type="next_time", model="cox", event_duration=risk_period,
               formula= ~ U*log(2) + L*beta_L_A, surv_dist=fa,
               basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
-              as_integer=TRUE, immunity_duration=immunity_duration_A) +
+              as_integer=FALSE, immunity_duration=immunity_duration_A) +
       node_td("Y", type="next_time", model="cox", event_duration=1,
               formula= ~ U*log(2) + ATRUE*eval(theta) + LTRUE*beta_L_Y +
                 U:time_cuts_event_count*eval(U_time_interact),
               surv_dist=fy,
               basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
-              as_integer=TRUE, immunity_duration=immunity_duration_Y) +
+              as_integer=FALSE, immunity_duration=immunity_duration_Y) +
       node_td("time_cuts", type="next_time", prob_fun=1,
               event_duration=0, distr_fun=simDAG:::timecuts,
               distr_fun_args=list(cuts=300), event_count=TRUE)
@@ -155,21 +155,21 @@ create_data_scenario3 <- function(n, theta, risk_period) {
     node_td("A", type="next_time", model="cox", event_duration=risk_period,
             formula= ~ U*log(2), surv_dist=fbasehaz_A2,
             basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
-            as_integer=TRUE, immunity_duration=Inf)
+            as_integer=FALSE, immunity_duration=Inf)
 
   # Y with constant baseline hazard
   dag1 <- dag +
     node_td("Y", type="next_time", model="cox", event_duration=1,
             formula= ~ U*log(2) + A*eval(theta), surv_dist=fbasehaz_Y1,
             basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
-            as_integer=TRUE, immunity_duration=1)
+            as_integer=FALSE, immunity_duration=1)
 
   # Y with time-varying baseline hazard
   dag2 <- dag +
     node_td("Y", type="next_time", model="cox", event_duration=1,
             formula= ~ U*log(2) + A*eval(theta), surv_dist=fbasehaz_Y2,
             basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
-            as_integer=TRUE, immunity_duration=1)
+            as_integer=FALSE, immunity_duration=1)
 
   # simulate half of the data under one and the other half under another
   # baseline hazard function
@@ -186,7 +186,8 @@ create_data_scenario3 <- function(n, theta, risk_period) {
 }
 
 ## get RR estimate using different methods
-apply_method <- function(data, type, include_ci=FALSE, risk_period=30) {
+apply_method <- function(data, type, include_ci=FALSE, risk_period=30,
+                         allow_overlap=FALSE) {
 
   if (type=="cox") {
     mod <- coxph(Surv(start, stop, Y) ~ A + U, data=data)
@@ -196,7 +197,7 @@ apply_method <- function(data, type, include_ci=FALSE, risk_period=30) {
     out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                              id=".id", pairs="all", risk_period=risk_period,
                              estimator="moments", bounds="(]",
-                             convergence=FALSE, allow_overlap=FALSE,
+                             convergence=FALSE, allow_overlap=allow_overlap,
                              bootstrap=include_ci)
     rr_hat <- out$est
     n_events <- out$sizes$n_events
@@ -238,8 +239,8 @@ apply_method <- function(data, type, include_ci=FALSE, risk_period=30) {
 run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
                            multiple_A, multiple_Y, beta_L_Y=0, beta_L_A=0,
                            U_time_interact=0, A_time_interact=0,
-                           conf_int=FALSE, risk_period=30, n_cores=8,
-                           seed=2134) {
+                           conf_int=FALSE, risk_period=30, allow_overlap=FALSE,
+                           n_cores=8, seed=2134) {
 
   # annoying needed fix, because otherwise run() fails
   # due to scoping issues
@@ -269,7 +270,8 @@ run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
     U_time_interact = U_time_interact,
     A_time_interact = A_time_interact,
     conf_int = conf_int,
-    risk_period = risk_period
+    risk_period = risk_period,
+    allow_overlap = allow_overlap
   )
 
   # define the simulation script
@@ -283,7 +285,8 @@ run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
                           risk_period=L$risk_period)
     })
     out <- apply_method(data=data, type=L$estimator, include_ci=L$conf_int,
-                        risk_period=L$risk_period)
+                        risk_period=L$risk_period,
+                        allow_overlap=L$allow_overlap)
 
     return(out)
   })

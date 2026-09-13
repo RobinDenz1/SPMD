@@ -29,7 +29,7 @@ estimate_moments <- function(data, bootstrap=FALSE, n_boot=1000,
   # point estimate
   est <- exp(0.5 * log(l_sums$Xb1_Xa2 / l_sums$Xa1_Xb2))
 
-  if (est==0) {
+  if (!is.na(est) && est==0) {
     warning("The estimated RR is exactly 0, because the numerator was 0.",
             " Although this is a valid value, it should be interpreted with",
             " caution since it is usually a sign of unstable estimates due",
