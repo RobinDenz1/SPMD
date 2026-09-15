@@ -29,6 +29,7 @@ sim1 <- run_simulation(
   theta = log(c(0.7, 1, 1.5, 2.5, 5)),
   multiple_A = FALSE,
   multiple_Y= TRUE,
+  censor = 1,
   n_cores = 8,
   seed = 42
 )
@@ -165,4 +166,53 @@ sim10 <- run_simulation(
   n_cores = 8,
   seed = 51
 )
-saveRDS(sim10$results, "./simulation/data/sim3_results.Rds")
+saveRDS(sim10$results, "./simulation/data/sim10_results.Rds")
+
+## varying theta with completely random right-censoring
+sim11 <- run_simulation(
+  n_sim = 20000,
+  n_repeats = n_repeats,
+  method = all_methods,
+  scenario = c(1, 2),
+  theta = log(c(0.7, 1, 2.5)),
+  multiple_A = FALSE,
+  multiple_Y= TRUE,
+  censor = 1,
+  n_cores = 8,
+  seed = 52
+)
+saveRDS(sim11$results, "./simulation/data/sim11_results.Rds")
+
+## varying theta with right-censoring dependent on U
+sim12 <- run_simulation(
+  n_sim = 20000,
+  n_repeats = n_repeats,
+  method = all_methods,
+  scenario = c(1, 2),
+  theta = log(c(0.7, 1, 2.5)),
+  multiple_A = FALSE,
+  multiple_Y= TRUE,
+  censor = 2,
+  n_cores = 8,
+  seed = 53
+)
+saveRDS(sim12$results, "./simulation/data/sim12_results.Rds")
+
+## varying theta with right-censoring dependent on L
+## where L may be a sole outcome / exposure predictor or true confounder
+sim13 <- run_simulation(
+  n_sim = 20000,
+  n_repeats = n_repeats,
+  method = all_methods,
+  scenario = c(1, 2),
+  theta = log(2.5),
+  multiple_A = FALSE,
+  multiple_Y= TRUE,
+  censor = 3,
+  beta_L_Y = log(c(1, 3, 5)),
+  beta_L_A = log(c(1, 3, 5)),
+  n_cores = 8,
+  seed = 54
+)
+saveRDS(sim13$results, "./simulation/data/sim13_results.Rds")
+

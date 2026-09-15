@@ -73,6 +73,9 @@ one_boot_iter <- function(ids, d_exp, d_events, pairs, n_pairs, risk_period,
   if (estimator=="moments") {
     est <- estimate_moments(data=d_matches_i, bootstrap=FALSE,
                             n_boot=1000, conf_level=0.95)$est
+    if (is.na(est) || is.infinite(est)) {
+      est <- NA
+    }
   } else if (estimator=="glmm") {
     est <- tryCatch({estimate_glmm(data=d_matches_i, ...)$est},
                     error=function(e){return(NA)})
@@ -154,8 +157,8 @@ perform_bootstrapping <- function(d_exp, d_events, estimator, pairs, n_pairs,
 ## estimates a p-value from bootstrapped samples
 #' @importFrom data.table fifelse
 get_boot_p_value <- function(boot_samples, null=1) {
-  p_lower <- mean(boot_samples <= null)
-  p_upper <- mean(boot_samples >= null)
+  p_lower <- mean(boot_samples <= null, na.rm=TRUE)
+  p_upper <- mean(boot_samples >= null, na.rm=TRUE)
 
   p <- 2 * min(p_lower, p_upper)
   p <- min(p, 1)

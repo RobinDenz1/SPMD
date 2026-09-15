@@ -37,19 +37,6 @@ fbasehaz_A2 <- function(t) {
            wave_heights=rep(0.0003, 6))
 }
 
-## apply censoring to simulated start-stop data
-censor_start_stop <- function(data) {
-
-  # remove rows starting after censoring time
-  data <- subset(data, start < C)
-
-  # adjust rows that end after censoring time
-  data[stop > C & Y==TRUE, Y := FALSE]
-  data[stop > C, stop := C]
-
-  return(data)
-}
-
 ## generate a dataset following the required DGP for both scenarios
 create_data <- function(n, scenario, theta, multiple_A=FALSE,
                         multiple_Y=TRUE, beta_L_A=0, beta_L_Y=0,
@@ -133,17 +120,29 @@ create_data <- function(n, scenario, theta, multiple_A=FALSE,
               distr_fun_args=list(cuts=300), event_count=TRUE)
   }
 
-  # TODO:
-  # - add completely random censoring
-  # - add censoring caused by U
-  # - add censoring caused by L
+  # define censoring node, if specified
   if (censor==1) {
-
+    dag <- dag + node_td("C", type="next_time", prob_fun=0.0005,
+                         event_duration=Inf, event_count=TRUE)
+  } else if (censor==2) {
+    dag <- dag + node_td("C", type="next_time",
+                         formula= ~ log(0.0001) + U*log(2),
+                         event_duration=Inf, event_count=TRUE, link="log")
+  } else if (censor==3) {
+    dag <- dag + node_td("C", type="next_time",
+                         formula= ~ log(0.0001) + L*log(5),
+                         event_duration=Inf, event_count=TRUE, link="log")
   }
 
   # generate data
   data <- sim_discrete_event(dag, n_sim=n, max_t=1000, censor_at_max_t=TRUE,
                              target_event="Y")
+
+  # apply censoring, if specified
+  if (censor != 0) {
+    data <- subset(data, C_event_count==0)
+  }
+
   return(data)
 }
 
@@ -240,7 +239,7 @@ run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
                            multiple_A, multiple_Y, beta_L_Y=0, beta_L_A=0,
                            U_time_interact=0, A_time_interact=0,
                            conf_int=FALSE, risk_period=30, allow_overlap=FALSE,
-                           n_cores=8, seed=2134) {
+                           censor=0, n_cores=8, seed=2134) {
 
   # annoying needed fix, because otherwise run() fails
   # due to scoping issues
@@ -271,7 +270,8 @@ run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
     A_time_interact = A_time_interact,
     conf_int = conf_int,
     risk_period = risk_period,
-    allow_overlap = allow_overlap
+    allow_overlap = allow_overlap,
+    censor = censor
   )
 
   # define the simulation script
@@ -282,7 +282,7 @@ run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
                           beta_L_Y=L$beta_L_Y, beta_L_A=L$beta_L_A,
                           U_time_interact=L$U_time_interact,
                           A_time_interact=L$A_time_interact,
-                          risk_period=L$risk_period)
+                          risk_period=L$risk_period, censor=L$censor)
     })
     out <- apply_method(data=data, type=L$estimator, include_ci=L$conf_int,
                         risk_period=L$risk_period,
@@ -298,7 +298,7 @@ run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
                  "splines"),
     batch_levels = c("n", "scenario", "theta", "multiple_Y", "multiple_A",
                      "beta_L_A", "beta_L_Y", "U_time_interact",
-                     "A_time_interact", "risk_period"),
+                     "A_time_interact", "risk_period", "censor"),
     parallel = n_cores > 1,
     n_cores = n_cores,
     seed = seed

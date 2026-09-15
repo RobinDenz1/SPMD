@@ -16,6 +16,7 @@ estimate_sccs <- function(data, spline=FALSE, cuts=NULL, df) {
   d_sccs <- simplify_start_stop(data, id=".id", cols="A")
 
   # add time-categories if spline based method is used
+  # TODO: adjust this so it works with right-censoring
   if (spline) {
 
     # create dataset of cut-points

@@ -98,6 +98,10 @@ d_sim6 <- readRDS("./data/sim6_results.Rds")
 d_sim7 <- readRDS("./data/sim7_results.Rds")
 d_sim8 <- readRDS("./data/sim8_results.Rds")
 d_sim9 <- readRDS("./data/sim9_results.Rds")
+d_sim10 <- readRDS("./data/sim10_results.Rds")
+d_sim11 <- readRDS("./data/sim11_results.Rds")
+d_sim12 <- readRDS("./data/sim12_results.Rds")
+d_sim13 <- readRDS("./data/sim13_results.Rds")
 
 # prepare it for plotting
 d_sim1 <- prepare_sim_results(d_sim1)
@@ -109,6 +113,10 @@ d_sim6 <- prepare_sim_results(d_sim6)
 d_sim7 <- prepare_sim_results(d_sim7)
 d_sim8 <- prepare_sim_results(d_sim8)
 d_sim9 <- prepare_sim_results(d_sim9)
+d_sim10 <- prepare_sim_results(d_sim10)
+d_sim11 <- prepare_sim_results(d_sim11)
+d_sim12 <- prepare_sim_results(d_sim12)
+d_sim13 <- prepare_sim_results(d_sim13)
 ```
 
 # Varying $n$ and $\theta$
@@ -130,6 +138,40 @@ plot_boxplots_n <- function(data, outliers=FALSE) {
     labs(x=NULL, y=expression(hat(theta) - theta))
 }
 
+## simple boxplots for each estimator and scenario
+plot_boxplots_beta_L <- function(data, outliers=FALSE) {
+  ggplot(data=data, aes(y=log_bias_i, x=estimator, fill=estimator)) +
+    geom_hline(yintercept=0, linetype="dashed") +
+    geom_boxplot(outliers=outliers, linewidth=0.3) +
+    facet_grid(cols=vars(beta_L_A_f), rows=vars(beta_L_Y_f),
+               labeller = label_parsed) +
+    theme_minimal() +
+    theme(legend.position="none",
+          axis.text.x=element_text(size=7)) +
+    labs(x=NULL, y=expression(hat(theta) - theta))
+}
+
+## create a table of bias, MSE and associated MCSE by n / theta / scenario
+get_table_n_beta <- function(d_sim) {
+  
+  d_bias <- copy(as.data.table(d_sim))
+  d_bias <- subset(d_bias, is.finite(rr_hat) & !is.na(rr_hat))
+  d_bias[, exp_beta_L_A := exp(beta_L_A)]
+  d_bias[, exp_beta_L_Y := exp(beta_L_Y)]
+
+  d_bias <- d_bias[,
+    .(bias = mean(log(rr_hat) - theta, na.rm=TRUE),
+      bias_mcse = sd(log(rr_hat) - theta, na.rm=TRUE) / sqrt(.N),
+      mse = mean((log(rr_hat) - theta)^2, na.rm=TRUE),
+      mse_mcse = sd((log(rr_hat) - theta)^2, na.rm=TRUE) / sqrt(.N),
+      n_NA = 1000 - .N),
+    by=c("n", "exp_beta_L_Y", "exp_beta_L_A", "scenario", "estimator")
+  ]
+
+  setkey(d_bias, n, exp_beta_L_Y, exp_beta_L_A, scenario, estimator)
+  return(d_bias)
+}
+
 ## create a table of bias, MSE and associated MCSE by n / theta / scenario
 get_table_n_theta <- function(d_sim) {
   
@@ -138,9 +180,9 @@ get_table_n_theta <- function(d_sim) {
 
   d_bias <- d_bias[,
     .(bias = mean(log(rr_hat) - theta, na.rm=TRUE),
-      bias_mcse = sd(log(rr_hat) - theta, na.rm=TRUE) / sqrt(1000),
+      bias_mcse = sd(log(rr_hat) - theta, na.rm=TRUE) / sqrt(.N),
       mse = mean((log(rr_hat) - theta)^2, na.rm=TRUE),
-      mse_mcse = sd((log(rr_hat) - theta)^2, na.rm=TRUE) / sqrt(1000),
+      mse_mcse = sd((log(rr_hat) - theta)^2, na.rm=TRUE) / sqrt(.N),
       n_NA = 1000 - .N,
       n_events = mean(n_events),
       n_events_exp = mean(n_exposed_and_event)),
@@ -255,42 +297,6 @@ knitr::kable(subset(d_bias3, n==20000)[, -"n"], format="html", booktabs=TRUE,
 
 ## With time-varying variable $L_t$
 
-```{r}
-## simple boxplots for each estimator and scenario
-plot_boxplots_beta_L <- function(data, outliers=FALSE) {
-  ggplot(data=data, aes(y=log_bias_i, x=estimator, fill=estimator)) +
-    geom_hline(yintercept=0, linetype="dashed") +
-    geom_boxplot(outliers=outliers, linewidth=0.3) +
-    facet_grid(cols=vars(beta_L_A_f), rows=vars(beta_L_Y_f),
-               labeller = label_parsed) +
-    theme_minimal() +
-    theme(legend.position="none",
-          axis.text.x=element_text(size=7)) +
-    labs(x=NULL, y=expression(hat(theta) - theta))
-}
-
-## create a table of bias, MSE and associated MCSE by n / theta / scenario
-get_table_n_beta <- function(d_sim) {
-  
-  d_bias <- copy(as.data.table(d_sim))
-  d_bias <- subset(d_bias, is.finite(rr_hat) & !is.na(rr_hat))
-  d_bias[, exp_beta_L_A := exp(beta_L_A)]
-  d_bias[, exp_beta_L_Y := exp(beta_L_Y)]
-
-  d_bias <- d_bias[,
-    .(bias = mean(log(rr_hat) - theta, na.rm=TRUE),
-      bias_mcse = sd(log(rr_hat) - theta, na.rm=TRUE) / sqrt(1000),
-      mse = mean((log(rr_hat) - theta)^2, na.rm=TRUE),
-      mse_mcse = sd((log(rr_hat) - theta)^2, na.rm=TRUE) / sqrt(1000),
-      n_NA = 1000 - .N),
-    by=c("n", "exp_beta_L_Y", "exp_beta_L_A", "scenario", "estimator")
-  ]
-
-  setkey(d_bias, n, exp_beta_L_Y, exp_beta_L_A, scenario, estimator)
-  return(d_bias)
-}
-```
-
 ## Scenario 1
 
 ```{r}
@@ -376,18 +382,61 @@ plot_boxplots_n(subset(d_sim7, n==20000))
 ggsave("./Plots/sim7_n20000.pdf", width=6, height=6)
 ```
 
-# Different Baseline hazards per person
+# With independent right-censoring
 
 ```{r}
-ggplot(data=d_sim8, aes(y=log_bias_i, x=estimator, fill=estimator)) +
-  geom_hline(yintercept=0, linetype="dashed") +
-  geom_boxplot(outliers=FALSE, linewidth=0.3) +
-  facet_wrap(~ exp_theta_f, labeller=label_parsed) +
-  theme_minimal() +
-  theme(legend.position="none",
-        axis.text.x=element_text(size=8)) +
-  labs(x=NULL, y=expression(hat(theta) - theta))
-ggsave("./Plots/sim8.pdf", width=6, height=6)
+plot_boxplots_n(subset(d_sim11, n==20000))
+ggsave("./Plots/sim11.pdf", width=6, height=6)
+```
+
+# With right-censoring dependent on $U$
+
+```{r}
+plot_boxplots_n(subset(d_sim12, n==20000))
+ggsave("./Plots/sim12.pdf", width=6, height=6)
+```
+
+# With right-censoring dependent on $L(t)$
+
+## Scenario 1
+
+```{r}
+plot_boxplots_beta_L(subset(d_sim13, scenario=="Scenario 1"))
+ggsave("./plots/sim13_scenario1.pdf", width=7.5, height=7)
+```
+
+```{r}
+d_bias13 <- get_table_n_beta(d_sim13)
+knitr::kable(d_bias13[, -"n"], format="html", booktabs=TRUE,
+             digits=3, linesep="", longtable=TRUE)
+```
+
+## Scenario 2
+
+```{r}
+plot_boxplots_beta_L(subset(d_sim13, scenario=="Scenario 2"))
+ggsave("./plots/sim13_scenario2.pdf", width=7.5, height=7)
+```
+
+```{r}
+knitr::kable(d_bias13[, -"n"], format="html", booktabs=TRUE,
+             digits=3, linesep="", longtable=TRUE)
+```
+
+# Different Baseline hazards per person
+
+## $n = 10000$
+
+```{r}
+plot_boxplots_n(subset(d_sim8, n==10000))
+ggsave("./Plots/sim8_n10000.pdf", width=6, height=6)
+```
+
+## $n = 20000$
+
+```{r}
+plot_boxplots_n(subset(d_sim8, n==20000))
+ggsave("./Plots/sim8_n20000.pdf", width=6, height=6)
 ```
 
 # Varying $\tau$
@@ -429,3 +478,20 @@ ggplot(data=subset(d_sim9, n==20000),
   labs(x=NULL, y=expression(hat(theta) - theta))
 ggsave("./Plots/sim9_n20000.pdf", width=6, height=6)
 ```
+
+# Allowing partial pairs
+
+## $n = 10000$
+
+```{r}
+plot_boxplots_n(subset(d_sim10, n==10000))
+ggsave("./Plots/sim10_n10000.pdf", width=6, height=6)
+```
+
+## $n = 20000$
+
+```{r}
+plot_boxplots_n(subset(d_sim10, n==20000))
+ggsave("./Plots/sim10_n20000.pdf", width=6, height=6)
+```
+
