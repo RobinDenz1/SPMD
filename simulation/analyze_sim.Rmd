@@ -13,17 +13,12 @@ knitr::opts_chunk$set(echo=FALSE, fig.width=7, fig.height=7)
 library(ggplot2)
 library(data.table)
 library(binom)
-```
 
-# Introduction
-
-This script takes in the results generated using the Monte-Carlo simulation and analyzes them, creating the plots and tables shown in the paper and its appendices. To reproduce these results, first execute the `run_simulation.r` script. Only then this markdown document may be created.
-
-```{r}
 # some general data preparations for simulation results
 prepare_sim_results <- function(d_sim) {
   
   d_sim <- within(d_sim, {
+    scenario_num <- scenario;
     scenario <- paste0("Scenario ", scenario);
     estimator <- factor(
       estimator,
@@ -67,6 +62,8 @@ prepare_sim_results <- function(d_sim) {
     );
     log_bias_i <- log(rr_hat) - theta;
     log_mse_i <- (log(rr_hat) - theta)^2;
+    exp_beta_L_A <- exp(beta_L_A);
+    exp_beta_L_Y <- exp(beta_L_Y);
   })
   
   d_sim <- as.data.table(d_sim)
@@ -82,46 +79,18 @@ prepare_sim_results <- function(d_sim) {
              "beta_L_Y", "beta_L_A", "U_time_interact", "A_time_interact",
              "conf_int", "risk_period")]
   
+  # TODO: remove this after re-run of simulations
+  if (!"allow_overlap" %in% colnames(d_sim)) {
+    d_sim[, allow_overlap := FALSE]
+    d_sim[, censor := 0]
+  }
+  
   # remove rows where rr = 0
   d_sim <- subset(d_sim, !(rr_hat==0))
   
   return(d_sim)
 }
 
-# read in simulation results
-d_sim1 <- readRDS("./data/sim1_results.Rds")
-d_sim2 <- readRDS("./data/sim2_results.Rds")
-d_sim3 <- readRDS("./data/sim3_results.Rds")
-d_sim4 <- readRDS("./data/sim4_results.Rds")
-d_sim5 <- readRDS("./data/sim5_results.Rds")
-d_sim6 <- readRDS("./data/sim6_results.Rds")
-d_sim7 <- readRDS("./data/sim7_results.Rds")
-d_sim8 <- readRDS("./data/sim8_results.Rds")
-d_sim9 <- readRDS("./data/sim9_results.Rds")
-d_sim10 <- readRDS("./data/sim10_results.Rds")
-d_sim11 <- readRDS("./data/sim11_results.Rds")
-d_sim12 <- readRDS("./data/sim12_results.Rds")
-d_sim13 <- readRDS("./data/sim13_results.Rds")
-
-# prepare it for plotting
-d_sim1 <- prepare_sim_results(d_sim1)
-d_sim2 <- prepare_sim_results(d_sim2)
-d_sim3 <- prepare_sim_results(d_sim3)
-d_sim4 <- prepare_sim_results(d_sim4)
-d_sim5 <- prepare_sim_results(d_sim5)
-d_sim6 <- prepare_sim_results(d_sim6)
-d_sim7 <- prepare_sim_results(d_sim7)
-d_sim8 <- prepare_sim_results(d_sim8)
-d_sim9 <- prepare_sim_results(d_sim9)
-d_sim10 <- prepare_sim_results(d_sim10)
-d_sim11 <- prepare_sim_results(d_sim11)
-d_sim12 <- prepare_sim_results(d_sim12)
-d_sim13 <- prepare_sim_results(d_sim13)
-```
-
-# Varying $n$ and $\theta$
-
-```{r}
 ## simple boxplots for each estimator and scenario
 plot_boxplots_n <- function(data, outliers=FALSE) {
   ggplot(data=data, aes(y=log_bias_i, x=estimator, fill=estimator)) +
@@ -152,57 +121,123 @@ plot_boxplots_beta_L <- function(data, outliers=FALSE) {
 }
 
 ## create a table of bias, MSE and associated MCSE by n / theta / scenario
-get_table_n_beta <- function(d_sim) {
+get_stats_table <- function(d_sim, n_repeats=1000) {
   
+  # remove infinite or NA values
   d_bias <- copy(as.data.table(d_sim))
   d_bias <- subset(d_bias, is.finite(rr_hat) & !is.na(rr_hat))
-  d_bias[, exp_beta_L_A := exp(beta_L_A)]
-  d_bias[, exp_beta_L_Y := exp(beta_L_Y)]
-
+  
+  # identify variables that were varied
+  all_vars <- c("n", "exp_beta_L_Y", "exp_beta_L_A", "scenario_num", "estimator",
+                "exp_theta", "multiple_A", "multiple_Y", "U_time_interact",
+                "A_time_interact", "conf_int", "risk_period", "allow_overlap",
+                "censor")
+  varies <- apply(d_bias[, all_vars, with=FALSE], 2, function(x){uniqueN(x) > 1})
+  all_vars <- all_vars[varies]
+  
+  # calculate performance stats
   d_bias <- d_bias[,
     .(bias = mean(log(rr_hat) - theta, na.rm=TRUE),
       bias_mcse = sd(log(rr_hat) - theta, na.rm=TRUE) / sqrt(.N),
       mse = mean((log(rr_hat) - theta)^2, na.rm=TRUE),
       mse_mcse = sd((log(rr_hat) - theta)^2, na.rm=TRUE) / sqrt(.N),
-      n_NA = 1000 - .N),
-    by=c("n", "exp_beta_L_Y", "exp_beta_L_A", "scenario", "estimator")
+      n_events = mean(n_events),
+      n_events_exp = mean(n_exposed_and_event),
+      n_NA = n_repeats - .N),
+    by=eval(all_vars)
   ]
 
-  setkey(d_bias, n, exp_beta_L_Y, exp_beta_L_A, scenario, estimator)
+  setkeyv(d_bias, all_vars)
+  
+  # put Bias / MSE and their MCSE in one columns
+  d_bias[, `Bias [MCSE]` := paste0(round(bias, 3), " [", round(bias_mcse, 3), "]")]
+  d_bias[, `MSE [MCSE]` := paste0(round(mse, 3), " [", round(mse_mcse, 3), "]")]
+  d_bias[, c("bias", "bias_mcse", "mse", "mse_mcse") := NULL]
+  
+  # change column order
+  setcolorder(d_bias,
+              neworder=c(all_vars, "Bias [MCSE]", "MSE [MCSE]", "n_events",
+                         "n_events_exp", "n_NA"))
+  
+  # change column names
+  setnames(d_bias,
+           old=c("exp_beta_L_Y", "exp_beta_L_A", "exp_theta", "risk_period",
+                 "n_events", "n_events_exp", "n_NA", "scenario_num",
+                 "estimator"),
+           new=c("exp(beta_Y)", "exp(beta_A)", "exp(theta)",
+                 "tau", "n_Y", "n_YA", "n NA",
+                 "Scenario", "Estimator"),
+           skip_absent=TRUE)
+  
   return(d_bias)
 }
 
-## create a table of bias, MSE and associated MCSE by n / theta / scenario
-get_table_n_theta <- function(d_sim) {
-  
-  d_bias <- copy(as.data.table(d_sim))
-  d_bias <- subset(d_bias, is.finite(rr_hat) & !is.na(rr_hat) & rr_hat!=0)
-
-  d_bias <- d_bias[,
-    .(bias = mean(log(rr_hat) - theta, na.rm=TRUE),
-      bias_mcse = sd(log(rr_hat) - theta, na.rm=TRUE) / sqrt(.N),
-      mse = mean((log(rr_hat) - theta)^2, na.rm=TRUE),
-      mse_mcse = sd((log(rr_hat) - theta)^2, na.rm=TRUE) / sqrt(.N),
-      n_NA = 1000 - .N,
-      n_events = mean(n_events),
-      n_events_exp = mean(n_exposed_and_event)),
-    by=c("n", "exp_theta", "scenario", "estimator")
-  ]
-
-  setkey(d_bias, n, exp_theta, scenario, estimator)
-  return(d_bias)
+## prints out the table of statistics
+print_stats <- function(d_bias, format="html") {
+  knitr::kable(d_bias, format=format, booktabs=TRUE, digits=3, linesep="",
+               longtable=TRUE)
 }
 ```
+
+# Introduction
+
+This script takes in the results generated using the Monte-Carlo simulation and analyzes them, creating the plots and tables shown in the paper and its appendices. To reproduce these results, first execute the `run_simulation.r` script. Only then this markdown document may be created.
+
+```{r}
+# read in simulation results
+d_sim1 <- readRDS("./data/sim1_results.Rds")
+d_sim2 <- readRDS("./data/sim2_results.Rds")
+d_sim3 <- readRDS("./data/sim3_results.Rds")
+d_sim4 <- readRDS("./data/sim4_results.Rds")
+d_sim5 <- readRDS("./data/sim5_results.Rds")
+d_sim6 <- readRDS("./data/sim6_results.Rds")
+d_sim7 <- readRDS("./data/sim7_results.Rds")
+d_sim8 <- readRDS("./data/sim8_results.Rds")
+d_sim9 <- readRDS("./data/sim9_results.Rds")
+d_sim10 <- readRDS("./data/sim10_results.Rds")
+d_sim11 <- readRDS("./data/sim11_results.Rds")
+d_sim12 <- readRDS("./data/sim12_results.Rds")
+d_sim13 <- readRDS("./data/sim13_results.Rds")
+
+# prepare it for plotting
+d_sim1 <- prepare_sim_results(d_sim1)
+d_sim2 <- prepare_sim_results(d_sim2)
+d_sim3 <- prepare_sim_results(d_sim3)
+d_sim4 <- prepare_sim_results(d_sim4)
+d_sim5 <- prepare_sim_results(d_sim5)
+d_sim6 <- prepare_sim_results(d_sim6)
+d_sim7 <- prepare_sim_results(d_sim7)
+d_sim8 <- prepare_sim_results(d_sim8)
+d_sim9 <- prepare_sim_results(d_sim9)
+d_sim10 <- prepare_sim_results(d_sim10)
+d_sim11 <- prepare_sim_results(d_sim11)
+d_sim12 <- prepare_sim_results(d_sim12)
+d_sim13 <- prepare_sim_results(d_sim13)
+
+# calculate bias tables for all scenarios (where it is needed)
+d_bias1 <- get_stats_table(d_sim1)
+d_bias2 <- get_stats_table(d_sim2)
+d_bias3 <- get_stats_table(d_sim3)
+d_bias4 <- get_stats_table(d_sim4)
+d_bias6 <- get_stats_table(d_sim6)
+d_bias7 <- get_stats_table(d_sim7)
+d_bias8 <- get_stats_table(d_sim8)
+d_bias9 <- get_stats_table(d_sim9)
+d_bias10 <- get_stats_table(d_sim10)
+d_bias11 <- get_stats_table(d_sim11)
+d_bias12 <- get_stats_table(d_sim12)
+d_bias13 <- get_stats_table(d_sim13)
+```
+
+# Varying $n$ and $\theta$
 
 ## $n = 5000$
 
-```{r, results="asis"}
-d_bias1 <- get_table_n_theta(d_sim1)
-knitr::kable(subset(d_bias1, n==5000)[, -"n"], format="html", booktabs=TRUE,
-             digits=3, linesep="", longtable=TRUE)
-```
-
 Boxplots not shown due to convergence issues in many methods.
+
+```{r}
+print_stats(subset(d_bias1, n==5000)[, -"n"], format="html")
+```
 
 ## $n = 10000$
 
@@ -212,8 +247,7 @@ ggsave("./Plots/sim1_n10000.pdf", width=6.5, height=7)
 ```
 
 ```{r}
-knitr::kable(subset(d_bias1, n==10000)[, -"n"], format="html", booktabs=TRUE,
-             digits=3, linesep="", longtable=TRUE)
+print_stats(subset(d_bias1, n==10000)[, -"n"], format="html")
 ```
 
 ## $n = 20000$
@@ -224,8 +258,7 @@ ggsave("./Plots/sim1_n20000.pdf", width=6.5, height=7)
 ```
 
 ```{r}
-knitr::kable(subset(d_bias1, n==20000)[, -"n"], format="html", booktabs=TRUE,
-             digits=3, linesep="", longtable=TRUE)
+print_stats(subset(d_bias1, n==20000)[, -"n"], format="html")
 ```
 
 ## Runtime
@@ -251,9 +284,7 @@ ggsave("./Plots/sim2_n10000.pdf", width=6, height=6)
 ```
 
 ```{r}
-d_bias2 <- get_table_n_theta(d_sim2)
-knitr::kable(subset(d_bias2, n==10000)[, -"n"], format="html", booktabs=TRUE,
-             digits=3, linesep="", longtable=TRUE)
+print_stats(subset(d_bias2, n==10000)[, -"n"], format="html")
 ```
 
 ## $n = 20000$
@@ -264,8 +295,7 @@ ggsave("./Plots/sim2_n20000.pdf", width=6, height=6)
 ```
 
 ```{r}
-knitr::kable(subset(d_bias2, n==20000)[, -"n"], format="html", booktabs=TRUE,
-             digits=3, linesep="", longtable=TRUE)
+print_stats(subset(d_bias2, n==20000)[, -"n"], format="html")
 ```
 
 # Varying $n$ and $\theta$ with a terminal event
@@ -278,9 +308,7 @@ ggsave("./Plots/sim3_n10000.pdf", width=6, height=6)
 ```
 
 ```{r}
-d_bias3 <- get_table_n_theta(d_sim3)
-knitr::kable(subset(d_bias3, n==10000)[, -"n"], format="html", booktabs=TRUE,
-             digits=3, linesep="", longtable=TRUE)
+print_stats(subset(d_bias3, n==10000)[, -"n"], format="html")
 ```
 
 ## $n = 20000$
@@ -291,8 +319,7 @@ ggsave("./Plots/sim3_n20000.pdf", width=6, height=6)
 ```
 
 ```{r}
-knitr::kable(subset(d_bias3, n==20000)[, -"n"], format="html", booktabs=TRUE,
-             digits=3, linesep="", longtable=TRUE)
+print_stats(subset(d_bias3, n==20000)[, -"n"], format="html")
 ```
 
 ## With time-varying variable $L_t$
@@ -305,9 +332,7 @@ ggsave("./plots/sim4_scenario1.pdf", width=7.5, height=7)
 ```
 
 ```{r}
-d_bias4 <- get_table_n_beta(d_sim4)
-knitr::kable(d_bias4[, -"n"], format="html", booktabs=TRUE,
-             digits=3, linesep="", longtable=TRUE)
+print_stats(subset(d_bias4, Scenario==1)[, -"Scenario"], format="html")
 ```
 
 ## Scenario 2
@@ -318,8 +343,7 @@ ggsave("./plots/sim4_scenario2.pdf", width=7.5, height=7)
 ```
 
 ```{r}
-knitr::kable(d_bias4[, -"n"], format="html", booktabs=TRUE,
-             digits=3, linesep="", longtable=TRUE)
+print_stats(subset(d_bias4, Scenario==2)[, -"Scenario"], format="html")
 ```
 
 # Bootstrap CI Coverage
@@ -359,11 +383,19 @@ plot_boxplots_n(subset(d_sim6, n==10000))
 ggsave("./Plots/sim6_n10000.pdf", width=6, height=6)
 ```
 
+```{r}
+print_stats(subset(d_bias6, n==10000)[, -"n"], format="html")
+```
+
 ## $n = 20000$
 
 ```{r}
 plot_boxplots_n(subset(d_sim6, n==20000))
 ggsave("./Plots/sim6_n20000.pdf", width=6, height=6)
+```
+
+```{r}
+print_stats(subset(d_bias6, n==20000)[, -"n"], format="html")
 ```
 
 # Interaction between time and $A$
@@ -375,6 +407,10 @@ plot_boxplots_n(subset(d_sim7, n==10000))
 ggsave("./Plots/sim7_n10000.pdf", width=6, height=6)
 ```
 
+```{r}
+print_stats(subset(d_bias7, n==10000)[, -"n"], format="html")
+```
+
 ## $n = 20000$
 
 ```{r}
@@ -382,18 +418,30 @@ plot_boxplots_n(subset(d_sim7, n==20000))
 ggsave("./Plots/sim7_n20000.pdf", width=6, height=6)
 ```
 
+```{r}
+print_stats(subset(d_bias7, n==20000)[, -"n"], format="html")
+```
+
 # With independent right-censoring
 
 ```{r}
-plot_boxplots_n(subset(d_sim11, n==20000))
+plot_boxplots_n(d_sim11)
 ggsave("./Plots/sim11.pdf", width=6, height=6)
+```
+
+```{r}
+print_stats(d_sim11, format="html")
 ```
 
 # With right-censoring dependent on $U$
 
 ```{r}
-plot_boxplots_n(subset(d_sim12, n==20000))
+plot_boxplots_n(d_sim12)
 ggsave("./Plots/sim12.pdf", width=6, height=6)
+```
+
+```{r}
+print_stats(d_sim12, format="html")
 ```
 
 # With right-censoring dependent on $L(t)$
@@ -406,9 +454,7 @@ ggsave("./plots/sim13_scenario1.pdf", width=7.5, height=7)
 ```
 
 ```{r}
-d_bias13 <- get_table_n_beta(d_sim13)
-knitr::kable(d_bias13[, -"n"], format="html", booktabs=TRUE,
-             digits=3, linesep="", longtable=TRUE)
+print_stats(subset(d_sim13, Scenario==1)[, -"Scenario"], format="html")
 ```
 
 ## Scenario 2
@@ -419,8 +465,7 @@ ggsave("./plots/sim13_scenario2.pdf", width=7.5, height=7)
 ```
 
 ```{r}
-knitr::kable(d_bias13[, -"n"], format="html", booktabs=TRUE,
-             digits=3, linesep="", longtable=TRUE)
+print_stats(subset(d_sim13, Scenario==2)[, -"Scenario"], format="html")
 ```
 
 # Different Baseline hazards per person
@@ -432,11 +477,19 @@ plot_boxplots_n(subset(d_sim8, n==10000))
 ggsave("./Plots/sim8_n10000.pdf", width=6, height=6)
 ```
 
+```{r}
+print_stats(subset(d_sim8, n==10000)[, -"n"], format="html")
+```
+
 ## $n = 20000$
 
 ```{r}
 plot_boxplots_n(subset(d_sim8, n==20000))
 ggsave("./Plots/sim8_n20000.pdf", width=6, height=6)
+```
+
+```{r}
+print_stats(subset(d_sim8, n==20000)[, -"n"], format="html")
 ```
 
 # Varying $\tau$
@@ -460,6 +513,10 @@ ggplot(data=subset(d_sim9, n==10000),
 ggsave("./Plots/sim9_n10000.pdf", width=6, height=6)
 ```
 
+```{r}
+print_stats(subset(d_sim9, n==10000)[, -"n"], format="html")
+```
+
 ## $n = 20000$
 
 ```{r}
@@ -479,6 +536,10 @@ ggplot(data=subset(d_sim9, n==20000),
 ggsave("./Plots/sim9_n20000.pdf", width=6, height=6)
 ```
 
+```{r}
+print_stats(subset(d_sim9, n==20000)[, -"n"], format="html")
+```
+
 # Allowing partial pairs
 
 ## $n = 10000$
@@ -488,6 +549,10 @@ plot_boxplots_n(subset(d_sim10, n==10000))
 ggsave("./Plots/sim10_n10000.pdf", width=6, height=6)
 ```
 
+```{r}
+print_stats(subset(d_sim10, n==10000)[, -"n"], format="html")
+```
+
 ## $n = 20000$
 
 ```{r}
@@ -495,3 +560,6 @@ plot_boxplots_n(subset(d_sim10, n==20000))
 ggsave("./Plots/sim10_n20000.pdf", width=6, height=6)
 ```
 
+```{r}
+print_stats(subset(d_sim10, n==20000)[, -"n"], format="html")
+```

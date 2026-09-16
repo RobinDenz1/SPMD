@@ -22,7 +22,7 @@ all_methods <- c("spmd", "cco", "ctc", "sccs", "sccs_spline_5",
 
 ## varying n, theta
 sim1 <- run_simulation(
-  n_sim = c(5000, 10000, 20000),
+  n_sim = c(10000, 20000, 30000),
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
@@ -37,7 +37,7 @@ saveRDS(sim1$results, "./simulation/data/sim1_results.Rds")
 
 ## varying n, theta while allowing multiple exposure periods per person
 sim2 <- run_simulation(
-  n_sim = c(10000, 20000),
+  n_sim = c(20000, 30000),
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
@@ -51,7 +51,7 @@ saveRDS(sim2$results, "./simulation/data/sim2_results.Rds")
 
 ## varying n, theta with a terminal event
 sim3 <- run_simulation(
-  n_sim = c(10000, 20000),
+  n_sim = c(20000, 30000),
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
@@ -81,7 +81,7 @@ saveRDS(sim4$results, "./simulation/data/sim4_results.Rds")
 
 ## bootstrap CI coverage
 sim5 <- run_simulation(
-  n_sim = c(10000, 20000),
+  n_sim = c(20000, 30000),
   n_repeats = n_repeats,
   method = "spmd",
   scenario = c(1, 2),
@@ -96,7 +96,7 @@ saveRDS(sim5$results, "./simulation/data/sim5_results.Rds")
 
 # interaction between time and U
 sim6 <- run_simulation(
-  n_sim = c(10000, 20000),
+  n_sim = c(20000, 30000),
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
@@ -111,7 +111,7 @@ saveRDS(sim6$results, "./simulation/data/sim6_results.Rds")
 
 # interaction between time and A
 sim7 <- run_simulation(
-  n_sim = c(10000, 20000),
+  n_sim = c(20000, 30000),
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
@@ -126,7 +126,7 @@ saveRDS(sim7$results, "./simulation/data/sim7_results.Rds")
 
 # different baseline hazards per person
 sim8 <- run_simulation(
-  n_sim = c(10000, 20000),
+  n_sim = c(20000, 30000),
   n_repeats = n_repeats,
   method = all_methods,
   scenario = 3,
@@ -140,7 +140,7 @@ saveRDS(sim8$results, "./simulation/data/sim8_results.Rds")
 
 # varying risk_period
 sim9 <- run_simulation(
-  n_sim = c(10000, 20000),
+  n_sim = c(20000, 30000),
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
@@ -155,7 +155,7 @@ saveRDS(sim9$results, "./simulation/data/sim9_results.Rds")
 
 ## varying n, theta and using partial pairs
 sim10 <- run_simulation(
-  n_sim = c(10000, 20000),
+  n_sim = c(20000, 30000),
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
