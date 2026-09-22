@@ -126,11 +126,11 @@ create_data <- function(n, scenario, theta, multiple_A=FALSE,
                          event_duration=Inf, event_count=TRUE)
   } else if (censor==2) {
     dag <- dag + node_td("C", type="next_time",
-                         formula= ~ log(0.0001) + U*log(2),
+                         formula= ~ log(0.0003) + U*log(2),
                          event_duration=Inf, event_count=TRUE, link="log")
   } else if (censor==3) {
     dag <- dag + node_td("C", type="next_time",
-                         formula= ~ log(0.0001) + L*log(5),
+                         formula= ~ log(0.0003) + L*log(5),
                          event_duration=Inf, event_count=TRUE, link="log")
   }
 

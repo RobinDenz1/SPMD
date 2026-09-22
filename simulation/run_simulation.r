@@ -28,7 +28,7 @@ sim1 <- run_simulation(
   scenario = c(1, 2),
   theta = log(c(0.7, 1, 1.5, 2.5, 5)),
   multiple_A = FALSE,
-  multiple_Y= TRUE,
+  multiple_Y = TRUE,
   censor = 1,
   n_cores = 8,
   seed = 42
@@ -43,7 +43,7 @@ sim2 <- run_simulation(
   scenario = c(1, 2),
   theta = log(c(0.7, 1, 2.5)),
   multiple_A = TRUE,
-  multiple_Y= TRUE,
+  multiple_Y = TRUE,
   n_cores = 8,
   seed = 43
 )
@@ -57,7 +57,7 @@ sim3 <- run_simulation(
   scenario = c(1, 2),
   theta = log(c(0.7, 1, 2.5)),
   multiple_A = FALSE,
-  multiple_Y= FALSE,
+  multiple_Y = FALSE,
   n_cores = 8,
   seed = 44
 )
@@ -71,7 +71,7 @@ sim4 <- run_simulation(
   scenario = c(1, 2),
   theta = log(2.5),
   multiple_A = FALSE,
-  multiple_Y= TRUE,
+  multiple_Y = TRUE,
   beta_L_Y = log(c(1, 3, 5)),
   beta_L_A = log(c(1, 3, 5)),
   n_cores = 8,
@@ -87,7 +87,7 @@ sim5 <- run_simulation(
   scenario = c(1, 2),
   theta = log(c(0.7, 1, 2.5)),
   multiple_A = FALSE,
-  multiple_Y= TRUE,
+  multiple_Y = TRUE,
   conf_int = TRUE,
   n_cores = 8,
   seed = 46
@@ -102,7 +102,7 @@ sim6 <- run_simulation(
   scenario = c(1, 2),
   theta = log(c(0.7, 1, 2.5)),
   multiple_A = FALSE,
-  multiple_Y= TRUE,
+  multiple_Y = TRUE,
   U_time_interact = log(0.5),
   n_cores = 8,
   seed = 47
@@ -117,7 +117,7 @@ sim7 <- run_simulation(
   scenario = c(1, 2),
   theta = log(c(0.7, 1, 2.5)),
   multiple_A = FALSE,
-  multiple_Y= TRUE,
+  multiple_Y = TRUE,
   A_time_interact = log(0.5),
   n_cores = 8,
   seed = 48
@@ -132,7 +132,7 @@ sim8 <- run_simulation(
   scenario = 3,
   theta = log(c(0.7, 1, 2.5)),
   multiple_A = FALSE,
-  multiple_Y= TRUE,
+  multiple_Y = TRUE,
   n_cores = 8,
   seed = 49
 )
@@ -146,7 +146,7 @@ sim9 <- run_simulation(
   scenario = c(1, 2),
   theta = log(2.5),
   multiple_A = FALSE,
-  multiple_Y= TRUE,
+  multiple_Y = TRUE,
   risk_period = c(10, 50, 100, 150, 300),
   n_cores = 8,
   seed = 50
@@ -161,7 +161,7 @@ sim10 <- run_simulation(
   scenario = c(1, 2),
   theta = log(c(0.7, 1, 2.5)),
   multiple_A = FALSE,
-  multiple_Y= TRUE,
+  multiple_Y = TRUE,
   allow_overlap = TRUE,
   n_cores = 8,
   seed = 51
@@ -176,7 +176,7 @@ sim11 <- run_simulation(
   scenario = c(1, 2),
   theta = log(c(0.7, 1, 2.5)),
   multiple_A = FALSE,
-  multiple_Y= TRUE,
+  multiple_Y = TRUE,
   censor = 1,
   n_cores = 8,
   seed = 52
@@ -191,7 +191,7 @@ sim12 <- run_simulation(
   scenario = c(1, 2),
   theta = log(c(0.7, 1, 2.5)),
   multiple_A = FALSE,
-  multiple_Y= TRUE,
+  multiple_Y = TRUE,
   censor = 2,
   n_cores = 8,
   seed = 53
@@ -207,7 +207,7 @@ sim13 <- run_simulation(
   scenario = c(1, 2),
   theta = log(2.5),
   multiple_A = FALSE,
-  multiple_Y= TRUE,
+  multiple_Y = TRUE,
   censor = 3,
   beta_L_Y = log(c(1, 3, 5)),
   beta_L_A = log(c(1, 3, 5)),
@@ -216,3 +216,7 @@ sim13 <- run_simulation(
 )
 saveRDS(sim13$results, "./simulation/data/sim13_results.Rds")
 
+# TODO:
+# - previous event-dependent exposure
+# - previous event-dependent events
+# - misspecified \tau

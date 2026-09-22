@@ -25,7 +25,7 @@ prepare_sim_results <- function(d_sim) {
       levels = c("cox", "cco", "ctc", "sccs", "sccs_spline_5",
                  "sccs_spline_15", "spmd"),
       labels = c("Cox", "CCO", "CTC", "SCCS", "SCCS\nSpline\n(5)",
-                 "SCCS\nSpline\n(15)", "SPMD")
+                 "SCCS\nSpline\n(15)", "SPM")
     );
     exp_theta <- exp(theta);
     exp_theta_f <- factor(
@@ -78,12 +78,6 @@ prepare_sim_results <- function(d_sim) {
         by=c("rep_id", "scenario", "theta", "n", "multiple_A", "multiple_Y",
              "beta_L_Y", "beta_L_A", "U_time_interact", "A_time_interact",
              "conf_int", "risk_period")]
-  
-  # TODO: remove this after re-run of simulations
-  if (!"allow_overlap" %in% colnames(d_sim)) {
-    d_sim[, allow_overlap := FALSE]
-    d_sim[, censor := 0]
-  }
   
   # remove rows where rr = 0
   d_sim <- subset(d_sim, !(rr_hat==0))
@@ -152,6 +146,8 @@ get_stats_table <- function(d_sim, n_repeats=1000) {
   # put Bias / MSE and their MCSE in one columns
   d_bias[, `Bias [MCSE]` := paste0(round(bias, 3), " [", round(bias_mcse, 3), "]")]
   d_bias[, `MSE [MCSE]` := paste0(round(mse, 3), " [", round(mse_mcse, 3), "]")]
+  d_bias[estimator=="SCCS\nSpline\n(5)", estimator := "SCCS Spline (5)"]
+  d_bias[estimator=="SCCS\nSpline\n(15)", estimator := "SCCS Spline (15)"]
   d_bias[, c("bias", "bias_mcse", "mse", "mse_mcse") := NULL]
   
   # change column order
@@ -253,10 +249,21 @@ ggsave("./Plots/sim1_n20000.pdf", width=6.5, height=7)
 print_stats(subset(d_bias1, n==20000)[, -"n"], format="html")
 ```
 
+## $n = 30000$
+
+```{r}
+plot_boxplots_n(subset(d_sim1, n==30000))
+ggsave("./Plots/sim1_n30000.pdf", width=6.5, height=7)
+```
+
+```{r}
+print_stats(subset(d_bias1, n==30000)[, -"n"], format="html")
+```
+
 ## Runtime
 
 ```{r}
-ggplot(subset(d_sim1, estimator=="SPMD"),
+ggplot(subset(d_sim1, estimator=="SPM"),
        aes(x=factor(n), y=runtime, fill=factor(exp_theta))) +
   geom_boxplot(size=0.1, linewidth=0.2) +
   facet_wrap(~ scenario, ncol=1) +
@@ -363,7 +370,7 @@ ggsave("./plots/sim5.pdf", width=6, height=7)
 ```
 
 ```{r}
-knitr::kable(d_sim5_est)
+knitr::kable(d_sim5_est, format="latex")
 ```
 
 # Interaction between time and $U$
@@ -496,8 +503,7 @@ ggplot(data=subset(d_sim9, n==20000),
   facet_grid(cols=vars(scenario), rows=vars(risk_period_f),
                labeller = labeller(
                  risk_period_f = label_parsed,
-                 scenario = label_value
-               )) +
+                 scenario = label_value), scales="free_y") +
   theme_minimal() +
   theme(legend.position="none",
         axis.text.x=element_text(size=8)) +
@@ -520,7 +526,7 @@ ggplot(data=subset(d_sim9, n==30000),
                labeller = labeller(
                  risk_period_f = label_parsed,
                  scenario = label_value
-               )) +
+               ), scales="free_y") +
   theme_minimal() +
   theme(legend.position="none",
         axis.text.x=element_text(size=8)) +
