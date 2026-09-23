@@ -106,8 +106,8 @@ contents of this vignette.</p>
 the SPM design. We highly encourage readers and users of the method to
 read the associated paper instead (Denz et al. 2026), which describes
 the method and its associated assumptions in much more detail. The goal
-of the SPM design is to estimate the causal relative risk of a binary
-time-dependent exposure on a possibly re-current binary time-to-event
+of the SPM design is to estimate the causal incidence rate ratio of a
+binary time-dependent exposure on a recurrent binary time-to-event
 outcome. A classic example would be the effect of a Covid-19 vaccination
 on the occurrence of acute myocarditis in a short period (for example 24
 days) after vaccination. Importantly, the exposure is assumed to be
@@ -297,7 +297,7 @@ method:</p>
 <span><span class="co">#&gt;   Observation time used            94.21%</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Effect estimate</span></span>
-<span><span class="co">#&gt;   log(RR)    RR</span></span>
+<span><span class="co">#&gt;   log(IRR)   IRR</span></span>
 <span><span class="co">#&gt;   0.851      2.343</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Estimation</span></span>
@@ -455,8 +455,8 @@ the dataset is gigantic, or when using
 <h2 id="estimators">Estimators<a class="anchor" aria-label="anchor" href="#estimators"></a>
 </h2>
 <p>After having created the symmetric pair matches, we still have to
-apply an estimator to obtain the relative risk of interest. The package
-implements two main estimators, the main empirical moments based
+apply an estimator to obtain the incidence rate ratio of interest. The
+package implements two main estimators, the main empirical moments based
 estimator (<code>estimator="moments"</code>) and an experimental
 estimator based on a generalized linear mixed Poisson model
 (<code>estimator="glmm"</code>).</p>
@@ -501,14 +501,14 @@ detail.</p>
 <h2 id="confidence-interval-estimation">Confidence interval estimation<a class="anchor" aria-label="anchor" href="#confidence-interval-estimation"></a>
 </h2>
 <p>The estimators by themselves only return a point estimate (e.g. an
-estimate of the relative risk). In most applications, we are, however,
-also interested in estimating the uncertainty of this point estimate.
-This is often done using confidence intervals. We may also wish to test
-the hypothesis, that the true relative risk is 1, which is often done
-using p-values. Currently, no equation exists that could be used to
-directly estimate the standard error of the estimate, which would be
-required for both applications. We therefore usually rely on
-bootstrapping, which is implemented into the
+estimate of the incidence rate ratio). In most applications, we are,
+however, also interested in estimating the uncertainty of this point
+estimate. This is often done using confidence intervals. We may also
+wish to test the hypothesis, that the true incidence rate ratio is 1,
+which is often done using p-values. Currently, no equation exists that
+could be used to directly estimate the standard error of the estimate,
+which would be required for both applications. We therefore usually rely
+on bootstrapping, which is implemented into the
 <code><a href="../reference/sym_pair_matching.html">sym_pair_matching()</a></code> function through the
 <code>bootstrap</code> argument:</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
@@ -535,7 +535,7 @@ bootstrapping, which is implemented into the
 <span><span class="co">#&gt;   Observation time used            94.21%</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Effect estimate</span></span>
-<span><span class="co">#&gt;   log(RR)    RR         SE         95% CI          P-value</span></span>
+<span><span class="co">#&gt;   log(IRR)   IRR        SE         95% CI          P-value</span></span>
 <span><span class="co">#&gt;   0.851      2.343      0.649      1.356 – 3.855   0.006</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Bootstrap: 1,000 replicates</span></span>

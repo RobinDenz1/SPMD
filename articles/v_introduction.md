@@ -40,8 +40,8 @@ In the following we give a very informal and short introduction to the
 SPM design. We highly encourage readers and users of the method to read
 the associated paper instead (Denz et al. 2026), which describes the
 method and its associated assumptions in much more detail. The goal of
-the SPM design is to estimate the causal relative risk of a binary
-time-dependent exposure on a possibly re-current binary time-to-event
+the SPM design is to estimate the causal incidence rate ratio of a
+binary time-dependent exposure on a recurrent binary time-to-event
 outcome. A classic example would be the effect of a Covid-19 vaccination
 on the occurrence of acute myocarditis in a short period (for example 24
 days) after vaccination. Importantly, the exposure is assumed to be
@@ -206,7 +206,7 @@ summary(out)
 #>   Observation time used            94.21%
 #> 
 #> Effect estimate
-#>   log(RR)    RR
+#>   log(IRR)   IRR
 #>   0.851      2.343
 #> 
 #> Estimation
@@ -393,7 +393,7 @@ or when using `estimator="glmm"`.
 ## Estimators
 
 After having created the symmetric pair matches, we still have to apply
-an estimator to obtain the relative risk of interest. The package
+an estimator to obtain the incidence rate ratio of interest. The package
 implements two main estimators, the main empirical moments based
 estimator (`estimator="moments"`) and an experimental estimator based on
 a generalized linear mixed Poisson model (`estimator="glmm"`).
@@ -428,14 +428,14 @@ now, as its theoretical properties have not been studied in detail.
 ## Confidence interval estimation
 
 The estimators by themselves only return a point estimate (e.g. an
-estimate of the relative risk). In most applications, we are, however,
-also interested in estimating the uncertainty of this point estimate.
-This is often done using confidence intervals. We may also wish to test
-the hypothesis, that the true relative risk is 1, which is often done
-using p-values. Currently, no equation exists that could be used to
-directly estimate the standard error of the estimate, which would be
-required for both applications. We therefore usually rely on
-bootstrapping, which is implemented into the
+estimate of the incidence rate ratio). In most applications, we are,
+however, also interested in estimating the uncertainty of this point
+estimate. This is often done using confidence intervals. We may also
+wish to test the hypothesis, that the true incidence rate ratio is 1,
+which is often done using p-values. Currently, no equation exists that
+could be used to directly estimate the standard error of the estimate,
+which would be required for both applications. We therefore usually rely
+on bootstrapping, which is implemented into the
 [`sym_pair_matching()`](https://robindenz1.github.io/SPMD/reference/sym_pair_matching.md)
 function through the `bootstrap` argument:
 
@@ -464,7 +464,7 @@ summary(out)
 #>   Observation time used            94.21%
 #> 
 #> Effect estimate
-#>   log(RR)    RR         SE         95% CI          P-value
+#>   log(IRR)   IRR        SE         95% CI          P-value
 #>   0.851      2.343      0.649      1.356 – 3.855   0.006
 #> 
 #> Bootstrap: 1,000 replicates

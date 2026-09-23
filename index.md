@@ -97,7 +97,7 @@ summary(spmd)
 #>   Observation time used            96.57%
 #> 
 #> Effect estimate
-#>   log(RR)    RR         SE         95% CI          P-value
+#>   log(IRR)   IRR        SE         95% CI          P-value
 #>   0.899      2.457      0.542      1.596 – 3.718   0.001
 #> 
 #> Bootstrap: 1,000 replicates

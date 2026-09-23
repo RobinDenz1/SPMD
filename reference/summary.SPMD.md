@@ -115,7 +115,7 @@ summary(out)
 #>   Observation time used            70.45%
 #> 
 #> Effect estimate
-#>   log(RR)    RR
+#>   log(IRR)   IRR
 #>   0.405      1.500
 #> 
 #> Estimation

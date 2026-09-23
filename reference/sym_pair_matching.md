@@ -352,7 +352,7 @@ Returns a `SPMD` object, containing the following objects:
 
 - `inputs`: A `list` containing the arguments supplied by the user.
 
-- `est`: A single number containing the estimated relative risk.
+- `est`: A single number containing the estimated incidence rate ratio.
 
 - `d_counts`: If `estimator="moments"`, a `data.table` containing the
   four event counts per matched pair.
@@ -439,7 +439,7 @@ summary(out)
 #>   Observation time used            95.84%
 #> 
 #> Effect estimate
-#>   log(RR)    RR
+#>   log(IRR)   IRR
 #>   0.903      2.468
 #> 
 #> Estimation
