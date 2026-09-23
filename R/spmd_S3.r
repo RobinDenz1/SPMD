@@ -71,7 +71,7 @@ summary.SPMD <- function(object, ...) {
   se <- object$se
   ci <- object$ci
   p_value <- object$p_value
-  log_rr <- ifelse(is.finite(estimate), log(estimate), NA_real_)
+  log_irr <- ifelse(is.finite(estimate), log(estimate), NA_real_)
   boot_n <- ifelse(!is.null(object$boot_est), length(object$boot_est), 0)
 
   # estimating equation
@@ -110,8 +110,8 @@ summary.SPMD <- function(object, ...) {
     ),
 
     estimate = list(
-      log_rr = log_rr,
-      rr = estimate,
+      log_irr = log_irr,
+      irr = estimate,
       se = se,
       ci = ci,
       conf_level = inputs$conf_level,
@@ -173,21 +173,21 @@ print.summary.SPMD <- function(x, ...) {
   # effect estimate
   cat("\nEffect estimate\n")
 
-  if (length(x$estimate$rr) == 0 || !is.finite(x$estimate$rr)) {
+  if (length(x$estimate$irr) == 0 || !is.finite(x$estimate$irr)) {
     cat("  No finite estimate available.\n")
   } else if (is.null(x$estimate$ci)) {
-    cat(sprintf("  %-10s %s\n", "log(RR)", "RR"))
-    cat(sprintf("  %-10.3f %.3f\n", x$estimate$log_rr, x$estimate$rr))
+    cat(sprintf("  %-10s %s\n", "log(IRR)", "IRR"))
+    cat(sprintf("  %-10.3f %.3f\n", x$estimate$log_irr, x$estimate$irr))
   } else {
     ci_label <- paste0(x$estimate$conf_level * 100, "% CI")
 
-    cat(sprintf("  %-10s %-10s %-10s %-15s %s\n", "log(RR)", "RR", "SE",
+    cat(sprintf("  %-10s %-10s %-10s %-15s %s\n", "log(IRR)", "IRR", "SE",
                 ci_label, "P-value"))
     ci_string <- sprintf("%.3f \u2013 %.3f", x$estimate$ci[1],
                          x$estimate$ci[2])
     p_string <- format.pval(x$estimate$p_value, digits=3, eps=0.001)
-    cat(sprintf("  %-10.3f %-10.3f %-10.3f %-17s %s\n", x$estimate$log_rr,
-                x$estimate$rr, x$estimate$se, ci_string, p_string))
+    cat(sprintf("  %-10.3f %-10.3f %-10.3f %-17s %s\n", x$estimate$log_irr,
+                x$estimate$irr, x$estimate$se, ci_string, p_string))
   }
 
   # Bootstrap

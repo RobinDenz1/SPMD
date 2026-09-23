@@ -9,4 +9,10 @@ For the paper:
 
 - add illustrative example
 - maybe discuss how the estimand changes under effect heterogeneity
-- in the discussion, state conditions when SPM is preferable to SCCS more clearly
+- double-check the assumptions
+- Simulation
+	- a few more Scenarios
+	- maybe increase the baseline probability for exposures
+	- add a methodological sub-section (Performance criteria, exact values used, R package versions, method specifications, R code for reproducing it)
+	- Maybe add some average bias / MSE to main text in parenthesis
+	- check if bootstrap CI convergence is better under full bootstrap

@@ -40,7 +40,7 @@ library(lme4)
 
 # What is the Symmetric Pair Matching Design?
 
-In the following we give a very informal and short introduction to the SPM design. We highly encourage readers and users of the method to read the associated paper instead (Denz et al. 2026), which describes the method and its associated assumptions in much more detail. The goal of the SPM design is to estimate the causal relative risk of a binary time-dependent exposure on a possibly re-current binary time-to-event outcome. A classic example would be the effect of a Covid-19 vaccination on the occurrence of acute myocarditis in a short period (for example 24 days) after vaccination. Importantly, the exposure is assumed to be transient, e.g. it is assumed that it only has an effect on the outcome for a known duration after exposure, after which the risk goes back to the persons baseline level.
+In the following we give a very informal and short introduction to the SPM design. We highly encourage readers and users of the method to read the associated paper instead (Denz et al. 2026), which describes the method and its associated assumptions in much more detail. The goal of the SPM design is to estimate the causal incidence rate ratio of a binary time-dependent exposure on a recurrent binary time-to-event outcome. A classic example would be the effect of a Covid-19 vaccination on the occurrence of acute myocarditis in a short period (for example 24 days) after vaccination. Importantly, the exposure is assumed to be transient, e.g. it is assumed that it only has an effect on the outcome for a known duration after exposure, after which the risk goes back to the persons baseline level.
 
 Under the assumption that there are no time-dependent confounders of the relationship between vaccination and the development of acute myocarditis, two potential sources of confounding remain: (1) time-invariant confounders, such as sex or genetics and (2) time itself. The latter my arise when the probability for vaccination is time-dependent and the probability for the outcome is also time-dependent, irrespective of individual characteristics. In vaccine-safety studies, this is frequently the case, especially for seasonal vaccinations such as influenza vaccines. Briefly, the method adjusts for both types of confounding through a special pair matching structure, as its name suggests.
 
@@ -218,7 +218,7 @@ The amount of options naturally raises the question, which option is the best. W
 
 # Estimators
 
-After having created the symmetric pair matches, we still have to apply an estimator to obtain the relative risk of interest. The package implements two main estimators, the main empirical moments based estimator (`estimator="moments"`) and an experimental estimator based on a generalized linear mixed Poisson model (`estimator="glmm"`).
+After having created the symmetric pair matches, we still have to apply an estimator to obtain the incidence rate ratio of interest. The package implements two main estimators, the main empirical moments based estimator (`estimator="moments"`) and an experimental estimator based on a generalized linear mixed Poisson model (`estimator="glmm"`).
 
 ## Empirical moments based estimator
 
@@ -236,7 +236,7 @@ An alternative experimental estimator is based on a generalized linear mixed Poi
 
 # Confidence interval estimation
 
-The estimators by themselves only return a point estimate (e.g. an estimate of the relative risk). In most applications, we are, however, also interested in estimating the uncertainty of this point estimate. This is often done using confidence intervals. We may also wish to test the hypothesis, that the true relative risk is 1, which is often done using p-values. Currently, no equation exists that could be used to directly estimate the standard error of the estimate, which would be required for both applications. We therefore usually rely on bootstrapping, which is implemented into the `sym_pair_matching()` function through the `bootstrap` argument:
+The estimators by themselves only return a point estimate (e.g. an estimate of the incidence rate ratio). In most applications, we are, however, also interested in estimating the uncertainty of this point estimate. This is often done using confidence intervals. We may also wish to test the hypothesis, that the true incidence rate ratio is 1, which is often done using p-values. Currently, no equation exists that could be used to directly estimate the standard error of the estimate, which would be required for both applications. We therefore usually rely on bootstrapping, which is implemented into the `sym_pair_matching()` function through the `bootstrap` argument:
 
 ```{r}
 out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",

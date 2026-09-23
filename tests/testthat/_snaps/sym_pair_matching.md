@@ -19,7 +19,7 @@
       Observation time used            8.00%
     
     Effect estimate
-      log(RR)    RR
+      log(IRR)   IRR
       0.805      2.236
     
     Estimation

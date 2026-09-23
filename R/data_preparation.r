@@ -229,7 +229,8 @@ fix_overlap <- function(d_pairs, bounds, risk_period) {
   }
 
   # for individuals with overlap, fix observation period for the earlier
-  # comparison to [t1, t2] and to [t1 + risk_period, t2] for the latter
+  # comparison to [t1, t2] and to [t1 + risk_period, t2 + risk_period]
+  # for the latter
   d_pairs[.group <= 2 & .has_overlap==TRUE, .end_time := .t2]
   d_pairs[.group >= 3 & .has_overlap==TRUE, .time := .t1 + risk_period]
 

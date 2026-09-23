@@ -186,7 +186,7 @@ create_data_scenario3 <- function(n, theta, risk_period) {
 
 ## get RR estimate using different methods
 apply_method <- function(data, type, include_ci=FALSE, risk_period=30,
-                         allow_overlap=FALSE) {
+                         allow_overlap=FALSE, pairs="all", n_pairs=100000) {
 
   if (type=="cox") {
     mod <- coxph(Surv(start, stop, Y) ~ A + U, data=data)
@@ -194,10 +194,10 @@ apply_method <- function(data, type, include_ci=FALSE, risk_period=30,
     n_events <- n_exposed_and_event <- ci_lower <- ci_upper <- NA
   } else if (type=="spmd") {
     out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
-                             id=".id", pairs="all", risk_period=risk_period,
+                             id=".id", pairs=pairs, risk_period=risk_period,
                              estimator="moments", bounds="(]",
                              convergence=FALSE, allow_overlap=allow_overlap,
-                             bootstrap=include_ci)
+                             bootstrap=include_ci, n_pairs=n_pairs)
     rr_hat <- out$est
     n_events <- out$sizes$n_events
     n_exposed_and_event <- out$sizes$n_exposed_and_event
@@ -239,7 +239,8 @@ run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
                            multiple_A, multiple_Y, beta_L_Y=0, beta_L_A=0,
                            U_time_interact=0, A_time_interact=0,
                            conf_int=FALSE, risk_period=30, allow_overlap=FALSE,
-                           censor=0, n_cores=8, seed=2134) {
+                           censor=0, pairs="all", n_pairs=1000000, n_cores=8,
+                           seed=2134) {
 
   # annoying needed fix, because otherwise run() fails
   # due to scoping issues
@@ -271,7 +272,9 @@ run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
     conf_int = conf_int,
     risk_period = risk_period,
     allow_overlap = allow_overlap,
-    censor = censor
+    censor = censor,
+    pairs = pairs,
+    n_pairs = n_pairs
   )
 
   # define the simulation script
@@ -286,7 +289,8 @@ run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
     })
     out <- apply_method(data=data, type=L$estimator, include_ci=L$conf_int,
                         risk_period=L$risk_period,
-                        allow_overlap=L$allow_overlap)
+                        allow_overlap=L$allow_overlap, pairs=L$pairs,
+                        n_pairs=L$n_pairs)
 
     return(out)
   })

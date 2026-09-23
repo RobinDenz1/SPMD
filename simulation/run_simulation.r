@@ -216,7 +216,26 @@ sim13 <- run_simulation(
 )
 saveRDS(sim13$results, "./simulation/data/sim13_results.Rds")
 
+## using random subset of pairs
+sim14 <- run_simulation(
+  n_sim = c(20000, 30000),
+  n_repeats = n_repeats,
+  method = all_methods,
+  scenario = c(1, 2),
+  theta = log(c(0.7, 1, 2.5)),
+  multiple_A = FALSE,
+  multiple_Y = TRUE,
+  pairs = "random2",
+  n_pairs = 20000,
+  n_cores = 8,
+  seed = 55
+)
+saveRDS(sim14$results, "./simulation/data/sim14_results.Rds")
+
 # TODO:
 # - previous event-dependent exposure
 # - previous event-dependent events
 # - misspecified \tau
+
+
+
