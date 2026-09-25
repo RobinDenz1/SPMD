@@ -206,11 +206,12 @@ summary(out)
 #>   Observation time used            94.21%
 #> 
 #> Effect estimate
-#>   log(IRR)   IRR
-#>   0.851      2.343
+#>   log(IRR)   IRR        SE         95% CI          P-value
+#>   0.851      2.343      0.573      1.450 – 3.784   <0.001
 #> 
 #> Estimation
 #>   Estimating equation: exp{1/2 log(225 / 41)}
+#>   CI estimation method: 'jackknife'
 #>   |A_n| / |E_n|^2: 0.0117922
 #> ──────────────────────────────────────────────────────────────
 ```
@@ -432,18 +433,20 @@ estimate of the incidence rate ratio). In most applications, we are,
 however, also interested in estimating the uncertainty of this point
 estimate. This is often done using confidence intervals. We may also
 wish to test the hypothesis, that the true incidence rate ratio is 1,
-which is often done using p-values. Currently, no equation exists that
-could be used to directly estimate the standard error of the estimate,
-which would be required for both applications. We therefore usually rely
-on bootstrapping, which is implemented into the
+which is often done using p-values. Currently, an equation to directly
+estimate the standard error of the estimate only exists for
+`estimator="moments"` with `pairs="all"`. In other cases, one must rely
+on bootstrapping. Both strategies are implemented into the
 [`sym_pair_matching()`](https://robindenz1.github.io/SPMD/reference/sym_pair_matching.md)
-function through the `bootstrap` argument:
+function through the `conf_type` argument.
+
+### Bootstrapping
 
 ``` r
 
 out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                          pairs="all", estimator="moments", risk_period=30,
-                         bootstrap=TRUE, n_boot=1000)
+                         conf_type="boot.fast", n_boot=1000)
 summary(out)
 #> ──────────────────────────────────────────────────────────────
 #> Symmetric Pair Matching Design
@@ -471,6 +474,7 @@ summary(out)
 #> 
 #> Estimation
 #>   Estimating equation: exp{1/2 log(225 / 41)}
+#>   CI estimation method: 'boot.fast'
 #>   |A_n| / |E_n|^2: 0.0117922
 #> ──────────────────────────────────────────────────────────────
 ```
@@ -505,13 +509,31 @@ Bootstrapping may become fairly computationally expensive, particularly
 with large samples and `pairs="all"` or `pairs="random1"` /
 `pairs="random2"` when using many matches. We have implemented some
 computational tricks that keep the computation time low, particularly
-when using `pairs="all"`. In this case, the pair matching is only done
-once and the bootstrap samples are generated directly from all pairs
-through re-weighting them. This is possible because repeated inclusion
-of individuals never generates new samples (individuals cannot match
-themselves, because the risk periods would overlap). Additionally, the
-`n_cores` argument may be used to run the bootstrap calculations on
-multiple processing cores, potentially saving much more time as well.
+when using `pairs="all"`. In this case, we may use
+`conf_type="boot.fast"` as shown above. Then, the pair matching is only
+done once and the bootstrap samples are generated directly from all
+pairs through re-weighting them. This is possible because repeated
+inclusion of individuals never generates new samples (individuals cannot
+match themselves, because the risk periods would overlap). If
+`pairs!="all"`, this strategy may not be used. Users should then use
+`conf_type="boot"`. To make this faster, the `n_cores` argument may be
+used to run the bootstrap calculations on multiple processing cores,
+potentially saving much more time as well.
+
+### Infinitesimal Jackknife
+
+The best approach that is currently available when using
+`estimator = "moments` and `pairs = "all"` is to set
+`conf_type = "jackknife`. This is also the underlying default behavior
+(e.g. when `conf_type = "auto"`). It uses a first-order taylor
+approximation of the `conf_type = "boot.fast"` method, which does not
+require actual re-sampling. This has multiple advantages. First, it is
+extremly fast because it only uses the existing pair information.
+Secondly, because no actual samples are created, the issue of infinite
+or undefined estimates in specific bootstrap samples does not arise. We
+therefore recommend using this approach, whenever feasible. More
+information is given in the appendix of the main paper (Denz et
+al. 2026).
 
 ## Some subtleties
 

@@ -297,11 +297,12 @@ method:</p>
 <span><span class="co">#&gt;   Observation time used            94.21%</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Effect estimate</span></span>
-<span><span class="co">#&gt;   log(IRR)   IRR</span></span>
-<span><span class="co">#&gt;   0.851      2.343</span></span>
+<span><span class="co">#&gt;   log(IRR)   IRR        SE         95% CI          P-value</span></span>
+<span><span class="co">#&gt;   0.851      2.343      0.573      1.450 – 3.784   &lt;0.001</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Estimation</span></span>
 <span><span class="co">#&gt;   Estimating equation: exp{1/2 log(225 / 41)}</span></span>
+<span><span class="co">#&gt;   CI estimation method: 'jackknife'</span></span>
 <span><span class="co">#&gt;   |A_n| / |E_n|^2: 0.0117922</span></span>
 <span><span class="co">#&gt; ──────────────────────────────────────────────────────────────</span></span></code></pre></div>
 </div>
@@ -505,16 +506,19 @@ estimate of the incidence rate ratio). In most applications, we are,
 however, also interested in estimating the uncertainty of this point
 estimate. This is often done using confidence intervals. We may also
 wish to test the hypothesis, that the true incidence rate ratio is 1,
-which is often done using p-values. Currently, no equation exists that
-could be used to directly estimate the standard error of the estimate,
-which would be required for both applications. We therefore usually rely
-on bootstrapping, which is implemented into the
-<code><a href="../reference/sym_pair_matching.html">sym_pair_matching()</a></code> function through the
-<code>bootstrap</code> argument:</p>
+which is often done using p-values. Currently, an equation to directly
+estimate the standard error of the estimate only exists for
+<code>estimator="moments"</code> with <code>pairs="all"</code>. In other
+cases, one must rely on bootstrapping. Both strategies are implemented
+into the <code><a href="../reference/sym_pair_matching.html">sym_pair_matching()</a></code> function through the
+<code>conf_type</code> argument.</p>
+<div class="section level3">
+<h3 id="bootstrapping">Bootstrapping<a class="anchor" aria-label="anchor" href="#bootstrapping"></a>
+</h3>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sym_pair_matching.html">sym_pair_matching</a></span><span class="op">(</span><span class="fu">Surv</span><span class="op">(</span><span class="va">start</span>, <span class="va">stop</span>, <span class="va">Y</span><span class="op">)</span> <span class="op">~</span> <span class="va">A</span>, data<span class="op">=</span><span class="va">data</span>, id<span class="op">=</span><span class="st">".id"</span>,</span>
 <span>                         pairs<span class="op">=</span><span class="st">"all"</span>, estimator<span class="op">=</span><span class="st">"moments"</span>, risk_period<span class="op">=</span><span class="fl">30</span>,</span>
-<span>                         bootstrap<span class="op">=</span><span class="cn">TRUE</span>, n_boot<span class="op">=</span><span class="fl">1000</span><span class="op">)</span></span>
+<span>                         conf_type<span class="op">=</span><span class="st">"boot.fast"</span>, n_boot<span class="op">=</span><span class="fl">1000</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ──────────────────────────────────────────────────────────────</span></span>
 <span><span class="co">#&gt; Symmetric Pair Matching Design</span></span>
@@ -542,6 +546,7 @@ on bootstrapping, which is implemented into the
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Estimation</span></span>
 <span><span class="co">#&gt;   Estimating equation: exp{1/2 log(225 / 41)}</span></span>
+<span><span class="co">#&gt;   CI estimation method: 'boot.fast'</span></span>
 <span><span class="co">#&gt;   |A_n| / |E_n|^2: 0.0117922</span></span>
 <span><span class="co">#&gt; ──────────────────────────────────────────────────────────────</span></span></code></pre></div>
 <p>Here, we first draw <code>n_boot</code> random samples with
@@ -569,14 +574,35 @@ particularly with large samples and <code>pairs="all"</code> or
 <code>pairs="random1"</code> / <code>pairs="random2"</code> when using
 many matches. We have implemented some computational tricks that keep
 the computation time low, particularly when using
-<code>pairs="all"</code>. In this case, the pair matching is only done
-once and the bootstrap samples are generated directly from all pairs
-through re-weighting them. This is possible because repeated inclusion
-of individuals never generates new samples (individuals cannot match
-themselves, because the risk periods would overlap). Additionally, the
-<code>n_cores</code> argument may be used to run the bootstrap
-calculations on multiple processing cores, potentially saving much more
-time as well.</p>
+<code>pairs="all"</code>. In this case, we may use
+<code>conf_type="boot.fast"</code> as shown above. Then, the pair
+matching is only done once and the bootstrap samples are generated
+directly from all pairs through re-weighting them. This is possible
+because repeated inclusion of individuals never generates new samples
+(individuals cannot match themselves, because the risk periods would
+overlap). If <code>pairs!="all"</code>, this strategy may not be used.
+Users should then use <code>conf_type="boot"</code>. To make this
+faster, the <code>n_cores</code> argument may be used to run the
+bootstrap calculations on multiple processing cores, potentially saving
+much more time as well.</p>
+</div>
+<div class="section level3">
+<h3 id="infinitesimal-jackknife">Infinitesimal Jackknife<a class="anchor" aria-label="anchor" href="#infinitesimal-jackknife"></a>
+</h3>
+<p>The best approach that is currently available when using
+<code>estimator = "moments</code> and <code>pairs = "all"</code> is to
+set <code>conf_type = "jackknife</code>. This is also the underlying
+default behavior (e.g. when <code>conf_type = "auto"</code>). It uses a
+first-order taylor approximation of the
+<code>conf_type = "boot.fast"</code> method, which does not require
+actual re-sampling. This has multiple advantages. First, it is extremly
+fast because it only uses the existing pair information. Secondly,
+because no actual samples are created, the issue of infinite or
+undefined estimates in specific bootstrap samples does not arise. We
+therefore recommend using this approach, whenever feasible. More
+information is given in the appendix of the main paper (Denz et
+al. 2026).</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="some-subtleties">Some subtleties<a class="anchor" aria-label="anchor" href="#some-subtleties"></a>

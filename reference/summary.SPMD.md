@@ -115,11 +115,12 @@ summary(out)
 #>   Observation time used            70.45%
 #> 
 #> Effect estimate
-#>   log(IRR)   IRR
-#>   0.405      1.500
+#>   log(IRR)   IRR        SE         95% CI          P-value
+#>   0.405      1.500      0.930      0.445 – 5.055   0.513
 #> 
 #> Estimation
 #>   Estimating equation: exp{1/2 log(9 / 4)}
+#>   CI estimation method: 'jackknife'
 #>   |A_n| / |E_n|^2: 0.05827083
 #> ──────────────────────────────────────────────────────────────
 ```

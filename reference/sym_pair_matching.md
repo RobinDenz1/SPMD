@@ -13,7 +13,7 @@ sym_pair_matching(formula, data, id, risk_period, bounds="[)",
                   estimator="moments", pairs="random2",
                   n_pairs=100000, batch_size=max(5000, n_pairs * 2),
                   rand_max_iter=100, allow_overlap=FALSE,
-                  bootstrap=FALSE, n_boot=1000, conf_level=0.95,
+                  conf_type="auto", conf_level=0.95, n_boot=1000,
                   n_cores=1, progressbar=TRUE, convergence=TRUE,
                   ...)
 ```
@@ -125,39 +125,43 @@ sym_pair_matching(formula, data, id, risk_period, bounds="[)",
   large impact if `risk_period` is small with respect to the total
   observation time.
 
-- bootstrap:
+- conf_type:
 
-  Either `TRUE` or `FALSE`, specifying whether bootstrapping should be
-  performed to estimate confidence intervals. The bootstrapping is done
-  on an individual level, before forming pairs, so that all parts of the
-  analysis are included. This is necessary for correct estimation, but
-  it might lead to long computation times. Especially when using
-  `pairs="all"`, `pairs="random1"` or `pairs="random2"` with a large
-  `n_pairs` value, it might take a long time.
-
-- n_boot:
-
-  A single positive integer, specifying the number of bootstrap
-  replications that should be done for confidence interval estimation.
-  Ignored if `bootstrap=FALSE`.
+  A single character string, specifying how the standard error,
+  confidence interval and p-value should be estimated. Must be either:
+  `"auto"` (default), in which case the method is choosen automatically
+  based on user input, `"none"` to not estimate any confidence
+  intervals, `"boot"` to use an individual-level bootstrap procedure,
+  `"boot.fast"` to use an approximate but much faster version of the
+  individual-level bootstrap or `"jackknife"` to use the infinitesimal
+  jackknife, which is a first-order taylor approximation of the
+  individual-level bootstrap variance. Note that both `"boot.fast"` and
+  `"jackknife"` only work with `estimator = "moments"` and
+  `pairs = "all"`. See details.
 
 - conf_level:
 
   A single number between 0 and 1, specifying the confidence level that
   should be used for the confidence interval estimation. Ignored if
-  `bootstrap=FALSE`.
+  `conf_type = "none"`.
+
+- n_boot:
+
+  A single positive integer, specifying the number of bootstrap
+  replications that should be done for confidence interval estimation.
+  Only used if `conf_type = "boot"` or `conf_type = "boot.fast"`.
 
 - n_cores:
 
   A single integer, specifying the number of processing cores that
-  should be used for bootstrapping when `bootstrap=TRUE` (ignored
-  otherwise).
+  should be used for bootstrapping when `conf_type = "boot"` or
+  `conf_type = "boot.fast"` (ignored otherwise).
 
 - progressbar:
 
   Either `TRUE` or `FALSE`, specifying whether a progressbar should be
-  shown when `bootstrap=TRUE`. This currently only works if
-  `n_cores > 1`.
+  shown when `conf_type = "boot"` or `conf_type = "boot.fast"`. This
+  currently only works if `n_cores > 1`.
 
 - convergence:
 
@@ -312,18 +316,35 @@ slower computationally and often does not converge. We recommend using
 ***Confidence Intervals & P-Values***:
 
 Because of the non-linear nature of the estimator and the potentially
-non-independent pairs, a non-parametric bootstrap procedure on the
-individual level is needed to estimate confidence intervals or p-values.
-In particular, percentile bootstrap confidence intervals are used. The
-p-value tests whether \\\exp(\hat{\theta}) == 1\\. Since all aspects of
-the estimation, including the pair matching, have to be bootstrapped,
-this may become fairly slow with large sample sizes and large amounts of
-`n_boot`. The `n_cores` option may help here, by allowing the usage of
-multiple processing cores in parallel. The doRNG package is used
-internally to ensure that the results are still replicable.
-Additionally, when using `pairs="all"` and `estimator="moments"`, a
-weighting trick is performed internally so that the pairs do not have to
-be build over and over again.
+non-independent pairs, simple standard error calculations ignoring such
+dependencies are not applicable. However, this package implements
+multiple valid options for statistical inference. The shown p-value
+tests whether \\\exp(\hat{\theta}) == 1\\ and the shown standard error
+and confidence interval is on the IRR scale.
+
+First, a non-parametric bootstrap procedure on the individual level may
+be used to estimate confidence intervals or p-values. In particular,
+percentile bootstrap confidence intervals are used. This corresponds to
+`conf_type = "boot"`, in which all aspects of the estimation, including
+the pair matching, are bootstrapped. This option works for both
+`estimator`s and all specifications of `pairs`. Unfortunately, this can
+be very slow with large sample sizes and large amounts of `n_boot`. The
+`n_cores` option may help here, by allowing the usage of multiple
+processing cores in parallel. The doRNG package is used internally to
+ensure that the results are still replicable.
+
+When using `pairs="all"` and `estimator="moments"`, two better options
+are available. First, `conf_type = "boot.fast"` utilizes the fact that
+bootstrapping cannot create new pairs that are not already included in
+the set of all valid pairs. Instead of actually performing re-sampling,
+it simply re-weights existing pairs appropriately and applies a weighter
+version of the estimator `n_boot` times. Even better,
+`conf_type = "jackknife"` uses a first-order taylor approximation of
+this procedure, which is equivalent to an infinitesimal jackknife, to
+avoid re-sampling altogether. This is the best and recommended option
+and is what is being used in this case with `conf_type = "auto"`
+(default). More information is given in the appendix of the main paper
+(Denz et al. 2026).
 
 ***Individuals without Events***:
 
@@ -439,11 +460,12 @@ summary(out)
 #>   Observation time used            95.84%
 #> 
 #> Effect estimate
-#>   log(IRR)   IRR
-#>   0.903      2.468
+#>   log(IRR)   IRR        SE         95% CI          P-value
+#>   0.903      2.468      0.488      1.675 – 3.636   <0.001
 #> 
 #> Estimation
 #>   Estimating equation: exp{1/2 log(676 / 111)}
+#>   CI estimation method: 'jackknife'
 #>   |A_n| / |E_n|^2: 0.01203079
 #> ──────────────────────────────────────────────────────────────
 ```
