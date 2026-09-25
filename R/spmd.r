@@ -7,7 +7,7 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                               estimator="moments", pairs="random2",
                               n_pairs=100000, batch_size=max(5000, n_pairs * 2),
                               rand_max_iter=100, allow_overlap=FALSE,
-                              bootstrap=FALSE, n_boot=1000, conf_level=0.95,
+                              conf_type="auto", conf_level=0.95, n_boot=1000,
                               n_cores=1, progressbar=TRUE, convergence=TRUE,
                               ...) {
 
@@ -20,10 +20,16 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
 
   check_inputs_spmd(formula=form_parsed, data=data, id=id,
                     risk_period=risk_period, pairs=pairs, n_pairs=n_pairs,
-                    estimator=estimator, bootstrap=bootstrap, n_boot=n_boot,
+                    estimator=estimator, conf_type=conf_type, n_boot=n_boot,
                     conf_level=conf_level, bounds=bounds,
                     rand_max_iter=rand_max_iter, batch_size=batch_size,
                     convergence=convergence, allow_overlap=allow_overlap)
+
+  # set type of confidence interval automatically if conf_type = "auto"
+  if (conf_type=="auto") {
+    conf_type <- fifelse(estimator=="moments" & pairs=="all", "jackknife",
+                         "none")
+  }
 
   # create matched dataset
   l_data <- get_full_data(data=data,
@@ -49,9 +55,9 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                           estimator=estimator,
                           risk_period=risk_period,
                           formula=formula,
-                          bootstrap=bootstrap,
-                          n_boot=n_boot,
+                          conf_type=conf_type,
                           conf_level=conf_level,
+                          n_boot=n_boot,
                           rand_max_iter=rand_max_iter,
                           batch_size=batch_size,
                           convergence=convergence,
@@ -60,7 +66,7 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
   if (estimator=="moments") {
 
     l_est <- estimate_moments(data=l_data$d_matches,
-                              bootstrap=bootstrap & pairs=="all",
+                              bootstrap=(conf_type=="boot.fast"),
                               n_boot=n_boot, conf_level=conf_level,
                               n_cores=n_cores, progressbar=progressbar)
 
@@ -70,7 +76,7 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
     out$model <- NULL
 
     # warn if NA or Inf
-    warnifnotm(!(is.na(log(out$est)) || is.infinite(log(out$est))),
+    warnifnotm(!(is.na(log(out$est)) || is.infinite(out$est)),
                "The final estimate is NA or not finite. Estimation likely",
                "failed due to rare events.")
 
@@ -85,7 +91,7 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
   }
 
   # perform full bootstrapping
-  if (bootstrap && !(estimator=="moments" && pairs=="all")) {
+  if (conf_type=="boot") {
 
     out_boot <- perform_bootstrapping(
       d_exp=l_data$d_exp,
@@ -115,12 +121,22 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
   }
 
   # warn if any NA or Inf in bootstrap estimates
-  if (bootstrap && out$n_boot_na > 0) {
+  if ((conf_type=="boot" | conf_type=="boot.fast") && out$n_boot_na > 0) {
     warning(out$n_boot_na, " bootstrap estimates were",
             " NA or infinite, which may happen with estimator='moments'",
             " if either the denominator or the numerator is 0. With",
             " estimator='glmm' it might be due to failed convergence.",
             " Proceed with caution.", call.=FALSE)
+  }
+
+  # if needed, calculate approximate variance
+  if (conf_type=="jackknife") {
+    jackknife_ci <- get_spm_ci_ijk(out$d_counts, conf_level=conf_level)
+
+    # multiply by IRR to show SE on IRR scale
+    out$se <- jackknife_ci$se * out$est
+    out$ci <- jackknife_ci$irr_ci
+    out$p_value <- jackknife_ci$p_value
   }
 
   ## calculate some further statistics

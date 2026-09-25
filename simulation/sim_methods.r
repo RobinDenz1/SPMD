@@ -1,6 +1,6 @@
 
 ## estimate either standard or spline-based SCCS
-estimate_sccs <- function(data, spline=FALSE, cuts=NULL, df) {
+estimate_sccs <- function(data, spline=FALSE, cuts=NULL, df, conf_int=FALSE) {
 
   data <- copy(data)
 
@@ -53,7 +53,16 @@ estimate_sccs <- function(data, spline=FALSE, cuts=NULL, df) {
                                  data=d_sccs)
   }
 
-  return(as.vector(exp(coef(sccs_mod)))[1])
+  if (conf_int) {
+    ci <- as.vector(exp(confint(sccs_mod))[1,1:2])
+  } else {
+    ci <- c(NA, NA)
+  }
+  rr <- as.vector(exp(coef(sccs_mod)))[1]
+  out <- list(rr_hat=rr, ci_lower=ci[1], ci_upper=ci[2],
+              n_events=NA, n_exposed_and_event=NA, boot_na=0)
+
+  return(out)
 }
 
 ## function to get data in the format needed to apply the CTC design
@@ -119,15 +128,25 @@ get_ctc_data <- function(data, risk_period) {
 }
 
 ## apply conditional log. reg. to transformed data and extract RR
-get_ctc_est <- function(data) {
+get_ctc_est <- function(data, conf_int=FALSE) {
   model <- clogit(period ~ exposure * group + strata(.id), data=data)
-  return(as.vector(exp(coef(model)[3])))
+
+  if (conf_int) {
+    ci <- as.vector(exp(confint(model)[3,1:2]))
+  } else {
+    ci <- c(NA, NA)
+  }
+  rr <- as.vector(exp(coef(model)[3]))
+  out <- list(rr_hat=rr, ci_lower=ci[1], ci_upper=ci[2],
+              n_events=NA, n_exposed_and_event=NA, boot_na=0)
+
+  return(out)
 }
 
 ## apply CTC design
-estimate_ctc <- function(data, risk_period) {
+estimate_ctc <- function(data, risk_period, conf_int) {
   d_ctc <- get_ctc_data(data=data, risk_period=risk_period)
-  out <- get_ctc_est(d_ctc)
+  out <- get_ctc_est(d_ctc, conf_int=conf_int)
   return(out)
 }
 
@@ -183,13 +202,24 @@ get_cco_data <- function(data, risk_period) {
 }
 
 # function to fit the model
-get_cco_est <- function(data) {
-  model <- clogit(period ~ exposure + strata(.id), data = data)
-  return(as.vector(exp(coef(model))))
+get_cco_est <- function(data, conf_int=FALSE) {
+  model <- clogit(period ~ exposure + strata(.id), data=data)
+
+  if (conf_int) {
+    ci <- as.vector(exp(confint(model)))
+  } else {
+    ci <- c(NA, NA)
+  }
+  rr <- as.vector(exp(coef(model)))
+
+  out <- list(rr_hat=rr, ci_lower=ci[1], ci_upper=ci[2],
+              n_events=NA, n_exposed_and_event=NA, boot_na=0)
+
+  return(out)
 }
 
-estimate_cco <- function(data, risk_period) {
+estimate_cco <- function(data, risk_period, conf_int) {
   d_cco <- get_cco_data(data=data, risk_period=risk_period)
-  out <- get_cco_est(d_cco)
+  out <- get_cco_est(d_cco, conf_int=conf_int)
   return(out)
 }

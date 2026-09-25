@@ -350,27 +350,27 @@ print_stats(subset(d_bias4, Scenario==2)[, -"Scenario"], format="html")
 ```{r}
 d_sim5[, in_ci := exp_theta >= ci_lower & exp_theta <= ci_upper]
 d_sim5[, ci_length := ci_upper - ci_lower]
+d_sim5[, signif := (ci_lower < 1 & ci_upper < 1) | (ci_lower > 1 & ci_upper > 1)]
 
 d_sim5_est <- d_sim5[, .(
   coverage = sum(in_ci) / .N,
   coverage_lower = binom.confint(x=sum(in_ci), n=.N, methods="exact")$lower,
   coverage_upper = binom.confint(x=sum(in_ci), n=.N, methods="exact")$upper,
-  mean_length = mean(ci_length)
-), by=c("n", "scenario", "exp_theta")  
+  power = mean(signif),
+  power_lower = binom.confint(x=sum(signif), n=.N, methods="exact")$lower,
+  power_upper = binom.confint(x=sum(signif), n=.N, methods="exact")$upper,
+  mean_boot_na = mean(boot_na),
+  n_NA = 1000 - .N
+), by=c("n", "scenario", "estimator", "exp_theta", "conf_int")  
 ]
-
-ggplot(d_sim5_est, aes(x=factor(exp_theta), y=coverage)) +
-  geom_hline(yintercept=0.95, linetype="dashed") +
-  geom_errorbar(aes(ymin=coverage_lower, ymax=coverage_upper), width=0.3) +
-  geom_point() +
-  facet_grid(cols=vars(scenario), rows=vars(n)) +
-  theme_minimal() +
-  scale_y_continuous(limits=c(0.85, 1), breaks=seq(0.85, 1, 0.05))
-ggsave("./plots/sim5.pdf", width=6, height=7)
 ```
 
 ```{r}
-knitr::kable(d_sim5_est, format="latex")
+knitr::kable(subset(d_sim5_est, conf_int=="boot.fast")[, -"conf_int"], format="html")
+```
+
+```{r}
+knitr::kable(subset(d_sim5_est, conf_int=="jackknife")[, -c("conf_int", "boot_na")], format="html")
 ```
 
 # Interaction between time and $U$

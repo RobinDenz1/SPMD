@@ -19,7 +19,7 @@ ggplot(plotdata, aes(x=time, y=p, color=kind, linetype=scenario)) +
   theme(legend.position="bottom") +
   labs(x="t", y="Baseline Hazard", color=NULL, linetype=NULL) +
   scale_y_continuous(labels=label_number()) +
-  scale_color_discrete(labels=parse(text=c("h[Y0](t)", "h[A0](t)"))) +
+  scale_color_discrete(labels=parse(text=c("h[A0](t)", "h[Y0](t)"))) +
   scale_linetype_manual(values=c("dashed", "solid"),
                         labels=c("Scenario 1", "Scenario 2"))
 ggsave("./simulation/plots/time_trends.pdf", width=6, height=4)

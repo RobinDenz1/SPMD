@@ -12,7 +12,7 @@ sym_pair_matching(formula, data, id, risk_period, bounds="[)",
                   estimator="moments", pairs="random2",
                   n_pairs=100000, batch_size=max(5000, n_pairs * 2),
                   rand_max_iter=100, allow_overlap=FALSE,
-                  bootstrap=FALSE, n_boot=1000, conf_level=0.95,
+                  conf_type="auto", conf_level=0.95, n_boot=1000,
                   n_cores=1, progressbar=TRUE, convergence=TRUE,
                   ...)
 }
@@ -50,20 +50,20 @@ A single positive integer, specifying the maximum number of allowed iterations f
   \item{allow_overlap}{
 Either \code{TRUE} or \code{FALSE} (default), specifying whether the use of pairs with partially overlapping exposure periods should be allowed. If allowed, only the non-overlapping parts of such pairs are used in any calculations, ensuring that no contaminated time is used. Due to usage of more pairs, this might lead to an increase in efficiency. It does, however, increase computational time and is unlikely to have a large impact if \code{risk_period} is small with respect to the total observation time.
   }
-  \item{bootstrap}{
-Either \code{TRUE} or \code{FALSE}, specifying whether bootstrapping should be performed to estimate confidence intervals. The bootstrapping is done on an individual level, before forming pairs, so that all parts of the analysis are included. This is necessary for correct estimation, but it might lead to long computation times. Especially when using \code{pairs="all"}, \code{pairs="random1"} or \code{pairs="random2"} with a large \code{n_pairs} value, it might take a long time.
-  }
-  \item{n_boot}{
-A single positive integer, specifying the number of bootstrap replications that should be done for confidence interval estimation. Ignored if \code{bootstrap=FALSE}.
+  \item{conf_type}{
+A single character string, specifying how the standard error, confidence interval and p-value should be estimated. Must be either: \code{"auto"} (default), in which case the method is choosen automatically based on user input, \code{"none"} to not estimate any confidence intervals, \code{"boot"} to use an individual-level bootstrap procedure, \code{"boot.fast"} to use an approximate but much faster version of the individual-level bootstrap or \code{"jackknife"} to use the infinitesimal jackknife, which is a first-order taylor approximation of the individual-level bootstrap variance. Note that both \code{"boot.fast"} and \code{"jackknife"} only work with \code{estimator = "moments"} and \code{pairs = "all"}. See details.
   }
   \item{conf_level}{
-A single number between 0 and 1, specifying the confidence level that should be used for the confidence interval estimation. Ignored if \code{bootstrap=FALSE}.
+A single number between 0 and 1, specifying the confidence level that should be used for the confidence interval estimation. Ignored if \code{conf_type = "none"}.
+  }
+  \item{n_boot}{
+A single positive integer, specifying the number of bootstrap replications that should be done for confidence interval estimation. Only used if \code{conf_type = "boot"} or \code{conf_type = "boot.fast"}.
   }
   \item{n_cores}{
-A single integer, specifying the number of processing cores that should be used for bootstrapping when \code{bootstrap=TRUE} (ignored otherwise).
+A single integer, specifying the number of processing cores that should be used for bootstrapping when \code{conf_type = "boot"} or \code{conf_type = "boot.fast"} (ignored otherwise).
   }
   \item{progressbar}{
-Either \code{TRUE} or \code{FALSE}, specifying whether a progressbar should be shown when \code{bootstrap=TRUE}. This currently only works if \code{n_cores > 1}.
+Either \code{TRUE} or \code{FALSE}, specifying whether a progressbar should be shown when \code{conf_type = "boot"} or \code{conf_type = "boot.fast"}. This currently only works if \code{n_cores > 1}.
   }
   \item{convergence}{
 Either \code{TRUE} or \code{FALSE}, specifying whether to calculate convergence related statistics. Those are calculated by default, but may be turned off to save some computation time.
@@ -123,7 +123,11 @@ where \eqn{X} represents the event counts observed in the \code{risk_period} tim
 
 \strong{\emph{Confidence Intervals & P-Values}}:
 
-Because of the non-linear nature of the estimator and the potentially non-independent pairs, a non-parametric bootstrap procedure on the individual level is needed to estimate confidence intervals or p-values. In particular, percentile bootstrap confidence intervals are used. The p-value tests whether \eqn{\exp(\hat{\theta}) == 1}. Since all aspects of the estimation, including the pair matching, have to be bootstrapped, this may become fairly slow with large sample sizes and large amounts of \code{n_boot}. The \code{n_cores} option may help here, by allowing the usage of multiple processing cores in parallel. The \pkg{doRNG} package is used internally to ensure that the results are still replicable. Additionally, when using \code{pairs="all"} and \code{estimator="moments"}, a weighting trick is performed internally so that the pairs do not have to be build over and over again.
+Because of the non-linear nature of the estimator and the potentially non-independent pairs, simple standard error calculations ignoring such dependencies are not applicable. However, this package implements multiple valid options for statistical inference. The shown p-value tests whether \eqn{\exp(\hat{\theta}) == 1} and the shown standard error and confidence interval is on the IRR scale.
+
+First, a non-parametric bootstrap procedure on the individual level may be used to estimate confidence intervals or p-values. In particular, percentile bootstrap confidence intervals are used. This corresponds to \code{conf_type = "boot"}, in which all aspects of the estimation, including the pair matching, are bootstrapped. This option works for both \code{estimator}s and all specifications of \code{pairs}. Unfortunately, this can be very slow with large sample sizes and large amounts of \code{n_boot}. The \code{n_cores} option may help here, by allowing the usage of multiple processing cores in parallel. The \pkg{doRNG} package is used internally to ensure that the results are still replicable.
+
+When using \code{pairs="all"} and \code{estimator="moments"}, two better options are available. First, \code{conf_type = "boot.fast"} utilizes the fact that bootstrapping cannot create new pairs that are not already included in the set of all valid pairs. Instead of actually performing re-sampling, it simply re-weights existing pairs appropriately and applies a weighter version of the estimator \code{n_boot} times. Even better, \code{conf_type = "jackknife"} uses a first-order taylor approximation of this procedure, which is equivalent to an infinitesimal jackknife, to avoid re-sampling altogether. This is the best and recommended option and is what is being used in this case with \code{conf_type = "auto"} (default). More information is given in the appendix of the main paper (Denz et al. 2026).
 
 \strong{\emph{Individuals without Events}}:
 

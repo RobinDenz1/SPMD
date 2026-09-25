@@ -199,6 +199,56 @@ get_convergence_stats <- function(d_counts) {
   return(out)
 }
 
+## applies the infinitesimal jackknife to obtain an approximation of the
+## variance and a confidence interval
+get_spm_ci_ijk <- function(d_counts, conf_level=0.95) {
+
+  . <- .id <- NULL
+
+  # pair level products
+  X <- d_counts$Xa1 * d_counts$Xb2
+  Y <- d_counts$Xb1 * d_counts$Xa2
+
+  # total sums
+  SX <- sum(X)
+  SY <- sum(Y)
+
+  # point estimate
+  theta_hat <- 0.5 * log(SY / SX)
+
+  # individual-level influence contributions:
+  # R_ij = Y_ij - exp(2 * theta_hat) * X_ij
+  # and for each i: R_i+ = sum of all pair residuals involving i
+  residual <- Y - (SY / SX) * X
+  influence_dt <- rbindlist(
+    list(data.table(.id = d_counts$.id1, residual = residual),
+         data.table(.id = d_counts$.id2, residual = residual))
+  )
+  influence_dt <- influence_dt[ , .(residual_sum = sum(residual)), by=.id]
+
+  # variance estimate
+  var_theta <- sum(influence_dt$residual_sum^2) / (4 * SY^2)
+  se_theta <- sqrt(var_theta)
+
+  # calculate confidence interval on log(IRR) scale, then exponentiate
+  z <- stats::qnorm(1 - (1 - conf_level) / 2)
+  theta_ci <- theta_hat + c(-1, 1) * z * se_theta
+  irr_ci <- exp(theta_ci)
+
+  # get p-value
+  p_value <- 2 * stats::pnorm(-abs(theta_hat / se_theta))
+
+  # put together
+  out <- list(
+    se = se_theta,
+    irr_ci = irr_ci,
+    theta_ci = theta_ci,
+    p_value = p_value
+  )
+
+  return(out)
+}
+
 ## works similar to stopifnot() but allows a custom message in
 ## a more convenient fashion
 stopifnotm <- function(assert, ...) {
@@ -221,7 +271,7 @@ is_date <- function(x) {
 
 ## input checks for the sym_pair_matching() function
 check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
-                              estimator, bootstrap, n_boot, conf_level,
+                              estimator, conf_type, n_boot, conf_level,
                               bounds, batch_size, rand_max_iter, convergence,
                               allow_overlap) {
 
@@ -247,8 +297,6 @@ check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
   stopifnotm((length(estimator)==1 && is.character(estimator) &&
                 estimator %in% c("none", "moments", "glmm")),
              "'estimator' must be either 'none', 'moments' or 'glmm'.")
-  stopifnotm((length(bootstrap)==1 && is.logical(bootstrap)),
-             "'bootstrap' must be either TRUE or FALSE.")
   stopifnotm((length(n_boot)==1 && is.numeric(n_boot) && n_boot > 0 &&
                 round(n_boot)==n_boot),
              "'n_boot' must be a single integer > 0.")
@@ -271,6 +319,18 @@ check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
   stopifnotm(!(is_date(data[[formula[[1]]]]) || is_date(data[[formula[[2]]]])),
              "The intervals coded by 'start' and 'stop' must be numeric.",
              "Date like values are not supported.")
+  stopifnotm(length(conf_type)==1 && is.character(conf_type) &&
+             conf_type %in% c("none", "auto", "boot", "boot.fast", "jackknife"),
+             "'conf_type' must be either 'none', 'auto', 'boot', 'boot.fast'",
+             "or 'jackknife'.")
+
+  # check if conf_type is okay
+  if (conf_type %in% c("boot.fast", "jackknife") &&
+      (estimator=="glmm" || (estimator=="moments" & pairs!="all"))) {
+    stop("conf_type = '", conf_type, "' is only supported with",
+         " estimator='moments' and pairs='all'. Use conf_type='boot' instead.",
+         call.=FALSE)
+  }
 
   # check if all variables named in formula are in data
   for (i in seq_len(4)) {

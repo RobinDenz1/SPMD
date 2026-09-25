@@ -185,51 +185,57 @@ create_data_scenario3 <- function(n, theta, risk_period) {
 }
 
 ## get RR estimate using different methods
-apply_method <- function(data, type, include_ci=FALSE, risk_period=30,
+apply_method <- function(data, type, conf_int="none", risk_period=30,
                          allow_overlap=FALSE, pairs="all", n_pairs=100000) {
 
   if (type=="cox") {
     mod <- coxph(Surv(start, stop, Y) ~ A + U, data=data)
     rr_hat <- as.vector(exp(coef(mod)["ATRUE"]))
-    n_events <- n_exposed_and_event <- ci_lower <- ci_upper <- NA
+
+    out <- list(
+      "rr_hat"=rr_hat,
+      "ci_lower"=NA,
+      "ci_upper"=NA,
+      "n_events"=NA,
+      "n_exposed_and_event"=NA,
+      "boot_na"=0
+    )
+
   } else if (type=="spmd") {
-    out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
+    spm <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                              id=".id", pairs=pairs, risk_period=risk_period,
                              estimator="moments", bounds="(]",
                              convergence=FALSE, allow_overlap=allow_overlap,
-                             bootstrap=include_ci, n_pairs=n_pairs)
-    rr_hat <- out$est
-    n_events <- out$sizes$n_events
-    n_exposed_and_event <- out$sizes$n_exposed_and_event
+                             conf_type=conf_int, n_pairs=n_pairs)
+    out <- list(
+      "rr_hat"=spm$est,
+      "ci_lower"=NA,
+      "ci_upper"=NA,
+      "n_events"=spm$sizes$n_events,
+      "n_exposed_and_event"=spm$sizes$n_exposed_and_event,
+      "boot_na"=0
+    )
 
-    if (include_ci) {
-      ci_lower <- out$ci[1]
-      ci_upper <- out$ci[2]
-    } else {
-      ci_lower <- ci_upper <- NA
+    if (conf_int!="none") {
+      out$ci_lower <- spm$ci[1]
+      out$ci_upper <- spm$ci[2]
+      out$boot_na <- ifelse(is.null(spm$n_boot_na), 0, spm$n_boot_na)
     }
   } else if (type=="sccs") {
-    rr_hat <- estimate_sccs(data)
-    n_events <- n_exposed_and_event <- ci_lower <- ci_upper <- NA
+    out <- estimate_sccs(data, conf_int=conf_int!="none")
   } else if (type=="sccs_spline_5") {
-    rr_hat <- estimate_sccs(data, spline=TRUE, cuts=seq(0, 1000, 50), df=5)
-    n_events <- n_exposed_and_event <- ci_lower <- ci_upper <- NA
+    out <- estimate_sccs(data, spline=TRUE, cuts=seq(0, 1000, 50), df=5,
+                         conf_int=conf_int!="none")
   } else if (type=="sccs_spline_15") {
-    rr_hat <- estimate_sccs(data, spline=TRUE, cuts=seq(0, 1000, 50), df=15)
-    n_events <- n_exposed_and_event <- ci_lower <- ci_upper <- NA
+    out <- estimate_sccs(data, spline=TRUE, cuts=seq(0, 1000, 50), df=15,
+                         conf_int=conf_int!="none")
   } else if (type=="cco") {
-    rr_hat <- estimate_cco(data, risk_period=risk_period)
-    n_events <- n_exposed_and_event <- ci_lower <- ci_upper <- NA
+    out <- estimate_cco(data, risk_period=risk_period,
+                        conf_int=conf_int!="none")
   } else if (type=="ctc") {
-    rr_hat <- estimate_ctc(data, risk_period=risk_period)
-    n_events <- n_exposed_and_event <- ci_lower <- ci_upper <- NA
+    out <- estimate_ctc(data, risk_period=risk_period,
+                        conf_int=conf_int!="none")
   }
-
-  out <- list("rr_hat"=rr_hat,
-              "n_events"=n_events,
-              "n_exposed_and_event"=n_exposed_and_event,
-              "ci_lower"=ci_lower,
-              "ci_upper"=ci_upper)
 
   return(out)
 }
@@ -238,7 +244,7 @@ apply_method <- function(data, type, include_ci=FALSE, risk_period=30,
 run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
                            multiple_A, multiple_Y, beta_L_Y=0, beta_L_A=0,
                            U_time_interact=0, A_time_interact=0,
-                           conf_int=FALSE, risk_period=30, allow_overlap=FALSE,
+                           conf_int="none", risk_period=30, allow_overlap=FALSE,
                            censor=0, pairs="all", n_pairs=1000000, n_cores=8,
                            seed=2134) {
 
@@ -287,7 +293,7 @@ run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
                           A_time_interact=L$A_time_interact,
                           risk_period=L$risk_period, censor=L$censor)
     })
-    out <- apply_method(data=data, type=L$estimator, include_ci=L$conf_int,
+    out <- apply_method(data=data, type=L$estimator, conf_int=L$conf_int,
                         risk_period=L$risk_period,
                         allow_overlap=L$allow_overlap, pairs=L$pairs,
                         n_pairs=L$n_pairs)

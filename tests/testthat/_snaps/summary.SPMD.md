@@ -26,6 +26,7 @@
       
       Estimation
         Estimating equation: exp{1/2 log(2 / 0)}
+        CI estimation method: 'none'
         |A_n| / |E_n|^2: 0
       ──────────────────────────────────────────────────────────────
 
@@ -85,6 +86,7 @@
       
       Estimation
         Estimating equation: exp{1/2 log(12 / 1)}
+        CI estimation method: 'none'
         |A_n| / |E_n|^2: 0.007456
       ──────────────────────────────────────────────────────────────
 
@@ -119,6 +121,7 @@
       
       Estimation
         Estimating equation: exp{1/2 log(12 / 1)}
+        CI estimation method: 'boot'
         |A_n| / |E_n|^2: 0.007456
       ──────────────────────────────────────────────────────────────
 
@@ -146,11 +149,12 @@
         Observation time used            97.91%
       
       Effect estimate
-        log(IRR)   IRR
-        1.194      3.300
+        log(IRR)   IRR        SE         95% CI          P-value
+        1.194      3.300      0.483      2.477 – 4.397   <0.001
       
       Estimation
         Estimating equation: exp{1/2 log(1,895 / 174)}
+        CI estimation method: 'jackknife'
         |A_n| / |E_n|^2: 0.007507649
       ──────────────────────────────────────────────────────────────
 
@@ -210,6 +214,7 @@
       
       Estimation
         Estimating equation: exp{1/2 log(5 / 0)}
+        CI estimation method: 'none'
         |A_n| / |E_n|^2: 0.008044444
       ──────────────────────────────────────────────────────────────
 
@@ -237,11 +242,14 @@
         Observation time used            97.91%
       
       Effect estimate
-        log(IRR)   IRR
-        1.194      3.300
+        log(IRR)   IRR        SE         99% CI          P-value
+        1.194      3.300      0.396      2.456 – 3.350   0.25
+      
+      Bootstrap: 4 replicates
       
       Estimation
         Estimating equation: exp{1/2 log(1,895 / 174)}
+        CI estimation method: 'boot'
         |A_n| / |E_n|^2: 0.007507649
       ──────────────────────────────────────────────────────────────
 

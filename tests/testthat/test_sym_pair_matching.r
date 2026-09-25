@@ -120,8 +120,8 @@ test_that("bootstrap, n_cores = 1, pairs = 'one', moments", {
   set.seed(2134)
   out <- suppressWarnings(
     sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
-                           risk_period=40, pairs="one", estimator="moments",
-                           bootstrap=TRUE, n_boot=5, n_cores=1)
+                      risk_period=40, pairs="one", estimator="moments",
+                      conf_type="boot", n_boot=5, n_cores=1)
   )
   expect_true(length(out$boot_est)==5)
   expect_true(is.numeric(out$boot_est))
@@ -133,7 +133,7 @@ test_that("bootstrap, n_cores = 1, pairs = 'one', glmm", {
   out <- suppressMessages(
     sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                       risk_period=40, pairs="one", estimator="glmm",
-                      bootstrap=TRUE, n_boot=5, n_cores=1)
+                      conf_type="boot", n_boot=5, n_cores=1)
   )
   expect_true(length(out$boot_est)==5)
   expect_true(is.numeric(out$boot_est))
@@ -144,7 +144,7 @@ test_that("bootstrap, n_cores = 1, pairs = 'random1', moments", {
   set.seed(2134)
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                            risk_period=40, pairs="random1", estimator="moments",
-                           bootstrap=TRUE, n_boot=5, n_cores=1, n_pairs=1000)
+                           conf_type="boot", n_boot=5, n_cores=1, n_pairs=1000)
   expect_true(length(out$boot_est)==5)
   expect_true(is.numeric(out$boot_est))
 })
@@ -154,7 +154,7 @@ test_that("bootstrap, n_cores = 1, pairs = 'random2', moments", {
   set.seed(2134)
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                            risk_period=40, pairs="random2", estimator="moments",
-                           bootstrap=TRUE, n_boot=5, n_cores=1, n_pairs=1000)
+                           conf_type="boot", n_boot=5, n_cores=1, n_pairs=1000)
   expect_true(length(out$boot_est)==5)
   expect_true(is.numeric(out$boot_est))
 })
@@ -165,7 +165,7 @@ test_that("bootstrap, n_cores = 1, pairs = 'random1', glmm", {
   out <- suppressMessages(
     sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                       risk_period=40, pairs="random1", estimator="glmm",
-                      bootstrap=TRUE, n_boot=5, n_cores=1, n_pairs=1000)
+                      conf_type="boot", n_boot=5, n_cores=1, n_pairs=1000)
   )
   expect_true(length(out$boot_est)==5)
   expect_true(is.numeric(out$boot_est))
@@ -177,7 +177,7 @@ test_that("bootstrap, n_cores = 1, pairs = 'random2', glmm", {
   out <- suppressMessages(
     sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                       risk_period=40, pairs="random2", estimator="glmm",
-                      bootstrap=TRUE, n_boot=5, n_cores=1, n_pairs=1000)
+                      conf_type="boot", n_boot=5, n_cores=1, n_pairs=1000)
   )
   expect_true(length(out$boot_est)==5)
   expect_true(is.numeric(out$boot_est))
@@ -186,11 +186,27 @@ test_that("bootstrap, n_cores = 1, pairs = 'random2', glmm", {
 test_that("bootstrap, n_cores = 1, pairs = 'all', moments", {
 
   set.seed(2134)
+
+  # using regular bootstrapping
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                            risk_period=40, pairs="all", estimator="moments",
-                           bootstrap=TRUE, n_boot=5, n_cores=1)
+                           conf_type="boot", n_boot=5, n_cores=1)
   expect_true(length(out$boot_est)==5)
   expect_true(is.numeric(out$boot_est))
+
+  # using fast bootstrapping
+  out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+                           risk_period=40, pairs="all", estimator="moments",
+                           conf_type="boot.fast", n_boot=5, n_cores=1)
+  expect_true(length(out$boot_est)==5)
+  expect_true(is.numeric(out$boot_est))
+
+  # using the infinitesimal jackknife
+  out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+                           risk_period=40, pairs="all", estimator="moments",
+                           conf_type="jackknife", n_boot=5, n_cores=1)
+  expect_true(length(out$boot_est)==0)
+  expect_true(length(out$ci)==2)
 })
 
 test_that("bootstrap, n_cores = 2, pairs = 'all', moments", {
@@ -199,7 +215,7 @@ test_that("bootstrap, n_cores = 2, pairs = 'all', moments", {
   set.seed(2134)
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                            risk_period=40, pairs="all", estimator="moments",
-                           bootstrap=TRUE, n_boot=5, n_cores=2)
+                           conf_type="boot.fast", n_boot=5, n_cores=2)
 
   expect_true(length(out$boot_est)==5)
   expect_true(is.numeric(out$boot_est))
@@ -208,7 +224,7 @@ test_that("bootstrap, n_cores = 2, pairs = 'all', moments", {
   set.seed(2134)
   out2 <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                             risk_period=40, pairs="all", estimator="moments",
-                            bootstrap=TRUE, n_boot=5, n_cores=2,
+                            conf_type="boot.fast", n_boot=5, n_cores=2,
                             progressbar=FALSE)
   expect_true(length(out2$boot_est)==5)
   expect_true(is.numeric(out2$boot_est))
@@ -221,7 +237,7 @@ test_that("bootstrap, n_cores = 2, pairs = 'one', moments", {
   out <- suppressWarnings(
     sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                            risk_period=40, pairs="one", estimator="moments",
-                           bootstrap=TRUE, n_boot=5, n_cores=2)
+                           conf_type="boot", n_boot=5, n_cores=2)
   )
 
   expect_true(length(out$boot_est)==5)
@@ -234,7 +250,7 @@ test_that("bootstrap, n_cores = 2, pairs = 'one', moments", {
   out2 <- suppressWarnings(
     sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                             risk_period=40, pairs="one", estimator="moments",
-                            bootstrap=TRUE, n_boot=5, n_cores=2,
+                            conf_type="boot", n_boot=5, n_cores=2,
                             progressbar=FALSE)
   )
 

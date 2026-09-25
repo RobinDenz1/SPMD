@@ -114,6 +114,7 @@ summary.SPMD <- function(object, ...) {
       irr = estimate,
       se = se,
       ci = ci,
+      conf_type = inputs$conf_type,
       conf_level = inputs$conf_level,
       p_value = p_value
     ),
@@ -204,6 +205,7 @@ print.summary.SPMD <- function(x, ...) {
   if (!is.null(x$estimating_equation)) {
     cat("\nEstimation\n")
     cat("  Estimating equation: ", x$estimating_equation, "\n", sep="")
+    cat("  CI estimation method: '", x$estimate$conf_type, "'\n", sep="")
 
     if (x$object$inputs$estimator=="moments" &&
         x$object$inputs$convergence==TRUE) {

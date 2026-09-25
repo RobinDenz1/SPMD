@@ -79,16 +79,16 @@ sim4 <- run_simulation(
 )
 saveRDS(sim4$results, "./simulation/data/sim4_results.Rds")
 
-## bootstrap CI coverage
+## CI coverage for actual bootstrap and IJK
 sim5 <- run_simulation(
   n_sim = c(20000, 30000),
   n_repeats = n_repeats,
-  method = "spmd",
+  method = all_methods,
   scenario = c(1, 2),
   theta = log(c(0.7, 1, 2.5)),
   multiple_A = FALSE,
   multiple_Y = TRUE,
-  conf_int = TRUE,
+  conf_int = c("boot.fast", "jackknife"),
   n_cores = 8,
   seed = 46
 )
@@ -236,6 +236,3 @@ saveRDS(sim14$results, "./simulation/data/sim14_results.Rds")
 # - previous event-dependent exposure
 # - previous event-dependent events
 # - misspecified \tau
-
-
-

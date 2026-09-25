@@ -24,5 +24,6 @@
     
     Estimation
       Estimating equation: exp{1/2 log(5 / 1)}
+      CI estimation method: 'none'
     ──────────────────────────────────────────────────────────────
 

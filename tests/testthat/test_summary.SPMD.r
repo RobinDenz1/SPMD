@@ -33,7 +33,7 @@ test_that("pairs='random', estimator='moments', bootstrap=TRUE", {
   out <- suppressWarnings(
     sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                            risk_period=40, pairs="random1", estimator="moments",
-                           n_pairs=500, bootstrap=TRUE, n_boot=10)
+                           n_pairs=500, conf_type="boot", n_boot=10)
   )
   expect_snapshot(summary(out))
 })
@@ -67,6 +67,6 @@ test_that("pairs='all', estimator='moments', with bootstrap", {
 
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                            risk_period=40, pairs="all", estimator="moments",
-                           conf_level=0.99)
+                           conf_level=0.99, conf_type="boot", n_boot=4)
   expect_snapshot(summary(out))
 })
