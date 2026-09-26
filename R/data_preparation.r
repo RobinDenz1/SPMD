@@ -1,6 +1,7 @@
 
 ## performs all data preparation tasks, including matching, to get
 ## the final dataset needed for further analysis
+# TODO: add support for pairs = "auto", at 4473 -> > 10 million pairs
 get_full_data <- function(data, start, stop, id, exposure, outcome,
                           pairs, n_pairs, risk_period, remove_noevents,
                           bounds, rand_max_iter, batch_size,

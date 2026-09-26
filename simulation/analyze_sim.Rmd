@@ -366,11 +366,11 @@ d_sim5_est <- d_sim5[, .(
 ```
 
 ```{r}
-knitr::kable(subset(d_sim5_est, conf_int=="boot.fast")[, -"conf_int"], format="html")
+knitr::kable(subset(d_sim5_est, conf_int=="boot.fast")[, -"conf_int"], format="html", digits=3)
 ```
 
 ```{r}
-knitr::kable(subset(d_sim5_est, conf_int=="jackknife")[, -c("conf_int", "boot_na")], format="html")
+knitr::kable(subset(d_sim5_est, conf_int=="jackknife")[, -c("conf_int", "mean_boot")], format="html", digits=3)
 ```
 
 # Interaction between time and $U$

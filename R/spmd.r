@@ -2,6 +2,7 @@
 ## main function to apply the symmetric pair matching design
 #' @importFrom data.table :=
 #' @importFrom data.table uniqueN
+#' @importFrom data.table fifelse
 #' @export
 sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                               estimator="moments", pairs="random2",
