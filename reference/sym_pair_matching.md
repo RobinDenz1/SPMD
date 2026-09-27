@@ -10,7 +10,7 @@ and vignette.
 
 ``` r
 sym_pair_matching(formula, data, id, risk_period, bounds="[)",
-                  estimator="moments", pairs="random2",
+                  estimator="moments", pairs="auto",
                   n_pairs=100000, batch_size=max(5000, n_pairs * 2),
                   rand_max_iter=100, allow_overlap=FALSE,
                   conf_type="auto", conf_level=0.95, n_boot=1000,
@@ -79,17 +79,19 @@ sym_pair_matching(formula, data, id, risk_period, bounds="[)",
 - pairs:
 
   A single character string specifying what pair matches should be used.
-  If `"one"`, a dataset is created in which each exposed individual is
-  included in exactly one pair (if possible). If `"all"`, all possible
-  valid pairings are created. This may be infeasible with large data. If
-  `"random1"`, a pre-specified amount of random pairings are created,
-  without first creating all possible matches. In this case, the amount
-  of pairs is controlled using the `n_pairs` argument. If `"random2"`, a
+  If `"auto"`, the type of pairs used is selected automatically
+  depending on the amount of available individuals who were ever exposed
+  and experienced at least one event (default). If `"one"`, a dataset is
+  created in which each exposed individual is included in exactly one
+  pair (if possible). If `"all"`, all possible valid pairings are
+  created. This may be infeasible with large data. If `"random1"`, a
+  pre-specified amount of random pairings are created, without first
+  creating all possible matches. In this case, the amount of pairs is
+  controlled using the `n_pairs` argument. If `"random2"`, a
   pre-specified amount of random pairings is created by random sampling
-  from all possible pairings (default). This is faster and more reliable
-  than `"random1"`, but it is much more memory inefficient and not
-  feasible with a large number of unique id/exposure combinations (see
-  details).
+  from all possible pairings. This is faster and more reliable than
+  `"random1"`, but it is much more memory inefficient and not feasible
+  with a large number of unique id/exposure combinations (see details).
 
 - n_pairs:
 
@@ -288,10 +290,13 @@ runs needlessly until `rand_max_iter` is reached. The option
 first generating all possible and valid pairs. This is generally
 preferable, whenever it is possible.
 
-We recommend trying `pairs="all"` first. If that is infeasible, we
-recommend switching to `pairs="random2"`. If that is still infeasible,
-use `pairs="random1"`. The option `pairs="one"` should only be used when
-using `estimator="glmm"`, or when the `data` is extremly large.
+We recommend keeping this argument at its default value of `"auto"`.
+Using this specification, `pairs="all"` is used if feasible (e.g. if the
+number of pairs that would be created is ~10 million). If that number
+exceeds 10 million, but is smaller than 50 million `pairs="random2"` If
+that number exceeds 50 million, `pairs="random1"` is used. The option
+`pairs="one"` should only be used when using `estimator="glmm"`, or when
+the `data` is extremly large.
 
 ***Estimators***:
 
