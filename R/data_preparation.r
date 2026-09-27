@@ -1,7 +1,7 @@
 
 ## performs all data preparation tasks, including matching, to get
 ## the final dataset needed for further analysis
-# TODO: add support for pairs = "auto", at 4473 -> > 10 million pairs
+#' @importFrom data.table fcase
 get_full_data <- function(data, start, stop, id, exposure, outcome,
                           pairs, n_pairs, risk_period, remove_noevents,
                           bounds, rand_max_iter, batch_size,
@@ -26,6 +26,14 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
     data[, .has_event := sum(.Y) > 0, by=.id]
     data <- data[.has_event==TRUE]
     data[, .has_event := NULL]
+  }
+
+  if (pairs=="auto") {
+    pairs <- fcase(
+      nrow(data) < 4473, "all",
+      nrow(data) >= 4473 & nrow(data) < 10000, "random2",
+      nrow(data) >= 10000, "random1"
+    )
   }
 
   # all exposure / event times
@@ -76,7 +84,7 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
   out <- list(d_matches=d_matches, data=data, d_exp=d_exp, d_events=d_events,
               n_exposed=uniqueN(d_exp$.id), n_exposures=nrow(d_exp),
               n_exposed_all=uniqueN(d_exp_all$.id),
-              n_exposures_all=nrow(d_exp_all))
+              n_exposures_all=nrow(d_exp_all), pairs=pairs)
 
   return(out)
 }

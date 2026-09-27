@@ -7,26 +7,31 @@ S3method(summary,SPMD)
 export(prepare_spmd_data)
 export(sim_example_data)
 export(sym_pair_matching)
-importFrom(data.table,":=")
-importFrom(data.table,.EACHI)
-importFrom(data.table,.I)
-importFrom(data.table,.N)
-importFrom(data.table,as.data.table)
-importFrom(data.table,copy)
-importFrom(data.table,data.table)
-importFrom(data.table,dcast)
-importFrom(data.table,fifelse)
-importFrom(data.table,is.data.table)
-importFrom(data.table,melt.data.table)
-importFrom(data.table,merge.data.table)
-importFrom(data.table,rbindlist)
-importFrom(data.table,setDTthreads)
-importFrom(data.table,setkey)
-importFrom(data.table,setnames)
-importFrom(data.table,setorder)
-importFrom(data.table,shift)
-importFrom(data.table,uniqueN)
-importFrom(simDAG,empty_dag)
-importFrom(simDAG,node)
-importFrom(simDAG,node_td)
-importFrom(simDAG,sim_discrete_event)
+importFrom(data.table,
+  ":=",
+  .EACHI,
+  .I,
+  .N,
+  as.data.table,
+  copy,
+  data.table,
+  dcast,
+  fcase,
+  fifelse,
+  is.data.table,
+  melt.data.table,
+  merge.data.table,
+  rbindlist,
+  setDTthreads,
+  setkey,
+  setnames,
+  setorder,
+  shift,
+  uniqueN
+)
+importFrom(simDAG,
+  empty_dag,
+  node,
+  node_td,
+  sim_discrete_event
+)

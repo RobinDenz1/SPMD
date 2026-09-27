@@ -9,7 +9,7 @@ This function can be used to perform symmetric pair matching, which is a self-co
 }
 \usage{
 sym_pair_matching(formula, data, id, risk_period, bounds="[)",
-                  estimator="moments", pairs="random2",
+                  estimator="moments", pairs="auto",
                   n_pairs=100000, batch_size=max(5000, n_pairs * 2),
                   rand_max_iter=100, allow_overlap=FALSE,
                   conf_type="auto", conf_level=0.95, n_boot=1000,
@@ -36,7 +36,7 @@ A single character string with two characters, specifying the bounds on the defi
 A single character string specifying which estimator should be used. If \code{"moments"} (default) the empirical based estimator described in the main paper is used. If \code{"glmm"}, a generalized linear model from the Poisson family with a specific random effects structure (\code{(1 | .id_pair:.group)}) is used instead. May also be set to \code{"none"} to only return the matched dataset, without performing any estimation. See details.
   }
   \item{pairs}{
-A single character string specifying what pair matches should be used. If \code{"one"}, a dataset is created in which each exposed individual is included in exactly one pair (if possible). If \code{"all"}, all possible valid pairings are created. This may be infeasible with large data. If \code{"random1"}, a pre-specified amount of random pairings are created, without first creating all possible matches. In this case, the amount of pairs is controlled using the \code{n_pairs} argument. If \code{"random2"}, a pre-specified amount of random pairings is created by random sampling from all possible pairings (default). This is faster and more reliable than \code{"random1"}, but it is much more memory inefficient and not feasible with a large number of unique id/exposure combinations (see details).
+A single character string specifying what pair matches should be used. If \code{"auto"}, the type of pairs used is selected automatically depending on the amount of available individuals who were ever exposed and experienced at least one event (default). If \code{"one"}, a dataset is created in which each exposed individual is included in exactly one pair (if possible). If \code{"all"}, all possible valid pairings are created. This may be infeasible with large data. If \code{"random1"}, a pre-specified amount of random pairings are created, without first creating all possible matches. In this case, the amount of pairs is controlled using the \code{n_pairs} argument. If \code{"random2"}, a pre-specified amount of random pairings is created by random sampling from all possible pairings. This is faster and more reliable than \code{"random1"}, but it is much more memory inefficient and not feasible with a large number of unique id/exposure combinations (see details).
   }
   \item{n_pairs}{
 A single positive number, specifying how many random matches should be created when using \code{pairs="random1"} or \code{pairs="random2"}, ignored otherwise.
@@ -111,7 +111,7 @@ Although fairly simple, this strategy is also inefficient. It means that for eac
 
 In \code{pairs="random1"}, randomly choosen pairs are generated in batches of size \code{batch_size}. It is then checked, whether these matches are valid and whether they were already included in the data. This continues until all \code{n_pairs} matches have been generated, or until \code{rand_max_iter} number of iterations are reached. This strategy is always feasible memory-wise, but is a bit slower than other strategies. It is also a little unstable, because it is possible that \code{n_pairs} is larger than the maximum number of possible (and valid) pairs. The algorithm then runs needlessly until \code{rand_max_iter} is reached. The option \code{pairs="random2"} also generates \code{n_pairs} random pairs, but does so by first generating all possible and valid pairs. This is generally preferable, whenever it is possible.
 
-We recommend trying \code{pairs="all"} first. If that is infeasible, we recommend switching to \code{pairs="random2"}. If that is still infeasible, use \code{pairs="random1"}. The option \code{pairs="one"} should only be used when using \code{estimator="glmm"}, or when the \code{data} is extremly large.
+We recommend keeping this argument at its default value of \code{"auto"}. Using this specification, \code{pairs="all"} is used if feasible (e.g. if the number of pairs that would be created is ~10 million). If that number exceeds 10 million, but is smaller than 50 million \code{pairs="random2"} If that number exceeds 50 million, \code{pairs="random1"} is used. The option \code{pairs="one"} should only be used when using \code{estimator="glmm"}, or when the \code{data} is extremly large.
 
 \strong{\emph{Estimators}}:
 

@@ -287,8 +287,9 @@ check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
                 risk_period > 0),
              "'risk_period' must be a single positive number.")
   stopifnotm((length(pairs)==1 && is.character(pairs) &&
-                pairs %in% c("one", "all", "random1", "random2")),
-             "'pairs' must be either 'one', 'all', 'random1' or 'random2'.")
+                pairs %in% c("auto", "one", "all", "random1", "random2")),
+             "'pairs' must be either 'auto', 'one', 'all', 'random1' or",
+             " 'random2'.")
   stopifnotm((is.null(n_pairs) || (length(n_pairs)==1 && is.numeric(n_pairs) &&
                                      n_pairs >= 1)),
              "'n_pairs' must be either NULL or a positive integer.")

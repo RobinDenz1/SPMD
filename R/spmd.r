@@ -5,7 +5,7 @@
 #' @importFrom data.table fifelse
 #' @export
 sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
-                              estimator="moments", pairs="random2",
+                              estimator="moments", pairs="auto",
                               n_pairs=100000, batch_size=max(5000, n_pairs * 2),
                               rand_max_iter=100, allow_overlap=FALSE,
                               conf_type="auto", conf_level=0.95, n_boot=1000,
@@ -26,12 +26,6 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                     rand_max_iter=rand_max_iter, batch_size=batch_size,
                     convergence=convergence, allow_overlap=allow_overlap)
 
-  # set type of confidence interval automatically if conf_type = "auto"
-  if (conf_type=="auto") {
-    conf_type <- fifelse(estimator=="moments" & pairs=="all", "jackknife",
-                         "none")
-  }
-
   # create matched dataset
   l_data <- get_full_data(data=data,
                           id=id,
@@ -48,10 +42,22 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                           batch_size=batch_size,
                           allow_overlap=allow_overlap)
 
+  # set type of confidence interval automatically if conf_type = "auto"
+  if (conf_type=="auto") {
+    conf_type <- fifelse(estimator=="moments" & l_data$pairs=="all",
+                         "jackknife", "none")
+  # this is caught in the check_inputs() function, but needs to be here as well
+  # in case pairs = "auto" is used
+  } else if (conf_type %in% c("boot.fast", "jackknife") &&
+             !(l_data$pairs=="all" && estimator=="moments")) {
+    warning("'conf_type' may only be set to '", conf_type, "' if",
+            " pairs='all' and estimator='moments'", call.=FALSE)
+  }
+
   # initiate output object
   out <- list(d_matches=l_data$d_matches,
               d_events=l_data$d_events,
-              inputs=list(pairs=pairs,
+              inputs=list(pairs=l_data$pairs,
                           n_pairs=n_pairs,
                           estimator=estimator,
                           risk_period=risk_period,
