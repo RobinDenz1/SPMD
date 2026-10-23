@@ -38,8 +38,9 @@ sym_pair_matching(formula, data, id, risk_period, bounds="[)",
   observation period, (2) the end of the observation period, (3) the
   outcome of interest, (4) the exposure of interest and (5) a unique
   person identifier (see `id`). It can contain any further number of
-  columns. For more details on how the start-stop data should be
-  structured, see details.
+  columns. Both left-truncated and right-censored data are supported.
+  For more details on how the start-stop data should be structured, see
+  details.
 
 - id:
 
