@@ -21,7 +21,7 @@ sym_pair_matching(formula, data, id, risk_period, bounds="[)",
 A \code{formula} object defining the variables that identify the start and stop of the respective observation periods, the outcome and exposure. It should look like \code{Surv(start, stop, Y) ~ A}, where \code{start}, \code{stop}, \code{Y} and \code{A} should be replaced with the names of the start and stop of the observation period, the outcome and the exposure respectively. The exposure should be binary, ideally coded as a logical variable. However, other codings are allowed as long as it is binary. See details.
   }
   \item{data}{
-A single \code{data.frame} like object in the start-stop format. This dataset should contain at least five columns: (1) the start of the observation period, (2) the end of the observation period, (3) the outcome of interest, (4) the exposure of interest and (5) a unique person identifier (see \code{id}). It can contain any further number of columns. For more details on how the start-stop data should be structured, see details.
+A single \code{data.frame} like object in the start-stop format. This dataset should contain at least five columns: (1) the start of the observation period, (2) the end of the observation period, (3) the outcome of interest, (4) the exposure of interest and (5) a unique person identifier (see \code{id}). It can contain any further number of columns. Both left-truncated and right-censored data are supported. For more details on how the start-stop data should be structured, see details.
   }
   \item{id}{
 A single character string, specifying the name of the unique person identifier in \code{data}.

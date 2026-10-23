@@ -81,6 +81,7 @@ prepare_spmd_data <- function(exposures, events, obs_start, obs_end, id, time,
   setnames(out, old="status", new=event_name)
 
   if (".observed" %in% colnames(out)) {
+    out <- subset(out, .observed==TRUE)
     out[, .observed := NULL]
   }
 
