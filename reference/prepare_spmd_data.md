@@ -12,7 +12,7 @@ function.
 prepare_spmd_data(exposures, events, obs_start, obs_end,
                   id, time, risk_period, exposure_name="A",
                   event_name="Y", convert_date=TRUE,
-                  units="days")
+                  units="days", remove_unexposed=FALSE)
 ```
 
 ## Arguments
@@ -97,6 +97,13 @@ prepare_spmd_data(exposures, events, obs_start, obs_end,
   units of time since the artificial time zero. Only used if
   `convert_date=TRUE` and if the supplied time values are `Date` like
   objects, ignored otherwise.
+
+- remove_unexposed:
+
+  Either `TRUE` or `FALSE` (default), specifying whether unexposed
+  individuals should be removed from the resulting data or not.
+  Unexposed individuals may be introduced through the `obs_start` or
+  `obs_end` arguments.
 
 ## Details
 
