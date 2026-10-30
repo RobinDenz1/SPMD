@@ -9,15 +9,17 @@
 #' @export
 prepare_spmd_data <- function(exposures, events, obs_start, obs_end, id, time,
                               risk_period, exposure_name="A", event_name="Y",
-                              convert_date=TRUE, units="days") {
+                              convert_date=TRUE, units="days",
+                              remove_unexposed=FALSE) {
 
-  start <- .observed <- NULL
+  start <- .observed <- A <- .any_A <- NULL
 
   check_inputs_prepare_data(exposures=exposures, events=events,
                             obs_start=obs_start, obs_end=obs_end, id=id,
                             time=time, risk_period=risk_period,
                             exposure_name=exposure_name, event_name=event_name,
-                            convert_date=convert_date)
+                            convert_date=convert_date,
+                            remove_unexposed=remove_unexposed)
 
   # prepare exposures
   exposures <- copy(as.data.table(exposures))
@@ -72,7 +74,7 @@ prepare_spmd_data <- function(exposures, events, obs_start, obs_end, id, time,
     dlist = dlist,
     by = id,
     all.x = TRUE,
-    all.y = FALSE,
+    all.y = TRUE,
     first_time = first_time,
     last_time = last_time,
     event_times = events,
@@ -80,15 +82,30 @@ prepare_spmd_data <- function(exposures, events, obs_start, obs_end, id, time,
   )
   setnames(out, old="status", new=event_name)
 
+  # handle unobserved time frames
   if (".observed" %in% colnames(out)) {
+
+    if (nrow(out[A==TRUE & .observed==FALSE])) {
+      warning("Some risk durations after exposure are cut-off by",
+              " individual observation start or end times.", call.=FALSE)
+    }
+
     out <- subset(out, .observed==TRUE)
     out[, .observed := NULL]
   }
 
+  # date to numeric conversion
   if (convert_date && is_date(out$start)) {
     min_time <- min(out$start)
     out[, start := as.vector(difftime(start, min_time, units=units))]
     out[, stop := as.vector(difftime(stop, min_time, units=units))]
+  }
+
+  # remove unexposed, if specified
+  if (remove_unexposed) {
+    out[, .any_A := any(A), by=id]
+    out <- subset(out, .any_A==TRUE)
+    out[, .any_A := NULL]
   }
 
   return(out)
@@ -98,7 +115,8 @@ prepare_spmd_data <- function(exposures, events, obs_start, obs_end, id, time,
 #' @importFrom data.table uniqueN
 check_inputs_prepare_data <- function(exposures, events, obs_start, obs_end,
                                       id, time, risk_period, exposure_name,
-                                      event_name, convert_date) {
+                                      event_name, convert_date,
+                                      remove_unexposed) {
 
   stopifnotm(length(id)==1 && is.character(id),
              "'id' must be a single character string.")
@@ -136,16 +154,17 @@ check_inputs_prepare_data <- function(exposures, events, obs_start, obs_end,
              "'risk_period' must be a single number > 0.")
   stopifnotm(length(convert_date)==1 && is.logical(convert_date),
              "'convert_date' must be either TRUE or FALSE.")
+  stopifnotm(length(remove_unexposed)==1 && is.logical(remove_unexposed),
+             "'convert_date' must be either TRUE or FALSE.")
 
   if (is.data.frame(obs_start)) {
     stopifnotm(id %in% colnames(obs_start),
                "'id' must be the name of a column in 'obs_start'.")
     stopifnotm(time %in% colnames(obs_start),
                "'time' must be the name of a column in 'obs_start'.")
-    stopifnotm(all(obs_start[[id]] %in% exposures[[id]]) &&
-               nrow(obs_start) == uniqueN(exposures[[id]]),
-               "If 'obs_start' is supplied as a data.frame, there should",
-               "be exactly one entry for every 'id' in 'exposures'.")
+    stopifnotm(all(exposures[[id]] %in% obs_start[[id]]),
+               "If 'obs_start' is supplied as a data.frame, it should",
+               "include an entry for every 'id' in 'exposures'.")
   }
 
   if (is.data.frame(obs_end)) {
@@ -153,9 +172,8 @@ check_inputs_prepare_data <- function(exposures, events, obs_start, obs_end,
                "'id' must be the name of a column in 'obs_end'.")
     stopifnotm(time %in% colnames(obs_end),
                "'time' must be the name of a column in 'obs_start'.")
-    stopifnotm(all(obs_end[[id]] %in% exposures[[id]]) &&
-               nrow(obs_end) == uniqueN(exposures[[id]]),
-               "If 'obs_end' is supplied as a data.frame, there should",
-               "be exactly one entry for every 'id' in 'exposures'.")
+    stopifnotm(all(exposures[[id]] %in% obs_end[[id]]),
+               "If 'obs_end' is supplied as a data.frame, it should",
+               "include an entry for every 'id' in 'exposures'.")
   }
 }

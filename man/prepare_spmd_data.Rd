@@ -11,7 +11,7 @@ This function may be used to transform raw information about exposure, event and
 prepare_spmd_data(exposures, events, obs_start, obs_end,
                   id, time, risk_period, exposure_name="A",
                   event_name="Y", convert_date=TRUE,
-                  units="days")
+                  units="days", remove_unexposed=FALSE)
 }
 \arguments{
   \item{exposures}{
@@ -46,6 +46,9 @@ Either \code{TRUE} (default) or \code{FALSE}, specifying whether \code{Date} lik
   }
   \item{units}{
 A single character string passed to the argument of the same name in \code{\link{difftime}}. It defines the units of time since the artificial time zero. Only used if \code{convert_date=TRUE} and if the supplied time values are \code{Date} like objects, ignored otherwise.
+  }
+  \item{remove_unexposed}{
+Either \code{TRUE} or \code{FALSE} (default), specifying whether unexposed individuals should be removed from the resulting data or not. Unexposed individuals may be introduced through the \code{obs_start} or \code{obs_end} arguments.
   }
 }
 \details{

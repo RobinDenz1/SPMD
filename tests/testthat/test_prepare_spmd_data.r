@@ -381,3 +381,44 @@ test_that("Date times are handled correctly", {
   expect_equal(out$start, c(0, 4, 7, 8))
   expect_equal(out$stop, c(4, 7, 8, 14))
 })
+
+test_that("remove_unexposed actually works", {
+  exposures <- data.frame(
+    id = c(1, 2),
+    time = c(5, 8)
+  )
+
+  events <- data.frame(
+    id = c(1, 2),
+    time = c(7, 10)
+  )
+
+  obs_start <- data.frame(
+    id = c(1, 2, 3),
+    time = c(1, 3, 7)
+  )
+
+  out1 <- prepare_spmd_data(
+    exposures = exposures,
+    events = events,
+    obs_start = obs_start,
+    obs_end = 12,
+    id = "id",
+    time = "time",
+    risk_period = 2
+  )
+
+  out2 <- prepare_spmd_data(
+    exposures = exposures,
+    events = events,
+    obs_start = obs_start,
+    obs_end = 12,
+    id = "id",
+    time = "time",
+    risk_period = 2,
+    remove_unexposed = TRUE
+  )
+
+  expect_equal(nrow(out1), 7)
+  expect_equal(nrow(out2), 6)
+})
