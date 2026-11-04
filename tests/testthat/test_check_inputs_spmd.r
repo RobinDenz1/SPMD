@@ -27,7 +27,8 @@ test_that("check_inputs_spmd accepts valid inputs", {
       batch_size = 100,
       rand_max_iter = 1000,
       convergence = TRUE,
-      allow_overlap = TRUE
+      allow_overlap = TRUE,
+      max_dist = Inf
     )
   )
 })
@@ -57,7 +58,8 @@ test_that("check_inputs_spmd checks data", {
       batch_size = 100,
       rand_max_iter = 1000,
       convergence = TRUE,
-      allow_overlap = TRUE
+      allow_overlap = TRUE,
+      max_dist = Inf
     ),
     "'data' must be a data.frame"
   )
@@ -77,7 +79,8 @@ test_that("check_inputs_spmd checks data", {
       batch_size = 100,
       rand_max_iter = 1000,
       convergence = TRUE,
-      allow_overlap = TRUE
+      allow_overlap = TRUE,
+      max_dist = Inf
     ),
     "'data' must contain at least 2 rows"
   )
@@ -97,7 +100,7 @@ test_that("check_inputs_spmd checks id", {
     check_inputs_spmd(
       c("A", "Y", "time", "id"), data, "missing",
       10, "one", NULL, "none", "none", 100, .95,
-      "()", 100, 1000, TRUE, TRUE
+      "()", 100, 1000, TRUE, TRUE, Inf
     ),
     "'id' must be a single character string"
   )
@@ -107,7 +110,7 @@ test_that("check_inputs_spmd checks id", {
     check_inputs_spmd(
       c("A", "Y", "time", "id"), data, 1,
       10, "one", NULL, "none", "none", 100, .95,
-      "()", 100, 1000, TRUE, TRUE
+      "()", 100, 1000, TRUE, TRUE, Inf
     ),
     "'id' must be a single character string"
   )
@@ -117,7 +120,7 @@ test_that("check_inputs_spmd checks id", {
     check_inputs_spmd(
       c("A", "Y", "time", "id"), data, c("id", "A"),
       10, "one", NULL, "none", "none", 100, .95,
-      "()", 100, 1000, TRUE, TRUE
+      "()", 100, 1000, TRUE, TRUE, Inf
     ),
     "'id' must be a single character string"
   )
@@ -130,7 +133,7 @@ test_that("check_inputs_spmd checks id", {
     check_inputs_spmd(
       c("A", "Y", "time", "id"), data_bad, "id",
       10, "one", NULL, "none", "none", 100, .95,
-      "()", 100, 1000, TRUE, TRUE
+      "()", 100, 1000, TRUE, TRUE, Inf
     ), "'id' must be a single character string")
 })
 
@@ -148,7 +151,7 @@ test_that("check_inputs_spmd checks risk_period", {
     check_inputs_spmd(
       c("A", "Y", "time", "id"), data, "id",
       0, "one", NULL, "none", "none", 100, .95,
-      "()", 100, 1000, TRUE, TRUE
+      "()", 100, 1000, TRUE, TRUE, Inf
     ), "'risk_period' must be a single positive number")
 
   # negative
@@ -156,7 +159,7 @@ test_that("check_inputs_spmd checks risk_period", {
     check_inputs_spmd(
       c("A", "Y", "time", "id"), data, "id",
       -1, "one", NULL, "none", "none", 100, .95,
-      "()", 100, 1000, TRUE, TRUE),
+      "()", 100, 1000, TRUE, TRUE, Inf),
     "'risk_period' must be a single positive number"
   )
 
@@ -165,7 +168,7 @@ test_that("check_inputs_spmd checks risk_period", {
     check_inputs_spmd(
       c("A", "Y", "time", "id"), data, "id",
       "10", "one", NULL, "none", "none", 100, .95,
-      "()", 100, 1000, TRUE, TRUE
+      "()", 100, 1000, TRUE, TRUE, Inf
     ),
     "'risk_period' must be a single positive number"
   )
@@ -175,7 +178,7 @@ test_that("check_inputs_spmd checks risk_period", {
     check_inputs_spmd(
       c("A", "Y", "time", "id"), data, "id",
       c(10, 20), "one", NULL, "none", "none", 100, .95,
-      "()", 100, 1000, TRUE, TRUE
+      "()", 100, 1000, TRUE, TRUE, Inf
     ),
     "'risk_period' must be a single positive number"
   )
@@ -202,7 +205,7 @@ test_that("check_inputs_spmd checks pairs", {
       check_inputs_spmd(
         c("A", "Y", "time", "id"), data, "id",
         10, bad_pairs, NULL, "none", "none", 100, .95,
-        "()", 100, 1000, TRUE, TRUE
+        "()", 100, 1000, TRUE, TRUE, Inf
       ),
       "'pairs' must be either"
     )
@@ -223,7 +226,7 @@ test_that("check_inputs_spmd checks n_pairs", {
     check_inputs_spmd(
       c("A", "Y", "time", "id"), data, "id",
       10, "one", NULL, "none", "none", 100, .95,
-      "()", 100, 1000, TRUE, TRUE
+      "()", 100, 1000, TRUE, TRUE, Inf
     )
   )
 
@@ -232,7 +235,7 @@ test_that("check_inputs_spmd checks n_pairs", {
     check_inputs_spmd(
       c("A", "Y", "time", "id"), data, "id",
       10, "one", 0, "none", "none", 100, .95,
-      "()", 100, 1000, TRUE, TRUE
+      "()", 100, 1000, TRUE, TRUE, Inf
     ),
     "'n_pairs' must be either NULL or a positive integer"
   )
@@ -242,7 +245,7 @@ test_that("check_inputs_spmd checks n_pairs", {
     check_inputs_spmd(
       c("A", "Y", "time", "id"), data, "id",
       10, "one", -1, "none", "none", 100, .95,
-      "()", 100, 1000, TRUE, TRUE
+      "()", 100, 1000, TRUE, TRUE, Inf
     ),
     "'n_pairs' must be either NULL or a positive integer"
   )
@@ -252,7 +255,7 @@ test_that("check_inputs_spmd checks n_pairs", {
     check_inputs_spmd(
       c("A", "Y", "time", "id"), data, "id",
       10, "one", "10", "none", "none", 100, .95,
-      "()", 100, 1000, TRUE, TRUE
+      "()", 100, 1000, TRUE, TRUE, Inf
     ),
     "'n_pairs' must be either NULL or a positive integer"
   )
@@ -262,7 +265,7 @@ test_that("check_inputs_spmd checks n_pairs", {
     check_inputs_spmd(
       c("A", "Y", "time", "id"), data, "id",
       10, "one", c(1, 2), "none", "none", 100, .95,
-      "()", 100, 1000, TRUE, TRUE
+      "()", 100, 1000, TRUE, TRUE, Inf
     ),
     "'n_pairs' must be either NULL or a positive integer"
   )
@@ -288,7 +291,7 @@ test_that("check_inputs_spmd checks estimator", {
       check_inputs_spmd(
         c("A", "Y", "time", "id"), data, "id",
         10, "one", NULL, bad_estimator, "none", 100, .95,
-        "()", 100, 1000, TRUE, TRUE
+        "()", 100, 1000, TRUE, TRUE, Inf
       ),
       "'estimator' must be either"
     )
@@ -310,7 +313,7 @@ test_that("check_inputs_spmd checks bootstrap", {
       check_inputs_spmd(
         c("A", "Y", "time", "id"), data, "id",
         10, "one", NULL, "none", bad_bootstrap, 100, .95,
-        "()", 100, 1000, TRUE, TRUE
+        "()", 100, 1000, TRUE, TRUE, Inf
       )
     )
   }
@@ -331,7 +334,7 @@ test_that("check_inputs_spmd checks n_boot", {
       check_inputs_spmd(
         c("A", "Y", "time", "id"), data, "id",
         10, "one", NULL, "none", "none", bad_n_boot, .95,
-        "()", 100, 1000, TRUE, TRUE
+        "()", 100, 1000, TRUE, TRUE, Inf
       ),
       "'n_boot' must be a single integer > 0"
     )
@@ -353,7 +356,7 @@ test_that("check_inputs_spmd checks conf_level", {
       check_inputs_spmd(
         c("A", "Y", "time", "id"), data, "id",
         10, "one", NULL, "none", "none", 100, bad_conf_level,
-        "()", 100, 1000, TRUE, TRUE
+        "()", 100, 1000, TRUE, TRUE, Inf
       ),
       "'conf_level' must be a single number < 1 and > 0"
     )
@@ -377,7 +380,7 @@ test_that("check_inputs_spmd checks bounds", {
         check_inputs_spmd(
           c("A", "Y", "time", "id"), data, "id",
           10, "one", NULL, "none", "none", 100, .95,
-          bad_bounds, 100, 1000, TRUE, TRUE
+          bad_bounds, 100, 1000, TRUE, TRUE, Inf
         ),
         "'bounds' must be one of"
       )
@@ -390,7 +393,7 @@ test_that("check_inputs_spmd checks bounds", {
       check_inputs_spmd(
         c("A", "Y", "time", "id"), data, "id",
         10, "one", NULL, "none", "none", 100, .95,
-        valid_bounds, 100, 1000, TRUE, TRUE
+        valid_bounds, 100, 1000, TRUE, TRUE, Inf
       )
     )
   }
@@ -411,7 +414,7 @@ test_that("check_inputs_spmd checks batch_size", {
       check_inputs_spmd(
         c("A", "Y", "time", "id"), data, "id",
         10, "one", NULL, "none", "none", 100, .95,
-        "()", bad_batch_size, 1000, TRUE, TRUE
+        "()", bad_batch_size, 1000, TRUE, TRUE, Inf
       ),
       "'batch_size' must be a single integer > 0"
     )
@@ -433,7 +436,7 @@ test_that("check_inputs_spmd checks rand_max_iter", {
       check_inputs_spmd(
         c("A", "Y", "time", "id"), data, "id",
         10, "one", NULL, "none", "none", 100, .95,
-        "()", 100, bad_rand_max_iter, TRUE, TRUE
+        "()", 100, bad_rand_max_iter, TRUE, TRUE, Inf
       ),
       "'rand_max_iter' must be a single integer > 0"
     )
@@ -455,7 +458,7 @@ test_that("check_inputs_spmd checks convergence", {
       check_inputs_spmd(
         c("A", "Y", "time", "id"), data, "id",
         10, "one", NULL, "none", "none", 100, .95,
-        "()", 100, 1000, bad_convergence, TRUE
+        "()", 100, 1000, bad_convergence, TRUE, Inf
       ),
       "'convergence' must be either"
     )
@@ -493,7 +496,8 @@ test_that("check_inputs_spmd checks formula variables", {
         batch_size = 100,
         rand_max_iter = 1000,
         convergence = TRUE,
-        allow_overlap = TRUE
+        allow_overlap = TRUE,
+        max_dist = Inf
       ),
       "Column ' missing ' not found in 'data'."
     )

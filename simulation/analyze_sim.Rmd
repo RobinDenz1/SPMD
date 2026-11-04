@@ -130,11 +130,13 @@ get_stats_table <- function(d_sim, n_repeats=1000) {
   all_vars <- all_vars[varies]
   
   # calculate performance stats
+  d_bias[, n_valid := sum(!is.na(rr_hat)), by=eval(all_vars)]
+  
   d_bias <- d_bias[,
     .(bias = mean(log(rr_hat) - theta, na.rm=TRUE),
-      bias_mcse = sd(log(rr_hat) - theta, na.rm=TRUE) / sqrt(.N),
+      bias_mcse = sd(log(rr_hat) - theta, na.rm=TRUE) / sqrt(n_valid),
       mse = mean((log(rr_hat) - theta)^2, na.rm=TRUE),
-      mse_mcse = sd((log(rr_hat) - theta)^2, na.rm=TRUE) / sqrt(.N),
+      mse_mcse = sd((log(rr_hat) - theta)^2, na.rm=TRUE) / sqrt(n_valid),
       n_events = mean(n_events),
       n_events_exp = mean(n_exposed_and_event),
       n_NA = n_repeats - .N),
@@ -230,7 +232,7 @@ d_bias13 <- get_stats_table(d_sim13)
 ## $n = 10000$
 
 ```{r}
-plot_boxplots_n(subset(d_sim1, n==10000))
+plot_boxplots_n(subset(d_sim1, n==10000), outliers=TRUE)
 ggsave("./Plots/sim1_n10000.pdf", width=6.5, height=7)
 ```
 
@@ -241,7 +243,7 @@ print_stats(subset(d_bias1, n==10000)[, -"n"], format="html")
 ## $n = 20000$
 
 ```{r}
-plot_boxplots_n(subset(d_sim1, n==20000))
+plot_boxplots_n(subset(d_sim1, n==20000), outliers=TRUE)
 ggsave("./Plots/sim1_n20000.pdf", width=6.5, height=7)
 ```
 
@@ -252,7 +254,7 @@ print_stats(subset(d_bias1, n==20000)[, -"n"], format="html")
 ## $n = 30000$
 
 ```{r}
-plot_boxplots_n(subset(d_sim1, n==30000))
+plot_boxplots_n(subset(d_sim1, n==30000), outliers=TRUE)
 ggsave("./Plots/sim1_n30000.pdf", width=6.5, height=7)
 ```
 
@@ -275,21 +277,8 @@ ggsave("./Plots/sim1_runtime.pdf", width=5, height=6)
 
 # Multiple exposure periods per person
 
-## $n = 20000$
-
 ```{r}
-plot_boxplots_n(subset(d_sim2, n==20000))
-ggsave("./Plots/sim2_n20000.pdf", width=6, height=6)
-```
-
-```{r}
-print_stats(subset(d_bias2, n==20000)[, -"n"], format="html")
-```
-
-## $n = 30000$
-
-```{r}
-plot_boxplots_n(subset(d_sim2, n==30000))
+plot_boxplots_n(subset(d_sim2, n==30000), outliers=TRUE)
 ggsave("./Plots/sim2_n30000.pdf", width=6, height=6)
 ```
 
@@ -297,23 +286,10 @@ ggsave("./Plots/sim2_n30000.pdf", width=6, height=6)
 print_stats(subset(d_bias2, n==30000)[, -"n"], format="html")
 ```
 
-# Varying $n$ and $\theta$ with a terminal event
-
-## $n = 20000$
+# Varying $\theta$ with a terminal event
 
 ```{r}
-plot_boxplots_n(subset(d_sim3, n==20000))
-ggsave("./Plots/sim3_n20000.pdf", width=6, height=6)
-```
-
-```{r}
-print_stats(subset(d_bias3, n==20000)[, -"n"], format="html")
-```
-
-## $n = 30000$
-
-```{r}
-plot_boxplots_n(subset(d_sim3, n==30000))
+plot_boxplots_n(subset(d_sim3, n==30000), outliers=TRUE)
 ggsave("./Plots/sim3_n30000.pdf", width=6, height=6)
 ```
 
@@ -326,7 +302,7 @@ print_stats(subset(d_bias3, n==30000)[, -"n"], format="html")
 ## Scenario 1
 
 ```{r}
-plot_boxplots_beta_L(subset(d_sim4, scenario=="Scenario 1"))
+plot_boxplots_beta_L(subset(d_sim4, scenario=="Scenario 1"), outliers=TRUE)
 ggsave("./plots/sim4_scenario1.pdf", width=7.5, height=7)
 ```
 
@@ -337,7 +313,7 @@ print_stats(subset(d_bias4, Scenario==1)[, -"Scenario"], format="html")
 ## Scenario 2
 
 ```{r}
-plot_boxplots_beta_L(subset(d_sim4, scenario=="Scenario 2"))
+plot_boxplots_beta_L(subset(d_sim4, scenario=="Scenario 2"), outliers=TRUE)
 ggsave("./plots/sim4_scenario2.pdf", width=7.5, height=7)
 ```
 
@@ -366,30 +342,17 @@ d_sim5_est <- d_sim5[, .(
 ```
 
 ```{r}
-knitr::kable(subset(d_sim5_est, conf_int=="boot.fast")[, -"conf_int"], format="html", digits=3)
+knitr::kable(subset(d_sim5_est, conf_int=="boot.fast")[, -"conf_int"], format="html")
 ```
 
 ```{r}
-knitr::kable(subset(d_sim5_est, conf_int=="jackknife")[, -c("conf_int", "mean_boot")], format="html", digits=3)
+knitr::kable(subset(d_sim5_est, conf_int=="jackknife")[, -c("conf_int", "boot_na")], format="html")
 ```
 
 # Interaction between time and $U$
 
-## $n = 20000$
-
 ```{r}
-plot_boxplots_n(subset(d_sim6, n==20000))
-ggsave("./Plots/sim6_n20000.pdf", width=6, height=6)
-```
-
-```{r}
-print_stats(subset(d_bias6, n==20000)[, -"n"], format="html")
-```
-
-## $n = 30000$
-
-```{r}
-plot_boxplots_n(subset(d_sim6, n==30000))
+plot_boxplots_n(subset(d_sim6, n==30000), outliers=TRUE)
 ggsave("./Plots/sim6_n30000.pdf", width=6, height=6)
 ```
 
@@ -399,21 +362,8 @@ print_stats(subset(d_bias6, n==30000)[, -"n"], format="html")
 
 # Interaction between time and $A$
 
-## $n = 20000$
-
 ```{r}
-plot_boxplots_n(subset(d_sim7, n==20000))
-ggsave("./Plots/sim7_n20000.pdf", width=6, height=6)
-```
-
-```{r}
-print_stats(subset(d_bias7, n==20000)[, -"n"], format="html")
-```
-
-## $n = 30000$
-
-```{r}
-plot_boxplots_n(subset(d_sim7, n==30000))
+plot_boxplots_n(subset(d_sim7, n==30000), outliers=TRUE)
 ggsave("./Plots/sim7_n30000.pdf", width=6, height=6)
 ```
 
@@ -424,7 +374,7 @@ print_stats(subset(d_bias7, n==30000)[, -"n"], format="html")
 # With independent right-censoring
 
 ```{r}
-plot_boxplots_n(d_sim11)
+plot_boxplots_n(d_sim11, outliers=TRUE)
 ggsave("./Plots/sim11.pdf", width=6, height=6)
 ```
 
@@ -435,7 +385,7 @@ print_stats(d_bias11, format="html")
 # With right-censoring dependent on $U$
 
 ```{r}
-plot_boxplots_n(d_sim12)
+plot_boxplots_n(d_sim12, outliers=TRUE)
 ggsave("./Plots/sim12.pdf", width=6, height=6)
 ```
 
@@ -448,7 +398,7 @@ print_stats(d_bias12, format="html")
 ## Scenario 1
 
 ```{r}
-plot_boxplots_beta_L(subset(d_sim13, scenario=="Scenario 1"))
+plot_boxplots_beta_L(subset(d_sim13, scenario=="Scenario 1"), outliers=TRUE)
 ggsave("./plots/sim13_scenario1.pdf", width=7.5, height=7)
 ```
 
@@ -459,7 +409,7 @@ print_stats(subset(d_bias13, Scenario==1)[, -"Scenario"], format="html")
 ## Scenario 2
 
 ```{r}
-plot_boxplots_beta_L(subset(d_sim13, scenario=="Scenario 2"))
+plot_boxplots_beta_L(subset(d_sim13, scenario=="Scenario 2"), outliers=TRUE)
 ggsave("./plots/sim13_scenario2.pdf", width=7.5, height=7)
 ```
 
@@ -469,21 +419,15 @@ print_stats(subset(d_bias13, Scenario==2)[, -"Scenario"], format="html")
 
 # Different Baseline hazards per person
 
-## $n = 20000$
-
 ```{r}
-plot_boxplots_n(subset(d_sim8, n==20000))
-ggsave("./Plots/sim8_n20000.pdf", width=6, height=6)
-```
-
-```{r}
-print_stats(subset(d_bias8, n==20000)[, -"n"], format="html")
-```
-
-## $n = 30000$
-
-```{r}
-plot_boxplots_n(subset(d_sim8, n==30000))
+ggplot(data=data, aes(y=log_bias_i, x=estimator, fill=estimator)) +
+    geom_hline(yintercept=0, linetype="dashed") +
+    geom_boxplot(outliers=TRUE, linewidth=0.3) +
+    facet_wrap(~ exp_theta_f, ncol=1, labeller="label_parsed") +
+    theme_minimal() +
+    theme(legend.position="none",
+          axis.text.x=element_text(size=8)) +
+    labs(x=NULL, y=expression(hat(theta) - theta))
 ggsave("./Plots/sim8_n30000.pdf", width=6, height=6)
 ```
 
@@ -493,35 +437,11 @@ print_stats(subset(d_bias8, n==30000)[, -"n"], format="html")
 
 # Varying $\tau$
 
-## $n = 20000$
-
-```{r}
-ggplot(data=subset(d_sim9, n==20000),
-       aes(y=log_bias_i, x=estimator, fill=estimator)) +
-  geom_hline(yintercept=0, linetype="dashed") +
-  geom_boxplot(outliers=FALSE, linewidth=0.3) +
-  facet_grid(cols=vars(scenario), rows=vars(risk_period_f),
-               labeller = labeller(
-                 risk_period_f = label_parsed,
-                 scenario = label_value), scales="free_y") +
-  theme_minimal() +
-  theme(legend.position="none",
-        axis.text.x=element_text(size=8)) +
-  labs(x=NULL, y=expression(hat(theta) - theta))
-ggsave("./Plots/sim9_n20000.pdf", width=6, height=6)
-```
-
-```{r}
-print_stats(subset(d_bias9, n==20000)[, -"n"], format="html")
-```
-
-## $n = 30000$
-
 ```{r}
 ggplot(data=subset(d_sim9, n==30000),
        aes(y=log_bias_i, x=estimator, fill=estimator)) +
   geom_hline(yintercept=0, linetype="dashed") +
-  geom_boxplot(outliers=FALSE, linewidth=0.3) +
+  geom_boxplot(outliers=TRUE, linewidth=0.3) +
   facet_grid(cols=vars(scenario), rows=vars(risk_period_f),
                labeller = labeller(
                  risk_period_f = label_parsed,
@@ -540,21 +460,8 @@ print_stats(subset(d_bias9, n==30000)[, -"n"], format="html")
 
 # Allowing partial pairs
 
-## $n = 20000$
-
 ```{r}
-plot_boxplots_n(subset(d_sim10, n==20000))
-ggsave("./Plots/sim10_n20000.pdf", width=6, height=6)
-```
-
-```{r}
-print_stats(subset(d_bias10, n==20000)[, -"n"], format="html")
-```
-
-## $n = 30000$
-
-```{r}
-plot_boxplots_n(subset(d_sim10, n==30000))
+plot_boxplots_n(subset(d_sim10, n==30000), outliers=TRUE)
 ggsave("./Plots/sim10_n30000.pdf", width=6, height=6)
 ```
 

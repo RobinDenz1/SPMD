@@ -17,12 +17,13 @@ source("./simulation/sim_functions.r")
 
 ## execute Monte-Carlo study
 n_repeats <- 1000
+n_sim <- 50000
 all_methods <- c("spmd", "cco", "ctc", "sccs", "sccs_spline_5",
                  "sccs_spline_15")
 
 ## varying n, theta
 sim1 <- run_simulation(
-  n_sim = c(10000, 20000, 30000),
+  n_sim = c(10000, 20000, 30000, 50000),
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
@@ -35,29 +36,31 @@ sim1 <- run_simulation(
 )
 saveRDS(sim1$results, "./simulation/data/sim1_results.Rds")
 
-## varying n, theta while allowing multiple exposure periods per person
+## varying theta while allowing multiple exposure periods per person
 sim2 <- run_simulation(
-  n_sim = c(20000, 30000),
+  n_sim = n_sim,
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
   theta = log(c(0.7, 1, 2.5)),
   multiple_A = TRUE,
   multiple_Y = TRUE,
+  max_t = 2000,
   n_cores = 8,
   seed = 43
 )
 saveRDS(sim2$results, "./simulation/data/sim2_results.Rds")
 
-## varying n, theta with a terminal event
+## varying theta with a terminal event
 sim3 <- run_simulation(
-  n_sim = c(20000, 30000),
+  n_sim = n_sim,
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
   theta = log(c(0.7, 1, 2.5)),
   multiple_A = FALSE,
   multiple_Y = FALSE,
+  censor = 4,
   n_cores = 8,
   seed = 44
 )
@@ -65,7 +68,7 @@ saveRDS(sim3$results, "./simulation/data/sim3_results.Rds")
 
 ## with time-varying outcome predictor / exposure predictor / confounder
 sim4 <- run_simulation(
-  n_sim = 20000,
+  n_sim = n_sim,
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
@@ -80,8 +83,9 @@ sim4 <- run_simulation(
 saveRDS(sim4$results, "./simulation/data/sim4_results.Rds")
 
 ## CI coverage for actual bootstrap and IJK
+# TODO: don't run yet, wait
 sim5 <- run_simulation(
-  n_sim = c(20000, 30000),
+  n_sim = c(20000, 30000, 50000),
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
@@ -96,7 +100,7 @@ saveRDS(sim5$results, "./simulation/data/sim5_results.Rds")
 
 # interaction between time and U
 sim6 <- run_simulation(
-  n_sim = c(20000, 30000),
+  n_sim = n_sim,
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
@@ -111,7 +115,7 @@ saveRDS(sim6$results, "./simulation/data/sim6_results.Rds")
 
 # interaction between time and A
 sim7 <- run_simulation(
-  n_sim = c(20000, 30000),
+  n_sim = n_sim,
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
@@ -126,7 +130,7 @@ saveRDS(sim7$results, "./simulation/data/sim7_results.Rds")
 
 # different baseline hazards per person
 sim8 <- run_simulation(
-  n_sim = c(20000, 30000),
+  n_sim = n_sim,
   n_repeats = n_repeats,
   method = all_methods,
   scenario = 3,
@@ -140,7 +144,7 @@ saveRDS(sim8$results, "./simulation/data/sim8_results.Rds")
 
 # varying risk_period
 sim9 <- run_simulation(
-  n_sim = c(20000, 30000),
+  n_sim = n_sim,
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
@@ -155,7 +159,7 @@ saveRDS(sim9$results, "./simulation/data/sim9_results.Rds")
 
 ## varying n, theta and using partial pairs
 sim10 <- run_simulation(
-  n_sim = c(20000, 30000),
+  n_sim = n_sim,
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
@@ -170,7 +174,7 @@ saveRDS(sim10$results, "./simulation/data/sim10_results.Rds")
 
 ## varying theta with completely random right-censoring
 sim11 <- run_simulation(
-  n_sim = 20000,
+  n_sim = n_sim,
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
@@ -185,7 +189,7 @@ saveRDS(sim11$results, "./simulation/data/sim11_results.Rds")
 
 ## varying theta with right-censoring dependent on U
 sim12 <- run_simulation(
-  n_sim = 20000,
+  n_sim = n_sim,
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
@@ -201,7 +205,7 @@ saveRDS(sim12$results, "./simulation/data/sim12_results.Rds")
 ## varying theta with right-censoring dependent on L
 ## where L may be a sole outcome / exposure predictor or true confounder
 sim13 <- run_simulation(
-  n_sim = 20000,
+  n_sim = n_sim,
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
@@ -218,7 +222,7 @@ saveRDS(sim13$results, "./simulation/data/sim13_results.Rds")
 
 ## using random subset of pairs
 sim14 <- run_simulation(
-  n_sim = c(20000, 30000),
+  n_sim = n_sim,
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
@@ -231,8 +235,3 @@ sim14 <- run_simulation(
   seed = 55
 )
 saveRDS(sim14$results, "./simulation/data/sim14_results.Rds")
-
-# TODO:
-# - previous event-dependent exposure
-# - previous event-dependent events
-# - misspecified \tau

@@ -41,23 +41,25 @@ fbasehaz_A2 <- function(t) {
 create_data <- function(n, scenario, theta, multiple_A=FALSE,
                         multiple_Y=TRUE, beta_L_A=0, beta_L_Y=0,
                         A_time_interact=0, U_time_interact=0,
-                        risk_period=30, censor=0) {
+                        risk_period=30, censor=0, max_t=1000) {
 
   # no time effects
   if (scenario==1) {
     fa <- fbasehaz_A1
     fy <- fbasehaz_Y1
-    # with sinus-curve like time effects
+  # with sinus-curve like time effects
   } else if (scenario==2) {
     fa <- fbasehaz_A2
     fy <- fbasehaz_Y2
+  # with different baseline hazards across individuals
   } else if (scenario==3) {
-    data <- create_data_scenario3(n=n, theta=theta, risk_period=risk_period)
+    data <- create_data_scenario3(n=n, theta=theta, risk_period=risk_period,
+                                  max_t=max_t)
     return(data)
   }
 
   if (multiple_A) {
-    immunity_duration_A <- 31
+    immunity_duration_A <- risk_period + 1
   } else {
     immunity_duration_A <- Inf
   }
@@ -76,11 +78,11 @@ create_data <- function(n, scenario, theta, multiple_A=FALSE,
               prob_fun=0.001) +
       node_td("A", type="next_time", model="cox", event_duration=risk_period,
               formula= ~ U*log(2) + L*beta_L_A, surv_dist=fa,
-              basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
+              basehaz_grid=seq(0.5, (max_t + 100), 0.5), extrapolate=TRUE,
               as_integer=FALSE, immunity_duration=immunity_duration_A) +
       node_td("Y", type="next_time", model="cox", event_duration=1,
               formula= ~ U*log(2) + A*eval(theta) + L*beta_L_Y, surv_dist=fy,
-              basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
+              basehaz_grid=seq(0.5, (max_t + 100), 0.5), extrapolate=TRUE,
               as_integer=FALSE, immunity_duration=immunity_duration_Y)
   } else if (A_time_interact != 0) {
     dag <- empty_dag() +
@@ -89,13 +91,13 @@ create_data <- function(n, scenario, theta, multiple_A=FALSE,
               prob_fun=0.001) +
       node_td("A", type="next_time", model="cox", event_duration=risk_period,
               formula= ~ U*log(2) + L*beta_L_A, surv_dist=fa,
-              basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
+              basehaz_grid=seq(0.5, (max_t + 100), 0.5), extrapolate=TRUE,
               as_integer=FALSE, immunity_duration=immunity_duration_A) +
       node_td("Y", type="next_time", model="cox", event_duration=1,
               formula= ~ U*log(2) + ATRUE*eval(theta) + LTRUE*beta_L_Y +
                 ATRUE:time_cuts_event_count*eval(A_time_interact),
               surv_dist=fy,
-              basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
+              basehaz_grid=seq(0.5, (max_t + 100), 0.5), extrapolate=TRUE,
               as_integer=FALSE, immunity_duration=immunity_duration_Y) +
       node_td("time_cuts", type="next_time", prob_fun=1,
               event_duration=0, distr_fun=simDAG:::timecuts,
@@ -107,13 +109,13 @@ create_data <- function(n, scenario, theta, multiple_A=FALSE,
               prob_fun=0.001) +
       node_td("A", type="next_time", model="cox", event_duration=risk_period,
               formula= ~ U*log(2) + L*beta_L_A, surv_dist=fa,
-              basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
+              basehaz_grid=seq(0.5, (max_t + 100), 0.5), extrapolate=TRUE,
               as_integer=FALSE, immunity_duration=immunity_duration_A) +
       node_td("Y", type="next_time", model="cox", event_duration=1,
               formula= ~ U*log(2) + ATRUE*eval(theta) + LTRUE*beta_L_Y +
                 U:time_cuts_event_count*eval(U_time_interact),
               surv_dist=fy,
-              basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
+              basehaz_grid=seq(0.5, (max_t + 100), 0.5), extrapolate=TRUE,
               as_integer=FALSE, immunity_duration=immunity_duration_Y) +
       node_td("time_cuts", type="next_time", prob_fun=1,
               event_duration=0, distr_fun=simDAG:::timecuts,
@@ -135,47 +137,61 @@ create_data <- function(n, scenario, theta, multiple_A=FALSE,
   }
 
   # generate data
-  data <- sim_discrete_event(dag, n_sim=n, max_t=1000, censor_at_max_t=TRUE,
+  data <- sim_discrete_event(dag, n_sim=n, max_t=max_t, censor_at_max_t=TRUE,
                              target_event="Y")
 
   # apply censoring, if specified
-  if (censor != 0) {
+  if (censor != 0 & censor < 4) {
     data <- subset(data, C_event_count==0)
+  # censor after first event
+  } else if (censor == 4) {
+    data[, min_time := if (any(Y)) min(stop[Y]) else Inf, by=.id]
+    data <- subset(data, stop <= min_time)
   }
 
   return(data)
 }
 
+# baseline hazards for the event in scenario 3
+fbasehaz_Y3.1 <- function(t) {
+  return(0.000008508646 *
+           (1 + 0.95 * tanh((t - 500) / 100)))
+}
+fbasehaz_Y3.2 <- function(t) {
+  return(0.000008508646 *
+           (1 - 0.95 * tanh((t - 500) / 100)))
+}
+
 ## data for scenario3, in which individuals have different baseline hazards
-create_data_scenario3 <- function(n, theta, risk_period) {
+create_data_scenario3 <- function(n, theta, risk_period, max_t) {
 
   dag <- empty_dag() +
     node("U", type="rnorm", mean=0, sd=1) +
     node_td("A", type="next_time", model="cox", event_duration=risk_period,
             formula= ~ U*log(2), surv_dist=fbasehaz_A2,
-            basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
+            basehaz_grid=seq(0.5, (max_t + 100), 0.5), extrapolate=TRUE,
             as_integer=FALSE, immunity_duration=Inf)
 
   # Y with constant baseline hazard
   dag1 <- dag +
     node_td("Y", type="next_time", model="cox", event_duration=1,
-            formula= ~ U*log(2) + A*eval(theta), surv_dist=fbasehaz_Y1,
-            basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
+            formula= ~ U*log(2) + A*eval(theta), surv_dist=fbasehaz_Y3.1,
+            basehaz_grid=seq(0.5, (max_t + 100), 0.5), extrapolate=TRUE,
             as_integer=FALSE, immunity_duration=1)
 
   # Y with time-varying baseline hazard
   dag2 <- dag +
     node_td("Y", type="next_time", model="cox", event_duration=1,
-            formula= ~ U*log(2) + A*eval(theta), surv_dist=fbasehaz_Y2,
-            basehaz_grid=seq(0.5, 1100, 0.5), extrapolate=TRUE,
+            formula= ~ U*log(2) + A*eval(theta), surv_dist=fbasehaz_Y3.2,
+            basehaz_grid=seq(0.5, (max_t + 100), 0.5), extrapolate=TRUE,
             as_integer=FALSE, immunity_duration=1)
 
   # simulate half of the data under one and the other half under another
   # baseline hazard function
-  data1 <- sim_discrete_event(dag1, n_sim=n/2, max_t=1000, censor_at_max_t=TRUE,
-                              target_event="Y")
-  data2 <- sim_discrete_event(dag2, n_sim=n/2, max_t=1000, censor_at_max_t=TRUE,
-                              target_event="Y")
+  data1 <- sim_discrete_event(dag1, n_sim=n/2, max_t=max_t,
+                              censor_at_max_t=TRUE, target_event="Y")
+  data2 <- sim_discrete_event(dag2, n_sim=n/2, max_t=max_t,
+                              censor_at_max_t=TRUE, target_event="Y")
 
   # put together
   data2[, .id := .id + (n/2)]
@@ -224,10 +240,10 @@ apply_method <- function(data, type, conf_int="none", risk_period=30,
   } else if (type=="sccs") {
     out <- estimate_sccs(data, conf_int=conf_int!="none")
   } else if (type=="sccs_spline_5") {
-    out <- estimate_sccs(data, spline=TRUE, cuts=seq(0, 1000, 50), df=5,
+    out <- estimate_sccs(data, spline=TRUE, cuts=seq(0, 1000, 50), df=6,
                          conf_int=conf_int!="none")
   } else if (type=="sccs_spline_15") {
-    out <- estimate_sccs(data, spline=TRUE, cuts=seq(0, 1000, 50), df=15,
+    out <- estimate_sccs(data, spline=TRUE, cuts=seq(0, 1000, 50), df=16,
                          conf_int=conf_int!="none")
   } else if (type=="cco") {
     out <- estimate_cco(data, risk_period=risk_period,
@@ -245,8 +261,8 @@ run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
                            multiple_A, multiple_Y, beta_L_Y=0, beta_L_A=0,
                            U_time_interact=0, A_time_interact=0,
                            conf_int="none", risk_period=30, allow_overlap=FALSE,
-                           censor=0, pairs="all", n_pairs=1000000, n_cores=8,
-                           seed=2134) {
+                           censor=0, pairs="all", n_pairs=1000000, max_t=1000,
+                           n_cores=8, seed=2134) {
 
   # annoying needed fix, because otherwise run() fails
   # due to scoping issues
@@ -280,7 +296,8 @@ run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
     allow_overlap = allow_overlap,
     censor = censor,
     pairs = pairs,
-    n_pairs = n_pairs
+    n_pairs = n_pairs,
+    max_t = max_t
   )
 
   # define the simulation script
@@ -291,7 +308,8 @@ run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
                           beta_L_Y=L$beta_L_Y, beta_L_A=L$beta_L_A,
                           U_time_interact=L$U_time_interact,
                           A_time_interact=L$A_time_interact,
-                          risk_period=L$risk_period, censor=L$censor)
+                          risk_period=L$risk_period, censor=L$censor,
+                          max_t=L$max_t)
     })
     out <- apply_method(data=data, type=L$estimator, conf_int=L$conf_int,
                         risk_period=L$risk_period,
@@ -308,7 +326,7 @@ run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
                  "splines"),
     batch_levels = c("n", "scenario", "theta", "multiple_Y", "multiple_A",
                      "beta_L_A", "beta_L_Y", "U_time_interact",
-                     "A_time_interact", "risk_period", "censor"),
+                     "A_time_interact", "risk_period", "censor", "max_t"),
     parallel = n_cores > 1,
     n_cores = n_cores,
     seed = seed

@@ -2,11 +2,12 @@
 library(data.table)
 library(ggplot2)
 library(ggbrace)
+library(scales)
 
 ## time trend plot
 plotdata <- data.frame(
   time = rep(1:1000, 4),
-  p = c(rep(0.000008508646, 1000), p_Y=fbasehaz_Y2(1:1000),
+  p = c(fbasehaz_Y1(1:1000), p_Y=fbasehaz_Y2(1:1000),
         rep(0.0002503218, 1000), p_A=fbasehaz_A2(1:1000)),
   kind = rep(c("h_Y(t)", "h_A(t)"), each=2000),
   scenario = c(rep("Scenario 1", 1000), rep("Scenario 2", 1000),
@@ -14,15 +15,39 @@ plotdata <- data.frame(
 )
 
 ggplot(plotdata, aes(x=time, y=p, color=kind, linetype=scenario)) +
-  geom_line() +
+  geom_line(linewidth=0.85) +
   theme_minimal() +
   theme(legend.position="bottom") +
   labs(x="t", y="Baseline Hazard", color=NULL, linetype=NULL) +
   scale_y_continuous(labels=label_number()) +
-  scale_color_discrete(labels=parse(text=c("h[A0](t)", "h[Y0](t)"))) +
+  scale_color_manual(
+    values = c("h_Y(t)" = "#C46A50", "h_A(t)" = "#35658A"),
+    breaks = c("h_Y(t)", "h_A(t)"),
+    labels = c(expression(h[Y0](t)), expression(h[A0](t)))
+  ) +
   scale_linetype_manual(values=c("dashed", "solid"),
                         labels=c("Scenario 1", "Scenario 2"))
 ggsave("./simulation/plots/time_trends.pdf", width=6, height=4)
+
+## time trend plot appendix
+plotdata <- data.frame(
+  time = rep(1:1000, 4),
+  p = c(fbasehaz_Y3.1(1:1000), fbasehaz_Y3.2(1:1000)),
+  half = factor(rep(c(0, 1), each=1000))
+)
+
+ggplot(plotdata, aes(x=time, y=p, color=half)) +
+  geom_line(linewidth=0.85) +
+  theme_minimal() +
+  theme(legend.position="bottom") +
+  labs(x="t", y="Baseline Hazard", color=NULL, linetype=NULL) +
+  scale_y_continuous(labels=label_number()) +
+  scale_color_manual(
+    values = c("0" = "#C46A50", "1" = "#35658A"),
+    breaks = c("0", "1"),
+    labels = c("First Half", "Second Half")
+  )
+ggsave("./simulation/plots/time_trends_scenario3.pdf", width=6, height=4)
 
 plotdata <- data.table(id=factor(c(2,1,1,2), levels=c(2, 1),
                                  labels=c("Individual b", "Individual a")),

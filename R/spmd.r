@@ -10,7 +10,7 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                               rand_max_iter=100, allow_overlap=FALSE,
                               conf_type="auto", conf_level=0.95, n_boot=1000,
                               n_cores=1, progressbar=TRUE, convergence=TRUE,
-                              ...) {
+                              max_dist=Inf, ...) {
 
   . <- .id <- .max_t <- .time <- .censored <- .had_overlap <- V1 <- NULL
 
@@ -24,7 +24,8 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                     estimator=estimator, conf_type=conf_type, n_boot=n_boot,
                     conf_level=conf_level, bounds=bounds,
                     rand_max_iter=rand_max_iter, batch_size=batch_size,
-                    convergence=convergence, allow_overlap=allow_overlap)
+                    convergence=convergence, allow_overlap=allow_overlap,
+                    max_dist=max_dist)
 
   # create matched dataset
   l_data <- get_full_data(data=data,
@@ -40,7 +41,8 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                           bounds=bounds,
                           rand_max_iter=rand_max_iter,
                           batch_size=batch_size,
-                          allow_overlap=allow_overlap)
+                          allow_overlap=allow_overlap,
+                          max_dist=max_dist)
 
   # set type of confidence interval automatically if conf_type = "auto"
   if (conf_type=="auto") {
@@ -114,6 +116,7 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
       rand_max_iter=rand_max_iter,
       batch_size=batch_size,
       allow_overlap=allow_overlap,
+      max_dist=max_dist,
       ...
     )
 

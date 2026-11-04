@@ -319,3 +319,31 @@ test_that("allow_pairs works with all pair types", {
 
   expect_true(nrow(out5$d_counts) == nrow(out6$d_counts))
 })
+
+test_that("using max_dist", {
+
+  # regular version
+  set.seed(12344)
+  out1 <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
+                            id=".id", pairs="all", estimator="moments",
+                            risk_period=40, max_dist=Inf)
+
+  # with max_dist
+  set.seed(12344)
+  out2 <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
+                            id=".id", pairs="all", estimator="moments",
+                            risk_period=40, max_dist=100)
+
+  # maximum observed distance in regular version
+  out1$d_matches[, min_time := min(.time), by=.id_pair]
+  out1$d_matches[, max_time := max(.time), by=.id_pair]
+  max_obs1 <- max(out1$d_matches$max_time - out1$d_matches$min_time)
+
+  # maximum observed distance with restrained to 100
+  out2$d_matches[, min_time := min(.time), by=.id_pair]
+  out2$d_matches[, max_time := max(.time), by=.id_pair]
+  max_obs2 <- max(out2$d_matches$max_time - out2$d_matches$min_time)
+
+  expect_equal(round(max_obs1, 3), 994)
+  expect_equal(round(max_obs2, 3), 100)
+})

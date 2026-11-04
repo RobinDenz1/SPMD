@@ -38,7 +38,9 @@ get_times_used <- function(d_matches, data, risk_period) {
 ## a single iteration of a full bootstrap procedure
 one_boot_iter <- function(ids, d_exp, d_events, pairs, n_pairs, risk_period,
                           bounds, estimator, batch_size, rand_max_iter,
-                          allow_overlap, ...) {
+                          allow_overlap, max_dist, ...) {
+
+  .dist <- .time <- .time2 <- NULL
 
   # get bootstrap sample
   ids_i <- sample(x=ids, size=length(ids), replace=TRUE)
@@ -53,6 +55,15 @@ one_boot_iter <- function(ids, d_exp, d_events, pairs, n_pairs, risk_period,
   if (nrow(d_matches_i)==0) {
     return(NA)
   }
+
+  # apply max_dist
+  d_matches_i[, .dist := abs(.time - .time2)]
+  d_matches_i <- subset(d_matches_i, .dist <= max_dist)
+
+  if (nrow(d_matches_i)==0) {
+    return(NA)
+  }
+  d_matches_i[, .dist := NULL]
 
   d_matches_i <- expand_pair_matches(d_matches_i, risk_period=risk_period)
 
@@ -89,7 +100,8 @@ one_boot_iter <- function(ids, d_exp, d_events, pairs, n_pairs, risk_period,
 perform_bootstrapping <- function(d_exp, d_events, estimator, pairs, n_pairs,
                                   risk_period, bounds, n_boot,
                                   n_cores, progressbar, batch_size,
-                                  rand_max_iter, allow_overlap, ...) {
+                                  rand_max_iter, allow_overlap, max_dist,
+                                  ...) {
   # includable ids
   ids <- unique(d_exp$.id)
 
@@ -104,6 +116,7 @@ perform_bootstrapping <- function(d_exp, d_events, estimator, pairs, n_pairs,
                               rand_max_iter=rand_max_iter,
                               estimator=estimator,
                               allow_overlap=allow_overlap,
+                              max_dist=max_dist,
                               ...)
     }
   # using multiple processing cores
@@ -144,7 +157,7 @@ perform_bootstrapping <- function(d_exp, d_events, estimator, pairs, n_pairs,
                     n_pairs=n_pairs, risk_period=risk_period,
                     bounds=bounds, estimator=estimator, batch_size=batch_size,
                     rand_max_iter=rand_max_iter, allow_overlap=allow_overlap,
-                    ...)
+                    max_dist=max_dist, ...)
     }
     on.exit(close(pb))
     on.exit(parallel::stopCluster(cl))
@@ -273,7 +286,7 @@ is_date <- function(x) {
 check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
                               estimator, conf_type, n_boot, conf_level,
                               bounds, batch_size, rand_max_iter, convergence,
-                              allow_overlap) {
+                              allow_overlap, max_dist) {
 
   stopifnotm(is.data.frame(data), "'data' must be a data.frame like ",
              "object (tibbles, data.table, etc.).")
@@ -324,6 +337,8 @@ check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
              conf_type %in% c("none", "auto", "boot", "boot.fast", "jackknife"),
              "'conf_type' must be either 'none', 'auto', 'boot', 'boot.fast'",
              "or 'jackknife'.")
+  stopifnotm((length(max_dist)==1 && is.numeric(max_dist) && max_dist > 0),
+             "'max_dist' must be a single number > 0.")
 
   # check if conf_type is okay
   if (conf_type %in% c("boot.fast", "jackknife") &&
