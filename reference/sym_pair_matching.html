@@ -48,7 +48,7 @@
 <span>                  rand_max_iter<span class="op">=</span><span class="fl">100</span>, allow_overlap<span class="op">=</span><span class="cn">FALSE</span>,</span>
 <span>                  conf_type<span class="op">=</span><span class="st">"auto"</span>, conf_level<span class="op">=</span><span class="fl">0.95</span>, n_boot<span class="op">=</span><span class="fl">1000</span>,</span>
 <span>                  n_cores<span class="op">=</span><span class="fl">1</span>, progressbar<span class="op">=</span><span class="cn">TRUE</span>, convergence<span class="op">=</span><span class="cn">TRUE</span>,</span>
-<span>                  <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span>                  max_dist<span class="op">=</span><span class="cn">Inf</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -104,6 +104,9 @@
 
   <dt id="arg-convergence">convergence<a class="anchor" aria-label="anchor" href="#arg-convergence"></a></dt>
 <dd><p>Either <code>TRUE</code> or <code>FALSE</code>, specifying whether to calculate convergence related statistics. Those are calculated by default, but may be turned off to save some computation time.</p></dd>
+
+  <dt id="arg-max-dist">max_dist<a class="anchor" aria-label="anchor" href="#arg-max-dist"></a></dt>
+<dd><p>A single positive number, specifying the maximum distance of exposure times allowed in a pair. If the distance is larger, the pair is deemed invalid. Defaults to <code>Inf</code> to make no restrictions on the exposure time distance. May be useful for long observation times.</p></dd>
 
   <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Further arguments passed to <code><a href="https://rdrr.io/pkg/lme4/man/glmer.html" class="external-link">glmer</a></code> when using <code>estimator="glmm"</code>, ignored otherwise.</p></dd>

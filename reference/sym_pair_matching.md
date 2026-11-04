@@ -15,7 +15,7 @@ sym_pair_matching(formula, data, id, risk_period, bounds="[)",
                   rand_max_iter=100, allow_overlap=FALSE,
                   conf_type="auto", conf_level=0.95, n_boot=1000,
                   n_cores=1, progressbar=TRUE, convergence=TRUE,
-                  ...)
+                  max_dist=Inf, ...)
 ```
 
 ## Arguments
@@ -171,6 +171,13 @@ sym_pair_matching(formula, data, id, risk_period, bounds="[)",
   Either `TRUE` or `FALSE`, specifying whether to calculate convergence
   related statistics. Those are calculated by default, but may be turned
   off to save some computation time.
+
+- max_dist:
+
+  A single positive number, specifying the maximum distance of exposure
+  times allowed in a pair. If the distance is larger, the pair is deemed
+  invalid. Defaults to `Inf` to make no restrictions on the exposure
+  time distance. May be useful for long observation times.
 
 - ...:
 
