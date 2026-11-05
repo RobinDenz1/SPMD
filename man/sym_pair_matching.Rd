@@ -11,10 +11,11 @@ This function can be used to perform symmetric pair matching, which is a self-co
 sym_pair_matching(formula, data, id, risk_period, bounds="[)",
                   estimator="moments", pairs="auto",
                   n_pairs=100000, batch_size=max(5000, n_pairs * 2),
-                  rand_max_iter=100, allow_overlap=FALSE,
+                  rand_max_iter=100, allow_partial=TRUE,
+                  allow_overlap=FALSE, max_dist=Inf,
                   conf_type="auto", conf_level=0.95, n_boot=1000,
                   n_cores=1, progressbar=TRUE, convergence=TRUE,
-                  max_dist=Inf, ...)
+                  ...)
 }
 \arguments{
   \item{formula}{
@@ -47,8 +48,14 @@ A single positive integer, specifying the number of candidate pair matches that 
   \item{rand_max_iter}{
 A single positive integer, specifying the maximum number of allowed iterations for generating random matches when \code{pairs="random1"}. Since the algorithm is iterative and does not generate all possible matches, it is possible that \code{n_pairs} is larger than the maximum possible number, or that through chance the algorithm gets stuck. This ensures that it eventually terminates (see details). Ignored if \code{pairs!="random1"}.
   }
+  \item{allow_partial}{
+Either \code{TRUE} (default) or \code{FALSE}, specifying whether the use of pairs with partially non-observed observation time due to left-truncation (delayed entry to follow-up) or right-censoring should still be used for pairs if possible.
+  }
   \item{allow_overlap}{
 Either \code{TRUE} or \code{FALSE} (default), specifying whether the use of pairs with partially overlapping exposure periods should be allowed. If allowed, only the non-overlapping parts of such pairs are used in any calculations, ensuring that no contaminated time is used. Due to usage of more pairs, this might lead to an increase in efficiency. It does, however, increase computational time and is unlikely to have a large impact if \code{risk_period} is small with respect to the total observation time.
+  }
+  \item{max_dist}{
+A single positive number, specifying the maximum distance of exposure times allowed in a pair. If the distance is larger, the pair is deemed invalid. Defaults to \code{Inf} to make no restrictions on the exposure time distance. May be useful for long observation times.
   }
   \item{conf_type}{
 A single character string, specifying how the standard error, confidence interval and p-value should be estimated. Must be either: \code{"auto"} (default), in which case the method is choosen automatically based on user input, \code{"none"} to not estimate any confidence intervals, \code{"boot"} to use an individual-level bootstrap procedure, \code{"boot.fast"} to use an approximate but much faster version of the individual-level bootstrap or \code{"jackknife"} to use the infinitesimal jackknife, which is a first-order taylor approximation of the individual-level bootstrap variance. Note that both \code{"boot.fast"} and \code{"jackknife"} only work with \code{estimator = "moments"} and \code{pairs = "all"}. See details.
@@ -67,9 +74,6 @@ Either \code{TRUE} or \code{FALSE}, specifying whether a progressbar should be s
   }
   \item{convergence}{
 Either \code{TRUE} or \code{FALSE}, specifying whether to calculate convergence related statistics. Those are calculated by default, but may be turned off to save some computation time.
-  }
-  \item{max_dist}{
-A single positive number, specifying the maximum distance of exposure times allowed in a pair. If the distance is larger, the pair is deemed invalid. Defaults to \code{Inf} to make no restrictions on the exposure time distance. May be useful for long observation times.
   }
   \item{...}{
 Further arguments passed to \code{\link[lme4]{glmer}} when using \code{estimator="glmm"}, ignored otherwise.
@@ -104,7 +108,7 @@ This function expects \code{data} to be supplied in the start-stop or counting p
 
 Ideally, the exposure specified on the RHS of the \code{formula} argument is coded as a logical variable, where \code{TRUE} corresponds to the "exposed" time and \code{FALSE} corresponds to the "unexposed" time. If this is not the case, this function will coerce it to this type internally using the following rules:
 
-1.) if the variable only consists of the numbers \code{0} and \code{1} (coded as numeric), \code{0} will be considered the "unexposed" time and \code{1} the "exposed" time; 2.) otherwise, if the variable is a factor, \code{levels(treat)[1]} will be considered the "exposed" time and the other value the "unexposed" time; 3.) otherwise \code{sort(unique(treat))[1]} will be considered "unexposed" and the other value the exposed. It is safest to ensure that the exposure variable is a logical variable.
+1.) if the variable only consists of the numbers \code{0} and \code{1} (coded as numeric), \code{0} will be considered the "unexposed" time and \code{1} the "exposed" time; 2.) otherwise, if the variable is a factor, \code{levels(treat)[1]} will be considered the "unexposed" time and the other value the "exposed" time; 3.) otherwise \code{sort(unique(treat))[1]} will be considered "unexposed" and the other value the exposed. It is safest to ensure that the exposure variable is a logical variable.
 
 \strong{\emph{Forming the Pairs}}:
 

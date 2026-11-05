@@ -7,12 +7,14 @@
 sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                               estimator="moments", pairs="auto",
                               n_pairs=100000, batch_size=max(5000, n_pairs * 2),
-                              rand_max_iter=100, allow_overlap=FALSE,
+                              rand_max_iter=100, allow_partial=TRUE,
+                              allow_overlap=FALSE, max_dist=Inf,
                               conf_type="auto", conf_level=0.95, n_boot=1000,
                               n_cores=1, progressbar=TRUE, convergence=TRUE,
-                              max_dist=Inf, ...) {
+                              ...) {
 
-  . <- .id <- .max_t <- .time <- .censored <- .had_overlap <- V1 <- NULL
+  . <- .id <- .max_t <- .time <- .censored <- .had_overlap <- V1 <-
+    .id_pair <- NULL
 
   requireNamespace("data.table", quietly=TRUE)
 
@@ -25,7 +27,7 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                     conf_level=conf_level, bounds=bounds,
                     rand_max_iter=rand_max_iter, batch_size=batch_size,
                     convergence=convergence, allow_overlap=allow_overlap,
-                    max_dist=max_dist)
+                    allow_partial=allow_partial, max_dist=max_dist)
 
   # create matched dataset
   l_data <- get_full_data(data=data,
@@ -42,6 +44,7 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                           rand_max_iter=rand_max_iter,
                           batch_size=batch_size,
                           allow_overlap=allow_overlap,
+                          allow_partial=allow_partial,
                           max_dist=max_dist)
 
   # set type of confidence interval automatically if conf_type = "auto"
@@ -70,7 +73,9 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                           rand_max_iter=rand_max_iter,
                           batch_size=batch_size,
                           convergence=convergence,
-                          allow_overlap=allow_overlap))
+                          allow_overlap=allow_overlap,
+                          allow_partial=allow_partial,
+                          max_dist=max_dist))
   # analyse data
   if (estimator=="moments") {
 
@@ -116,6 +121,7 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
       rand_max_iter=rand_max_iter,
       batch_size=batch_size,
       allow_overlap=allow_overlap,
+      allow_partial=allow_partial,
       max_dist=max_dist,
       ...
     )
@@ -164,7 +170,7 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
   n_events <- nrow(l_data$d_events)
   n_had_overlap <- sum(out$d_matches$.had_overlap) / 4
 
-  out$d_matches[, .censored := any((.time + risk_period) > .max_t), by=.id]
+  out$d_matches[, .censored := any((.time + risk_period) > .max_t), by=.id_pair]
   n_censored <- sum(out$d_matches$.censored)
 
   # amount of observation time used from included individuals

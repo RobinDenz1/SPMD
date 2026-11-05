@@ -267,7 +267,7 @@ test_that("not using convergence statistics", {
   expect_snapshot_output(summary(out))
 })
 
-test_that("allow_pairs works with all pair types", {
+test_that("allow_overlap works with all pair types", {
 
   set.seed(123443)
   data <- sim_example_data(n=100)
@@ -315,6 +315,59 @@ test_that("allow_pairs works with all pair types", {
     sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                       id=".id", pairs="random2", estimator="moments",
                       risk_period=40, allow_overlap=TRUE, n_pairs=1000)
+  )
+
+  expect_true(nrow(out5$d_counts) == nrow(out6$d_counts))
+})
+
+test_that("allow_partial works with all pair types", {
+
+  set.seed(12344)
+  data <- sim_example_data(n=100)
+
+  # no partial - all
+  out1 <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
+                            id=".id", pairs="all", estimator="moments",
+                            risk_period=70, allow_partial=FALSE)
+
+  # with partial - all
+  out2 <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
+                            id=".id", pairs="all", estimator="moments",
+                            risk_period=70, allow_partial=TRUE)
+
+  expect_true(nrow(out1$d_counts) < nrow(out2$d_counts))
+
+  # without partial - one
+  out3 <- suppressWarnings(
+    sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
+                      id=".id", pairs="one", estimator="moments",
+                      risk_period=40, allow_partial=FALSE)
+  )
+
+  # with partial - one
+  out4 <- suppressWarnings(
+    sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
+                      id=".id", pairs="one", estimator="moments",
+                      risk_period=40, allow_partial=TRUE)
+  )
+
+  # should be the same
+  out3$inputs$allow_partial <- TRUE
+  setkey(out4$d_matches, .id_pair, .group)
+  expect_equal(out3, out4)
+
+  # without partial - random1
+  out5 <- suppressWarnings(
+    sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
+                      id=".id", pairs="random1", estimator="moments",
+                      risk_period=40, allow_partial=FALSE, n_pairs=1000)
+  )
+
+  # without partial - random2
+  out6 <- suppressWarnings(
+    sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
+                      id=".id", pairs="random2", estimator="moments",
+                      risk_period=40, allow_partial=FALSE, n_pairs=1000)
   )
 
   expect_true(nrow(out5$d_counts) == nrow(out6$d_counts))

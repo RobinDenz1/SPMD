@@ -105,7 +105,7 @@ summary.SPMD <- function(object, ...) {
       exposed_with_event = sizes$n_exposed_and_event,
       symmetric_pairs = n_pairs,
       observation_time_used = time_used,
-      pairs_with_overlap = sizes$n_overlap,
+      pairs_with_overlap = sizes$n_had_overlap,
       pairs_with_censoring = sizes$n_censored
     ),
 
@@ -182,7 +182,7 @@ print.summary.SPMD <- function(x, ...) {
   } else {
     ci_label <- paste0(x$estimate$conf_level * 100, "% CI")
 
-    cat(sprintf("  %-10s %-10s %-10s %-15s %s\n", "log(IRR)", "IRR", "SE",
+    cat(sprintf("  %-10s %-10s %-10s %-15s %s\n", "log(IRR)", "IRR", "SE(IRR)",
                 ci_label, "P-value"))
     ci_string <- sprintf("%.3f \u2013 %.3f", x$estimate$ci[1],
                          x$estimate$ci[2])

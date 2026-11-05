@@ -97,8 +97,10 @@ get_boot_moments <- function(d_counts, data, n_boot, n_cores, progressbar) {
                                                        "SPMD")
       one_boot_iter_moments(d_W=d_W, d_counts=d_counts, n=n)
     }
-    on.exit(close(pb))
-    on.exit(parallel::stopCluster(cl))
+    if (progressbar) {
+      on.exit(close(pb))
+    }
+    on.exit(parallel::stopCluster(cl), add=TRUE)
 
     boot_out <- unlist(boot_out)
   }

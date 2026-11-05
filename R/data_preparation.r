@@ -2,10 +2,11 @@
 ## performs all data preparation tasks, including matching, to get
 ## the final dataset needed for further analysis
 #' @importFrom data.table fcase
+#' @importFrom data.table uniqueN
 get_full_data <- function(data, start, stop, id, exposure, outcome,
                           pairs, n_pairs, risk_period, remove_noevents,
                           bounds, rand_max_iter, batch_size,
-                          allow_overlap, max_dist) {
+                          allow_overlap, allow_partial, max_dist) {
 
   .time <- .max_t <- overlap <- .id <- .exposed <- .A <- .has_event <-
     .Y <- .dist <- .time2 <- NULL
@@ -29,10 +30,11 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
   }
 
   if (pairs=="auto") {
+    n_ids <- uniqueN(data$.id)
     pairs <- fcase(
-      nrow(data) < 4473, "all",
-      nrow(data) >= 4473 & nrow(data) < 10000, "random2",
-      nrow(data) >= 10000, "random1"
+      n_ids < 4473, "all",
+      n_ids >= 4473 & n_ids < 10000, "random2",
+      n_ids >= 10000, "random1"
     )
   }
 
@@ -61,18 +63,9 @@ get_full_data <- function(data, start, stop, id, exposure, outcome,
   d_matches <- match_pairs(data=d_exp, pairs=pairs, risk_period=risk_period,
                            n_pairs=n_pairs, max_iter=rand_max_iter,
                            batch_size=batch_size, bounds=bounds,
-                           allow_overlap=allow_overlap)
+                           allow_overlap=allow_overlap, max_dist=max_dist,
+                           allow_partial=allow_partial)
   stopifnotm(nrow(d_matches)!=0, "Could not create any valid matches.")
-
-  # keep only pairs with a distance smaller than max_dist
-  if (is.finite(max_dist)) {
-    d_matches[, .dist := abs(.time - .time2)]
-    d_matches <- subset(d_matches, .dist <= max_dist)
-
-    stopifnotm(nrow(d_matches)!=0, "After removing pairs whose exposusre times",
-               " are ", max_dist, " time units apart, no pairs remained.")
-    d_matches[, .dist := NULL]
-  }
 
   d_matches <- expand_pair_matches(d_matches, risk_period=risk_period)
 

@@ -38,7 +38,7 @@ get_times_used <- function(d_matches, data, risk_period) {
 ## a single iteration of a full bootstrap procedure
 one_boot_iter <- function(ids, d_exp, d_events, pairs, n_pairs, risk_period,
                           bounds, estimator, batch_size, rand_max_iter,
-                          allow_overlap, max_dist, ...) {
+                          allow_overlap, allow_partial, max_dist, ...) {
 
   .dist <- .time <- .time2 <- NULL
 
@@ -50,20 +50,12 @@ one_boot_iter <- function(ids, d_exp, d_events, pairs, n_pairs, risk_period,
   d_matches_i <- match_pairs(data=d_exp_i, pairs=pairs, risk_period=risk_period,
                              n_pairs=n_pairs, max_iter=rand_max_iter,
                              batch_size=batch_size, bounds=bounds,
-                             allow_overlap=allow_overlap)
+                             allow_overlap=allow_overlap,
+                             allow_partial=allow_partial, max_dist=max_dist)
 
   if (nrow(d_matches_i)==0) {
     return(NA)
   }
-
-  # apply max_dist
-  d_matches_i[, .dist := abs(.time - .time2)]
-  d_matches_i <- subset(d_matches_i, .dist <= max_dist)
-
-  if (nrow(d_matches_i)==0) {
-    return(NA)
-  }
-  d_matches_i[, .dist := NULL]
 
   d_matches_i <- expand_pair_matches(d_matches_i, risk_period=risk_period)
 
@@ -100,8 +92,8 @@ one_boot_iter <- function(ids, d_exp, d_events, pairs, n_pairs, risk_period,
 perform_bootstrapping <- function(d_exp, d_events, estimator, pairs, n_pairs,
                                   risk_period, bounds, n_boot,
                                   n_cores, progressbar, batch_size,
-                                  rand_max_iter, allow_overlap, max_dist,
-                                  ...) {
+                                  rand_max_iter, allow_overlap, allow_partial,
+                                  max_dist, ...) {
   # includable ids
   ids <- unique(d_exp$.id)
 
@@ -116,6 +108,7 @@ perform_bootstrapping <- function(d_exp, d_events, estimator, pairs, n_pairs,
                               rand_max_iter=rand_max_iter,
                               estimator=estimator,
                               allow_overlap=allow_overlap,
+                              allow_partial=allow_partial,
                               max_dist=max_dist,
                               ...)
     }
@@ -157,10 +150,12 @@ perform_bootstrapping <- function(d_exp, d_events, estimator, pairs, n_pairs,
                     n_pairs=n_pairs, risk_period=risk_period,
                     bounds=bounds, estimator=estimator, batch_size=batch_size,
                     rand_max_iter=rand_max_iter, allow_overlap=allow_overlap,
-                    max_dist=max_dist, ...)
+                    allow_partial=allow_partial, max_dist=max_dist, ...)
     }
-    on.exit(close(pb))
-    on.exit(parallel::stopCluster(cl))
+    if (progressbar) {
+      on.exit(close(pb))
+    }
+    on.exit(parallel::stopCluster(cl), add=TRUE)
 
     out <- unlist(out)
   }
@@ -286,16 +281,15 @@ is_date <- function(x) {
 check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
                               estimator, conf_type, n_boot, conf_level,
                               bounds, batch_size, rand_max_iter, convergence,
-                              allow_overlap, max_dist) {
+                              allow_overlap, max_dist, allow_partial) {
 
   stopifnotm(is.data.frame(data), "'data' must be a data.frame like ",
              "object (tibbles, data.table, etc.).")
   stopifnotm(nrow(data) > 1, "'data' must contain at least 2 rows ",
              "(for valid results, much more).")
-  stopifnotm((length(id)==1 && is.character(id) && id %in% colnames(data) &&
-              is.numeric(data[[id]])),
+  stopifnotm((length(id)==1 && is.character(id) && id %in% colnames(data)),
              "'id' must be a single character string, identifying a valid",
-             " numeric column in 'data'.")
+             " column of unique identifiers in 'data'.")
   stopifnotm((length(risk_period)==1 && is.numeric(risk_period) &&
                 risk_period > 0),
              "'risk_period' must be a single positive number.")
@@ -330,6 +324,8 @@ check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
              "'convergence' must be either TRUE or FALSE.")
   stopifnotm((length(allow_overlap)==1 && is.logical(allow_overlap)),
              "'allow_overlap' must be either TRUE or FALSE.")
+  stopifnotm((length(allow_partial)==1 && is.logical(allow_partial)),
+             "'allow_partial' must be either TRUE or FALSE.")
   stopifnotm(!(is_date(data[[formula[[1]]]]) || is_date(data[[formula[[2]]]])),
              "The intervals coded by 'start' and 'stop' must be numeric.",
              "Date like values are not supported.")

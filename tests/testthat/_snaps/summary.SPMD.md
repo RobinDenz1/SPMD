@@ -114,7 +114,7 @@
         Observation time used            12.33%
       
       Effect estimate
-        log(IRR)   IRR        SE         95% CI          P-value
+        log(IRR)   IRR        SE(IRR)    95% CI          P-value
         1.242      3.464      0.608      1.414 – 2.769   0.1
       
       Bootstrap: 10 replicates (5 NA or Inf)
@@ -149,7 +149,7 @@
         Observation time used            97.91%
       
       Effect estimate
-        log(IRR)   IRR        SE         95% CI          P-value
+        log(IRR)   IRR        SE(IRR)    95% CI          P-value
         1.194      3.300      0.483      2.477 – 4.397   <0.001
       
       Estimation
@@ -242,7 +242,7 @@
         Observation time used            97.91%
       
       Effect estimate
-        log(IRR)   IRR        SE         99% CI          P-value
+        log(IRR)   IRR        SE(IRR)    99% CI          P-value
         1.194      3.300      0.396      2.456 – 3.350   0.25
       
       Bootstrap: 4 replicates

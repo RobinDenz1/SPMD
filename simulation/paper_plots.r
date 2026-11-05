@@ -50,7 +50,7 @@ ggplot(plotdata, aes(x=time, y=p, color=half)) +
 ggsave("./simulation/plots/time_trends_scenario3.pdf", width=6, height=4)
 
 plotdata <- data.table(id=factor(c(2,1,1,2), levels=c(2, 1),
-                                 labels=c("Individual b", "Individual a")),
+                                 labels=c("Individual a", "Individual b")),
                        A=factor(c("Unexposed","Exposed","Unexposed","Exposed")),
                        time=c(50,50,120,120),
                        time_end=c(50,50,120,120) + 40)
@@ -90,18 +90,18 @@ ggsave("./simulation/plots/pair_example.pdf", width=6, height=4)
 
 ## partially valid pair
 plotdata <- data.table(id=factor(c(2,1,1,2), levels=c(2, 1),
-                                 labels=c("Individual b", "Individual a")),
+                                 labels=c("Individual a", "Individual b")),
                        A=factor(c("Unexposed","Exposed","Unexposed","Exposed")),
                        time=c(100,100,140,140),
                        time_end=c(120,120,160,160))
 
 plotdata2 <- data.table(id=factor(c(2,1), levels=c(2, 1),
-                                  labels=c("Individual b", "Individual a")),
+                                  labels=c("Individual a", "Individual b")),
                         time=c(120,120),
                         time_end=c(140,140))
 
 plotdata3 <- data.table(id=factor(c(2,1,1,2), levels=c(2, 1),
-                                  labels=c("Individual b", "Individual a")),
+                                  labels=c("Individual a", "Individual b")),
                         A=factor(c("Unexposed","Exposed","Unexposed","Exposed")),
                         time=c(100,100,140,120),
                         time_end=c(120,120,160,160))
@@ -198,7 +198,7 @@ ggsave("./simulation/plots/pair_overlap.pdf", width=7, height=4.5)
 
 
 plotdata <- data.table(id=factor(c(2,1,1,2), levels=c(2, 1),
-                                 labels=c("Individual b", "Individual a")),
+                                 labels=c("Individual a", "Individual b")),
                        A=factor(c("Unexposed","Exposed","Unexposed","Exposed")),
                        time=c(50,50,120,120),
                        time_end=c(90,90,140,140))
@@ -240,7 +240,7 @@ ggsave("./simulation/plots/pair_censor_valid.pdf", width=7, height=4.5)
 
 ## invalid pair with censoring
 plotdata <- data.table(id=factor(c(2,1,2), levels=c(2, 1),
-                                 labels=c("Individual b", "Individual a")),
+                                 labels=c("Individual a", "Individual b")),
                        A=factor(c("Unexposed","Exposed","Exposed")),
                        time=c(50,50,120),
                        time_end=c(80,80,120))
@@ -277,7 +277,7 @@ ggsave("./simulation/plots/pair_censor_invalid.pdf", width=7, height=4.5)
 
 
 plotdata <- data.table(id=factor(c(2,1,1,2,1,2), levels=c(2, 1),
-                                 labels=c("Individual b", "Individual a")),
+                                 labels=c("Individual a", "Individual b")),
                        A=factor(c("Unexposed","Exposed","Unexposed","Exposed",
                                   "Exposed", "Unexposed")),
                        time=c(70,70,130,130,10,10),

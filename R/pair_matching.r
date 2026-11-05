@@ -1,23 +1,38 @@
 
 ## create valid pairs from given data
 match_pairs <- function(data, pairs, risk_period, bounds, n_pairs=NULL,
-                        batch_size=NULL, max_iter=NULL, allow_overlap=FALSE) {
+                        batch_size=NULL, max_iter=NULL, allow_overlap=FALSE,
+                        allow_partial=TRUE, max_dist=Inf) {
+
+  if (allow_overlap & !allow_partial) {
+    warning("If allow_overlap=TRUE, the 'allow_partial' argument must also",
+            " be TRUE. Proceeding as if allow_partial=TRUE.", call.=FALSE)
+    allow_partial <- TRUE
+  }
 
   if (pairs=="one") {
     d_pairs <- generate_one_pairing(data=data, risk_period=risk_period,
-                                    bounds=bounds, allow_overlap=allow_overlap)
+                                    bounds=bounds, allow_overlap=allow_overlap,
+                                    allow_partial=allow_partial,
+                                    max_dist=max_dist)
   } else if (pairs=="all") {
     d_pairs <- generate_all_pairs(data=data, risk_period=risk_period,
-                                  bounds=bounds, allow_overlap=allow_overlap)
+                                  bounds=bounds, allow_overlap=allow_overlap,
+                                  allow_partial=allow_partial,
+                                  max_dist=max_dist)
   } else if (pairs=="random1") {
     d_pairs <- generate_random_pairs_mem(data=data, risk_period=risk_period,
                                          n_pairs=n_pairs, batch_size=batch_size,
                                          max_iter=max_iter, bounds=bounds,
-                                         allow_overlap=allow_overlap)
+                                         allow_overlap=allow_overlap,
+                                         allow_partial=allow_partial,
+                                         max_dist=max_dist)
   } else if (pairs=="random2") {
     d_pairs <- generate_random_pairs(data=data, risk_period=risk_period,
                                      n_pairs=n_pairs, bounds=bounds,
-                                     allow_overlap=allow_overlap)
+                                     allow_overlap=allow_overlap,
+                                     allow_partial=allow_partial,
+                                     max_dist=max_dist)
   }
 
   return(d_pairs)
@@ -32,39 +47,55 @@ match_pairs <- function(data, pairs, risk_period, bounds, n_pairs=NULL,
 is_valid_pair <- function(.id, .id2, .time, .time2, .min_t, .min_t2,
                           .max_t, .max_t2, risk_period, bounds,
                           check_censoring=TRUE, check_truncation=TRUE,
-                          allow_overlap=FALSE) {
+                          allow_overlap=FALSE, allow_partial=TRUE,
+                          max_dist=Inf) {
 
   # check overlap of risk periods
   if (allow_overlap) {
-    out <- .id==.id2 | .time==.time2
+    out <- .id==.id2 | .time==.time2 | (abs(.time - .time2) > max_dist)
   } else if (bounds=="[]") {
-    out <- .id==.id2 | (abs(.time - .time2) <= risk_period)
+    out <- .id==.id2 | (abs(.time - .time2) <= risk_period) |
+      (abs(.time - .time2) > max_dist)
   } else {
-    out <- .id==.id2 | (abs(.time - .time2) < risk_period)
+    out <- .id==.id2 | (abs(.time - .time2) < risk_period) |
+      (abs(.time - .time2) > max_dist)
   }
 
-  # check if follow-up time for each individual is sufficient
-  # NOTE: We do not treat this differently depending on the bounds, because
-  #       we assume that right-censoring means that we know a person is
-  #       event free up to the end of max_t (so effectively we have observed
-  #       max_t). It is then sufficient to require that max_t should be
-  #       equal to time + risk_period regardless of bounds.
-  if (check_censoring) {
-    complete_followup <- fifelse(.time <= .time2,
-                                 .max_t > .time2 & .max_t2 > .time2,
-                                 .max_t > .time & .max_t2 > .time)
-  } else {
-    complete_followup <- TRUE
-  }
-
-  # if observation period starts at different times, this checks if
-  # the pair can still be formed
-  if (check_truncation) {
+  # if partial pairs are not allowed, only a complete observation period
+  # is accepted, otherwise we check for partial pairs as well
+  if (!allow_partial) {
     complete_start <- fifelse(.time <= .time2,
                               .min_t <= .time & .min_t2 <= .time,
                               .min_t <= .time2 & .min_t2 <= .time2)
+    complete_followup <- fifelse(
+      .time <= .time2,
+      .max_t >= (.time2 + risk_period) & .max_t2 >= (.time2 + risk_period),
+      .max_t >= (.time + risk_period) & .max_t2 >= (.time + risk_period)
+    )
   } else {
-    complete_start <- TRUE
+    # check if follow-up time for each individual is sufficient
+    # NOTE: We do not treat this differently depending on the bounds, because
+    #       we assume that right-censoring means that we know a person is
+    #       event free up to the end of max_t (so effectively we have observed
+    #       max_t). It is then sufficient to require that max_t should be
+    #       equal to time + risk_period regardless of bounds.
+    if (check_censoring) {
+      complete_followup <- fifelse(.time <= .time2,
+                                   .max_t > .time2 & .max_t2 > .time2,
+                                   .max_t > .time & .max_t2 > .time)
+    } else {
+      complete_followup <- TRUE
+    }
+
+    # if observation period starts at different times, this checks if
+    # the pair can still be formed
+    if (check_truncation) {
+      complete_start <- fifelse(.time <= .time2,
+                                .min_t <= .time & .min_t2 <= .time,
+                                .min_t <= .time2 & .min_t2 <= .time2)
+    } else {
+      complete_start <- TRUE
+    }
   }
 
   return(!out & complete_followup & complete_start)
@@ -76,7 +107,8 @@ is_valid_pair <- function(.id, .id2, .time, .time2, .min_t, .min_t2,
 #' @importFrom data.table .I
 #' @importFrom data.table setnames
 generate_all_pairs <- function(data, risk_period, bounds,
-                               allow_overlap=FALSE) {
+                               allow_overlap=FALSE, allow_partial=TRUE,
+                               max_dist=Inf) {
 
   .idx <- . <- .id <- .id2 <- .time <- .time2 <- .id_pair <- NULL
 
@@ -101,7 +133,9 @@ generate_all_pairs <- function(data, risk_period, bounds,
   # keep only valid pairs
   d_pairs <- remove_invalid_matches(d_pairs=d_pairs, d_exp=data,
                                     risk_period=risk_period, bounds=bounds,
-                                    allow_overlap=allow_overlap)
+                                    allow_overlap=allow_overlap,
+                                    allow_partial=allow_partial,
+                                    max_dist=max_dist)
   d_pairs[, .id_pair := seq_len(.N)]
 
   return(d_pairs)
@@ -110,10 +144,13 @@ generate_all_pairs <- function(data, risk_period, bounds,
 ## generates a set of n random (valid) pairs
 #' @importFrom data.table .N
 generate_random_pairs <- function(data, risk_period, bounds, n_pairs,
-                                  allow_overlap=FALSE) {
+                                  allow_overlap=FALSE, allow_partial=TRUE,
+                                  max_dist=Inf) {
 
   d_pairs <- generate_all_pairs(data=data, risk_period=risk_period,
-                                bounds=bounds, allow_overlap=allow_overlap)
+                                bounds=bounds, allow_overlap=allow_overlap,
+                                allow_partial=allow_partial,
+                                max_dist=max_dist)
 
   if (n_pairs > nrow(d_pairs)) {
     warning("Cannot generate ", format(n_pairs, scientific=FALSE),
@@ -135,7 +172,8 @@ generate_random_pairs <- function(data, risk_period, bounds, n_pairs,
 #' @importFrom data.table .I
 generate_random_pairs_mem <- function(data, n_pairs, risk_period, bounds,
                                       batch_size=max(5000L, n_pairs * 2L),
-                                      max_iter=100L, allow_overlap=FALSE) {
+                                      max_iter=100L, allow_overlap=FALSE,
+                                      allow_partial=TRUE, max_dist=Inf) {
   . <- .id_pair <- NULL
 
   n <- nrow(data)
@@ -237,9 +275,13 @@ generate_random_pairs_mem <- function(data, n_pairs, risk_period, bounds,
     )]
 
     # remove invalid ones
-    cand <- remove_invalid_matches(d_pairs=cand, d_exp=data,
+    cand <- remove_invalid_matches(d_pairs=cand,
+                                   d_exp=data,
                                    risk_period=risk_period,
-                                   bounds=bounds, allow_overlap=allow_overlap)
+                                   bounds=bounds,
+                                   allow_overlap=allow_overlap,
+                                   allow_partial=allow_partial,
+                                   max_dist=max_dist)
     if (nrow(cand)==0) {
       next
     }
@@ -260,7 +302,8 @@ generate_random_pairs_mem <- function(data, n_pairs, risk_period, bounds,
 #' @importFrom data.table .N
 #' @importFrom data.table :=
 generate_one_pairing <- function(data, risk_period, bounds,
-                                 allow_overlap=FALSE) {
+                                 allow_overlap=FALSE, allow_partial=TRUE,
+                                 max_dist=Inf) {
 
   .time <- .id_pair <- .max_t <- NULL
 
@@ -285,7 +328,9 @@ generate_one_pairing <- function(data, risk_period, bounds,
   n_prev <- nrow(d_pairs)
   d_pairs <- remove_invalid_matches(d_pairs=d_pairs, d_exp=data,
                                     risk_period=risk_period, bounds=bounds,
-                                    allow_overlap=allow_overlap)
+                                    allow_overlap=allow_overlap,
+                                    allow_partial=allow_partial,
+                                    max_dist=max_dist)
 
   if (n_prev != nrow(d_pairs)) {
     stop("Matching failed. Use random matches (pairs='random1' / ",
@@ -303,7 +348,8 @@ generate_one_pairing <- function(data, risk_period, bounds,
 #' @importFrom data.table setnames
 #' @importFrom data.table dcast
 remove_invalid_matches <- function(d_pairs, d_exp, risk_period, bounds,
-                                   allow_overlap=FALSE) {
+                                   allow_overlap=FALSE, allow_partial=TRUE,
+                                   max_dist=Inf) {
 
   . <- .id <- .id2 <- .time <- .time2 <- .n_exp1 <- .n_exp2 <- .num <-
     is_valid <- .min_t <- .min_t2 <- .max_t <- .max_t2 <- NULL
@@ -315,7 +361,8 @@ remove_invalid_matches <- function(d_pairs, d_exp, risk_period, bounds,
       .id=.id, .id2=.id2, .time=.time, .time2=.time2,
       .min_t=.min_t, .min_t2=.min_t2,
       .max_t=.max_t, .max_t2=.max_t2, risk_period=risk_period,
-      bounds=bounds, allow_overlap=allow_overlap
+      bounds=bounds, allow_overlap=allow_overlap,
+      allow_partial=allow_partial, max_dist=max_dist
       )
     )
 
@@ -334,7 +381,9 @@ remove_invalid_matches <- function(d_pairs, d_exp, risk_period, bounds,
                                              .min_t=.min_t, .min_t2=.min_t2,
                                              risk_period=risk_period,
                                              bounds=bounds,
-                                             allow_overlap=allow_overlap))
+                                             allow_overlap=allow_overlap,
+                                             allow_partial=allow_partial,
+                                             max_dist=max_dist))
     # merge n exposures per id to it
     d_n_exp <- d_exp[, .(.n_exp1 = .N), by=.id]
 
@@ -376,7 +425,8 @@ remove_invalid_matches <- function(d_pairs, d_exp, risk_period, bounds,
                              .max_t=.max_t, .max_t2=.max_t2,
                              risk_period=risk_period,
                              bounds=bounds, check_censoring=FALSE,
-                             allow_overlap=FALSE, check_truncation=FALSE),
+                             allow_overlap=FALSE, check_truncation=FALSE,
+                             allow_partial=TRUE, max_dist=Inf),
               is_valid := FALSE]
     }
 
@@ -387,7 +437,8 @@ remove_invalid_matches <- function(d_pairs, d_exp, risk_period, bounds,
                              .min_t=.min_t, .min_t2=.min_t2,
                              risk_period=risk_period, bounds=bounds,
                              check_censoring=FALSE, allow_overlap=FALSE,
-                             check_truncation=FALSE),
+                             check_truncation=FALSE, max_dist=Inf,
+                             allow_partial=TRUE),
               is_valid := FALSE]
     }
 
