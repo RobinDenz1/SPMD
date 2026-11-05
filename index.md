@@ -12,13 +12,13 @@ in spirit to the famous self-controlled case series (SCCS) design in the
 sense that it is bi-directional, using both time before and after
 exposures as controls (irrespective of events). However, unlike the SCCS
 method, it not only automatically adjusts for time-invariant
-confounders, but also automatically adjusts for all time-effects,
+confounders, but also automatically adjusts for all common time-effects,
 without requiring any assumptions on the functional form of these time
 effects.
 
 It does so by creating pairs of individuals, in which each individual
 acts as a control for the other individual at their respective exposure
-time. It can be shown that under mild assumptions of multiplicative
+time. It can be shown that under the assumption of multiplicative
 effects and no interactions, both individual-level effects and time
 effects cancel out perfectly. For more details, please consult the
 associated paper (Denz et al. 2026).
@@ -97,7 +97,7 @@ summary(spmd)
 #>   Observation time used            96.57%
 #> 
 #> Effect estimate
-#>   log(IRR)   IRR        SE         95% CI          P-value
+#>   log(IRR)   IRR        SE(IRR)    95% CI          P-value
 #>   0.899      2.457      0.501      1.647 – 3.666   <0.001
 #> 
 #> Estimation

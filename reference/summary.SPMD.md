@@ -115,7 +115,7 @@ summary(out)
 #>   Observation time used            70.45%
 #> 
 #> Effect estimate
-#>   log(IRR)   IRR        SE         95% CI          P-value
+#>   log(IRR)   IRR        SE(IRR)    95% CI          P-value
 #>   0.405      1.500      0.930      0.445 – 5.055   0.513
 #> 
 #> Estimation

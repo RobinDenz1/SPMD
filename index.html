@@ -67,8 +67,8 @@
 <div class="section level2">
 <h2 id="description">Description<a class="anchor" aria-label="anchor" href="#description"></a>
 </h2>
-<p><code>SPMD</code> is a small R Package implementing the <em><strong>S</strong>ymmetric <strong>P</strong>air <strong>M</strong>atching <strong>D</strong>esign</em> (SPMD). Briefly, SPMD is a self-controlled method that allows estimation of the causal effect of a possible re-current binary exposure on a possible re-current event. It is similar in spirit to the famous self-controlled case series (SCCS) design in the sense that it is bi-directional, using both time before and after exposures as controls (irrespective of events). However, unlike the SCCS method, it not only automatically adjusts for time-invariant confounders, but also automatically adjusts for all time-effects, without requiring any assumptions on the functional form of these time effects.</p>
-<p>It does so by creating pairs of individuals, in which each individual acts as a control for the other individual at their respective exposure time. It can be shown that under mild assumptions of multiplicative effects and no interactions, both individual-level effects and time effects cancel out perfectly. For more details, please consult the associated paper (Denz et al. 2026).</p>
+<p><code>SPMD</code> is a small R Package implementing the <em><strong>S</strong>ymmetric <strong>P</strong>air <strong>M</strong>atching <strong>D</strong>esign</em> (SPMD). Briefly, SPMD is a self-controlled method that allows estimation of the causal effect of a possible re-current binary exposure on a possible re-current event. It is similar in spirit to the famous self-controlled case series (SCCS) design in the sense that it is bi-directional, using both time before and after exposures as controls (irrespective of events). However, unlike the SCCS method, it not only automatically adjusts for time-invariant confounders, but also automatically adjusts for all common time-effects, without requiring any assumptions on the functional form of these time effects.</p>
+<p>It does so by creating pairs of individuals, in which each individual acts as a control for the other individual at their respective exposure time. It can be shown that under the assumption of multiplicative effects and no interactions, both individual-level effects and time effects cancel out perfectly. For more details, please consult the associated paper (Denz et al. 2026).</p>
 </div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -129,7 +129,7 @@
 <span><span class="co">#&gt;   Observation time used            96.57%</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Effect estimate</span></span>
-<span><span class="co">#&gt;   log(IRR)   IRR        SE         95% CI          P-value</span></span>
+<span><span class="co">#&gt;   log(IRR)   IRR        SE(IRR)    95% CI          P-value</span></span>
 <span><span class="co">#&gt;   0.899      2.457      0.501      1.647 – 3.666   &lt;0.001</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Estimation</span></span>

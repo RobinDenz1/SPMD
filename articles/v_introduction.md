@@ -206,7 +206,7 @@ summary(out)
 #>   Observation time used            94.21%
 #> 
 #> Effect estimate
-#>   log(IRR)   IRR        SE         95% CI          P-value
+#>   log(IRR)   IRR        SE(IRR)    95% CI          P-value
 #>   0.851      2.343      0.573      1.450 – 3.784   <0.001
 #> 
 #> Estimation
@@ -467,7 +467,7 @@ summary(out)
 #>   Observation time used            94.21%
 #> 
 #> Effect estimate
-#>   log(IRR)   IRR        SE         95% CI          P-value
+#>   log(IRR)   IRR        SE(IRR)    95% CI          P-value
 #>   0.851      2.343      0.649      1.356 – 3.855   0.006
 #> 
 #> Bootstrap: 1,000 replicates

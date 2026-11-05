@@ -12,10 +12,11 @@ and vignette.
 sym_pair_matching(formula, data, id, risk_period, bounds="[)",
                   estimator="moments", pairs="auto",
                   n_pairs=100000, batch_size=max(5000, n_pairs * 2),
-                  rand_max_iter=100, allow_overlap=FALSE,
+                  rand_max_iter=100, allow_partial=TRUE,
+                  allow_overlap=FALSE, max_dist=Inf,
                   conf_type="auto", conf_level=0.95, n_boot=1000,
                   n_cores=1, progressbar=TRUE, convergence=TRUE,
-                  max_dist=Inf, ...)
+                  ...)
 ```
 
 ## Arguments
@@ -117,6 +118,13 @@ sym_pair_matching(formula, data, id, risk_period, bounds="[)",
   that it eventually terminates (see details). Ignored if
   `pairs!="random1"`.
 
+- allow_partial:
+
+  Either `TRUE` (default) or `FALSE`, specifying whether the use of
+  pairs with partially non-observed observation time due to
+  left-truncation (delayed entry to follow-up) or right-censoring should
+  still be used for pairs if possible.
+
 - allow_overlap:
 
   Either `TRUE` or `FALSE` (default), specifying whether the use of
@@ -127,6 +135,13 @@ sym_pair_matching(formula, data, id, risk_period, bounds="[)",
   does, however, increase computational time and is unlikely to have a
   large impact if `risk_period` is small with respect to the total
   observation time.
+
+- max_dist:
+
+  A single positive number, specifying the maximum distance of exposure
+  times allowed in a pair. If the distance is larger, the pair is deemed
+  invalid. Defaults to `Inf` to make no restrictions on the exposure
+  time distance. May be useful for long observation times.
 
 - conf_type:
 
@@ -171,13 +186,6 @@ sym_pair_matching(formula, data, id, risk_period, bounds="[)",
   Either `TRUE` or `FALSE`, specifying whether to calculate convergence
   related statistics. Those are calculated by default, but may be turned
   off to save some computation time.
-
-- max_dist:
-
-  A single positive number, specifying the maximum distance of exposure
-  times allowed in a pair. If the distance is larger, the pair is deemed
-  invalid. Defaults to `Inf` to make no restrictions on the exposure
-  time distance. May be useful for long observation times.
 
 - ...:
 
@@ -254,10 +262,10 @@ following rules:
 1.) if the variable only consists of the numbers `0` and `1` (coded as
 numeric), `0` will be considered the "unexposed" time and `1` the
 "exposed" time; 2.) otherwise, if the variable is a factor,
-`levels(treat)[1]` will be considered the "exposed" time and the other
-value the "unexposed" time; 3.) otherwise `sort(unique(treat))[1]` will
-be considered "unexposed" and the other value the exposed. It is safest
-to ensure that the exposure variable is a logical variable.
+`levels(treat)[1]` will be considered the "unexposed" time and the other
+value the "exposed" time; 3.) otherwise `sort(unique(treat))[1]` will be
+considered "unexposed" and the other value the exposed. It is safest to
+ensure that the exposure variable is a logical variable.
 
 ***Forming the Pairs***:
 
@@ -473,7 +481,7 @@ summary(out)
 #>   Observation time used            95.84%
 #> 
 #> Effect estimate
-#>   log(IRR)   IRR        SE         95% CI          P-value
+#>   log(IRR)   IRR        SE(IRR)    95% CI          P-value
 #>   0.903      2.468      0.488      1.675 – 3.636   <0.001
 #> 
 #> Estimation
