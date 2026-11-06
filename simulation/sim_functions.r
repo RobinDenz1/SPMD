@@ -14,32 +14,32 @@ fbasehaz <- function(t, base_p, peak_times, wave_widths,
 ## baseline hazard for outcome
 # = mean(fbasehaz_Y2(seq(1, 1000, 0.1)))
 fbasehaz_Y1 <- function(t) {
-  return(rep(0.000008508646, length(t)))
+  return(rep(0.00001701729, length(t)))
 }
 
 fbasehaz_Y2 <- function(t) {
-  fbasehaz(t=t, base_p=0.000001,
+  fbasehaz(t=t, base_p=0.000002,
            peak_times=c(0, 200, 400, 600, 800, 1000),
            wave_widths=rep(30, 6),
-           wave_heights=rep(0.00002, 6))
+           wave_heights=rep(0.00004, 6))
 }
 
 ## baseline hazard for exposure
 # = mean(fbasehaz_A2(seq(1, 1000, 0.1)))
 fbasehaz_A1 <- function(t) {
-  return(rep(0.0002503218, length(t)))
+  return(rep(0.0005006436, length(t)))
 }
 
 fbasehaz_A2 <- function(t) {
-  fbasehaz(t=t, base_p=0.0001,
+  fbasehaz(t=t, base_p=0.0002,
            peak_times=c(0, 200, 400, 600, 800, 1000)-100,
            wave_widths=rep(40, 6),
-           wave_heights=rep(0.0003, 6))
+           wave_heights=rep(0.0006, 6))
 }
 
 ## generate a dataset following the required DGP for both scenarios
 create_data <- function(n, scenario, theta, multiple_A=FALSE,
-                        multiple_Y=TRUE, beta_L_A=0, beta_L_Y=0,
+                        multiple_Y=TRUE, beta_L_A=0, beta_L_Y=0, beta_Y_count=0,
                         A_time_interact=0, U_time_interact=0,
                         risk_period=30, censor=0, max_t=1000) {
 
@@ -77,13 +77,15 @@ create_data <- function(n, scenario, theta, multiple_A=FALSE,
       node_td("L", type="next_time", event_duration=50,
               prob_fun=0.001) +
       node_td("A", type="next_time", model="cox", event_duration=risk_period,
-              formula= ~ U*log(2) + L*beta_L_A, surv_dist=fa,
+              formula= ~ U*log(2) + L*beta_L_A + Y_event_count*beta_Y_count,
+              surv_dist=fa,
               basehaz_grid=seq(0.5, (max_t + 100), 0.5), extrapolate=TRUE,
               as_integer=FALSE, immunity_duration=immunity_duration_A) +
       node_td("Y", type="next_time", model="cox", event_duration=1,
               formula= ~ U*log(2) + A*eval(theta) + L*beta_L_Y, surv_dist=fy,
               basehaz_grid=seq(0.5, (max_t + 100), 0.5), extrapolate=TRUE,
-              as_integer=FALSE, immunity_duration=immunity_duration_Y)
+              as_integer=FALSE, immunity_duration=immunity_duration_Y,
+              event_count=TRUE)
   } else if (A_time_interact != 0) {
     dag <- empty_dag() +
       node("U", type="rnorm", mean=0, sd=1) +
@@ -154,11 +156,12 @@ create_data <- function(n, scenario, theta, multiple_A=FALSE,
 
 # baseline hazards for the event in scenario 3
 fbasehaz_Y3.1 <- function(t) {
-  return(0.000008508646 *
+  return(0.000017017292 *
            (1 + 0.95 * tanh((t - 500) / 100)))
 }
+
 fbasehaz_Y3.2 <- function(t) {
-  return(0.000008508646 *
+  return(0.000017017292 *
            (1 - 0.95 * tanh((t - 500) / 100)))
 }
 
@@ -222,6 +225,7 @@ apply_method <- function(data, type, conf_int="none", risk_period=30,
                              id=".id", pairs=pairs, risk_period=risk_period,
                              estimator="moments", bounds="(]",
                              convergence=FALSE, allow_overlap=allow_overlap,
+                             allow_partial=allow_overlap,
                              conf_type=conf_int, n_pairs=n_pairs)
     out <- list(
       "rr_hat"=spm$est,
@@ -259,7 +263,7 @@ apply_method <- function(data, type, conf_int="none", risk_period=30,
 ## main function to run the entire Monte-Carlo simulation study
 run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
                            multiple_A, multiple_Y, beta_L_Y=0, beta_L_A=0,
-                           U_time_interact=0, A_time_interact=0,
+                           beta_Y_count=0, U_time_interact=0, A_time_interact=0,
                            conf_int="none", risk_period=30, allow_overlap=FALSE,
                            censor=0, pairs="all", n_pairs=1000000, max_t=1000,
                            n_cores=8, seed=2134) {
@@ -289,6 +293,7 @@ run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
     multiple_Y = multiple_Y,
     beta_L_Y = beta_L_Y,
     beta_L_A = beta_L_A,
+    beta_Y_count = beta_Y_count,
     U_time_interact = U_time_interact,
     A_time_interact = A_time_interact,
     conf_int = conf_int,
@@ -309,7 +314,7 @@ run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
                           U_time_interact=L$U_time_interact,
                           A_time_interact=L$A_time_interact,
                           risk_period=L$risk_period, censor=L$censor,
-                          max_t=L$max_t)
+                          max_t=L$max_t, beta_Y_count=L$beta_Y_count)
     })
     out <- apply_method(data=data, type=L$estimator, conf_int=L$conf_int,
                         risk_period=L$risk_period,
@@ -326,7 +331,8 @@ run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
                  "splines"),
     batch_levels = c("n", "scenario", "theta", "multiple_Y", "multiple_A",
                      "beta_L_A", "beta_L_Y", "U_time_interact",
-                     "A_time_interact", "risk_period", "censor", "max_t"),
+                     "A_time_interact", "risk_period", "censor", "max_t",
+                     "beta_Y_count"),
     parallel = n_cores > 1,
     n_cores = n_cores,
     seed = seed

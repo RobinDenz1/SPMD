@@ -17,17 +17,17 @@ source("./simulation/sim_functions.r")
 
 ## execute Monte-Carlo study
 n_repeats <- 1000
-n_sim <- 50000
+n_sim <- 80000
 all_methods <- c("spmd", "cco", "ctc", "sccs", "sccs_spline_5",
                  "sccs_spline_15")
 
 ## varying n, theta
 sim1 <- run_simulation(
-  n_sim = c(10000, 20000, 30000, 50000),
-  n_repeats = n_repeats,
+  n_sim = c(20000, 50000, 80000),
+  n_repeats = 2,
   method = all_methods,
   scenario = c(1, 2),
-  theta = log(c(0.7, 1, 1.5, 2.5, 5)),
+  theta = log(c(0.7, 1, 2.5, 5)),
   multiple_A = FALSE,
   multiple_Y = TRUE,
   censor = 1,
@@ -235,3 +235,19 @@ sim14 <- run_simulation(
   seed = 55
 )
 saveRDS(sim14$results, "./simulation/data/sim14_results.Rds")
+
+# exposure depending on count of previous events
+sim15 <- run_simulation(
+  n_sim = 20000,
+  n_repeats = n_repeats,
+  method = all_methods,
+  scenario = c(1, 2),
+  theta = log(c(0.7, 1, 2.5)),
+  multiple_A = FALSE,
+  multiple_Y = TRUE,
+  beta_Y_count = log(3),
+  n_cores = 8,
+  seed = 56
+)
+saveRDS(sim15$results, "./simulation/data/sim15_results.Rds")
+

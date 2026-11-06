@@ -8,7 +8,7 @@ library(scales)
 plotdata <- data.frame(
   time = rep(1:1000, 4),
   p = c(fbasehaz_Y1(1:1000), p_Y=fbasehaz_Y2(1:1000),
-        rep(0.0002503218, 1000), p_A=fbasehaz_A2(1:1000)),
+        fbasehaz_A1(1:1000), p_A=fbasehaz_A2(1:1000)),
   kind = rep(c("h_Y(t)", "h_A(t)"), each=2000),
   scenario = c(rep("Scenario 1", 1000), rep("Scenario 2", 1000),
                rep("Scenario 1", 1000), rep("Scenario 2", 1000))
@@ -49,6 +49,7 @@ ggplot(plotdata, aes(x=time, y=p, color=half)) +
   )
 ggsave("./simulation/plots/time_trends_scenario3.pdf", width=6, height=4)
 
+## main symmetric pair illustration plot
 plotdata <- data.table(id=factor(c(2,1,1,2), levels=c(2, 1),
                                  labels=c("Individual a", "Individual b")),
                        A=factor(c("Unexposed","Exposed","Unexposed","Exposed")),
@@ -84,7 +85,12 @@ ggplot(plotdata, aes(y=id)) +
   theme(axis.text.y=element_text(family="serif", face="italic", size=14),
         legend.position="bottom") +
   scale_x_continuous(breaks=seq(0, 170, 20), limits=c(35, 170)) +
-  labs(x="Time", y="", shape="", color="")
+  labs(x="Time", y="", shape="", color="") +
+  # point colors
+  scale_color_manual(
+    values = c("Exposed" = "#C46A50", "Unexposed" = "#35658A"),
+    breaks = c("Exposed", "Unexposed")
+  )
 ggsave("./simulation/plots/pair_example.pdf", width=6, height=4)
 
 
@@ -158,7 +164,12 @@ ggplot(plotdata, aes(y=id)) +
   theme(axis.text.y=element_text(family="serif", face="italic", size=14),
         legend.position="bottom") +
   scale_x_continuous(breaks=seq(0, 170, 10), limits=c(85, 165)) +
-  labs(x="Time", y="", shape="", color="")
+  labs(x="Time", y="", shape="", color="") +
+  # point colors
+  scale_color_manual(
+    values = c("Exposed" = "#C46A50", "Unexposed" = "#35658A"),
+    breaks = c("Exposed", "Unexposed")
+  )
 ggsave("./simulation/plots/pair_overlap.pdf", width=7, height=4.5)
 
 ggplot(plotdata, aes(y=id)) +
@@ -193,7 +204,12 @@ ggplot(plotdata, aes(y=id)) +
   theme(axis.text.y=element_text(family="serif", face="italic", size=14),
         legend.position="bottom") +
   scale_x_continuous(breaks=seq(0, 170, 10), limits=c(85, 165)) +
-  labs(x="Time", y="", shape="", color="")
+  labs(x="Time", y="", shape="", color="") +
+  # point colors
+  scale_color_manual(
+    values = c("Exposed" = "#C46A50", "Unexposed" = "#35658A"),
+    breaks = c("Exposed", "Unexposed")
+  )
 ggsave("./simulation/plots/pair_overlap.pdf", width=7, height=4.5)
 
 
@@ -235,7 +251,12 @@ ggplot(plotdata, aes(y=id)) +
   theme(axis.text.y=element_text(family="serif", face="italic", size=14),
         legend.position="bottom") +
   scale_x_continuous(breaks=seq(0, 170, 20), limits=c(35, 170)) +
-  labs(x="Time", y="", shape="", color="")
+  labs(x="Time", y="", shape="", color="") +
+  # point colors
+  scale_color_manual(
+    values = c("Exposed" = "#C46A50", "Unexposed" = "#35658A"),
+    breaks = c("Exposed", "Unexposed")
+  )
 ggsave("./simulation/plots/pair_censor_valid.pdf", width=7, height=4.5)
 
 ## invalid pair with censoring
@@ -272,7 +293,12 @@ ggplot(plotdata, aes(y=id)) +
   theme(axis.text.y=element_text(family="serif", face="italic", size=14),
         legend.position="bottom") +
   scale_x_continuous(breaks=seq(0, 170, 20), limits=c(35, 170)) +
-  labs(x="Time", y="", shape="", color="")
+  labs(x="Time", y="", shape="", color="") +
+  # point colors
+  scale_color_manual(
+    values = c("Exposed" = "#C46A50", "Unexposed" = "#35658A"),
+    breaks = c("Exposed", "Unexposed")
+  )
 ggsave("./simulation/plots/pair_censor_invalid.pdf", width=7, height=4.5)
 
 
@@ -313,5 +339,129 @@ ggplot(plotdata, aes(y=id)) +
   theme(axis.text.y=element_text(family="serif", face="italic", size=14),
         legend.position="bottom") +
   scale_x_continuous(breaks=seq(0, 180, 20), limits=c(0, 180)) +
-  labs(x="Time", y="", shape="", color="")
+  labs(x="Time", y="", shape="", color="") +
+  # point colors
+  scale_color_manual(
+    values = c("Exposed" = "#C46A50", "Unexposed" = "#35658A"),
+    breaks = c("Exposed", "Unexposed")
+  )
 ggsave("./simulation/plots/pair_multiple.pdf", width=7, height=4.5)
+
+## main results for the illustrative example
+
+# data.frame of the main results
+dat <- data.frame(
+  method = c("CCO", "CTC", "SCCS", "SCCS Spline (5)",
+             "SCCS Spline (15)", "SPM"),
+  estimate = c(1.303, 0.973, 0.749, 0.822, 0.811, 0.815),
+  se = c(0.080, 0.112, 0.054, 0.055, 0.057, 0.080),
+  lower = c(1.113, 0.781, 0.674, 0.725, 0.725, 0.697),
+  upper = c(1.525, 1.212, 0.832, 0.914, 0.907, 0.953)
+)
+
+dat$y <- 6:1
+dat$group <- ifelse(dat$method %in% c("CCO", "CTC"), "CC",
+                    ifelse(dat$method == "SPM", "SPM", "SCCS"))
+
+dat$estimate_label <- sprintf("%.3f", dat$estimate)
+dat$se_label <- sprintf("%.3f", dat$se)
+dat$ci_label <- sprintf("[%.3f, %.3f]", dat$lower, dat$upper)
+
+# forest plot coordinate transformation (logarithmic scale)
+forest_left <- 54
+forest_right <- 99
+log_limits <- log(c(0.65, 1.60))
+
+to_x <- function(x) {
+  forest_left + (log(x) - log_limits[1]) /
+    diff(log_limits) * (forest_right - forest_left)
+}
+
+dat$x <- to_x(dat$estimate)
+dat$x_lower <- to_x(dat$lower)
+dat$x_upper <- to_x(dat$upper)
+
+# alternating row backgrounds
+dat$shade <- "#FFFFFF"#ifelse(dat$y %% 2 == 0, "#F5F7FA", "#FFFFFF")
+
+# column headers
+headers <- data.frame(
+  x = c(1.5, 35, 49, 76),
+  label = c("Method", "SE", "95% CI", "Forest plot"),
+  hjust = c(0, 1, 1, 0.5)
+)
+
+# axis ticks
+axis_values <- c(0.70, 0.80, 1.00, 1.25, 1.50)
+
+# colours
+method_colours <- c(
+  "CC" = "#64748B",
+  "SCCS" = "#25827B",
+  "SPM" = "#C46B46"
+)
+dat$point_fill <- unname(method_colours[dat$group])
+
+p <- ggplot() +
+  # row backgrounds
+  geom_rect(data = dat, aes(xmin=0, xmax=100, ymin=y - 0.48,
+                            ymax=y + 0.48, fill=shade), inherit.aes=FALSE) +
+  # reference line and grid lines
+  geom_segment(aes(x=to_x(1), xend=to_x(1), y=0.52, yend=6.48),
+               colour="#475569", linewidth=0.75, linetype="dashed") +
+  geom_segment(data=data.frame(x=to_x(axis_values[axis_values != 1])),
+               aes(x=x, xend=x, y=0.52, yend=6.48),
+               colour="#E5EAF0", linewidth=0.4) +
+  # confidence intervals
+  geom_segment(data=dat, aes(x=x_lower, xend=x_upper, y=y, yend=y,
+                             colour=group),
+               linewidth=1.15, lineend="round") +
+  # point estimates
+  geom_point(data=dat, aes(x=x, y=y, fill=point_fill), shape=21, colour="white",
+             size=3.8, stroke=0.9) +
+  # method names
+  geom_text(data=dat, aes(x=1.5, y=y, label=method, fontface="plain"),
+            hjust=0, size=3.5, colour="#263445") +
+  # numerical estimates
+  geom_text(data=dat, aes(x=26, y=y, label=estimate_label), hjust=1, size=3.3,
+            colour="#263445") +
+  geom_text(data=dat, aes(x=35, y=y, label=se_label), hjust=1, size=3.3,
+            colour="#263445") +
+  geom_text(data=dat, aes(x=49, y=y, label=ci_label), hjust=1, size=3.3,
+            colour="#263445") +
+  # column headers
+  geom_text(data=headers, aes(x=x, y=7.05, label=label, hjust=hjust),
+            fontface="bold", size=4.0, colour="#526174") +
+  geom_text(aes(x=26, y=7.05, label="exp(hat(theta))"), parse=TRUE, hjust=1,
+            fontface="bold", size=3.0, colour="#526174") +
+  # separators between method groups
+  geom_hline(yintercept=c(4.5, 1.5), colour="#DCE2E9", linewidth=0.55) +
+  scale_fill_identity() +
+  scale_colour_manual(values=method_colours) +
+  scale_x_continuous(
+    limits = c(0, 100),
+    breaks = to_x(axis_values),
+    labels = c("0.70", "0.80", "1.00", "1.25", "1.50"),
+    expand = c(0, 0)
+  ) +
+  scale_y_continuous(breaks=NULL, expand=c(0, 0)) +
+  coord_cartesian(xlim=c(0, 100), ylim=c(0.25, 7.4), clip="off") +
+  labs(x = expression(exp(hat(theta))), y=NULL) +
+  theme_minimal(base_size=11) +
+  theme(
+    axis.text.x = element_text(size=9.5, colour="#475569",
+                               margin=margin(t = 7)),
+    axis.title.x = element_text(size=10.5, colour="#475569", hjust=0.77,
+                                margin=margin(t = 12)),
+    axis.ticks.x = element_line(colour="#94A3B8", linewidth=0.4),
+    axis.ticks.length.x = unit(2, "mm"),
+    axis.line = element_blank(),
+    panel.grid = element_blank(),
+    plot.background = element_rect(fill="white", colour=NA),
+    panel.background = element_rect(fill="white", colour=NA),
+    plot.margin = margin(12, 16, 8, 10),
+    legend.position = "none"
+  )
+p
+
+ggsave("forest_plot.pdf", p, width=8.5, height=6, dpi=300, bg="white")

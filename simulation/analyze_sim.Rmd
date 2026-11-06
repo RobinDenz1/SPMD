@@ -87,31 +87,149 @@ prepare_sim_results <- function(d_sim) {
 
 ## simple boxplots for each estimator and scenario
 plot_boxplots_n <- function(data, outliers=FALSE) {
-  ggplot(data=data, aes(y=log_bias_i, x=estimator, fill=estimator)) +
-    geom_hline(yintercept=0, linetype="dashed") +
-    geom_boxplot(outliers=outliers, linewidth=0.3) +
-    facet_grid(cols=vars(scenario), rows=vars(exp_theta_f),
-               labeller = labeller(
-                 exp_theta_f = label_parsed,
-                 scenario = label_value
-               )) +
-    theme_minimal() +
-    theme(legend.position="none",
-          axis.text.x=element_text(size=8)) +
+  
+  # colourblind-friendly colours (six estimators)
+  estimator_levels <- levels(droplevels(data$estimator))
+  estimator_cols <- setNames(
+    c(
+      "#0072B2",  # Blue
+      "#E69F00",  # Orange
+      "#009E73",  # Bluish green
+      "#D55E00",  # Vermillion
+      "#56B4E9",  # Sky blue
+      "#CC79A7"   # Reddish purple
+    ), estimator_levels
+  )
+
+  p <- ggplot(data=data, aes(x=estimator, y=log_bias_i, fill=estimator)) +
+    # reference line
+    geom_hline(yintercept=0, linetype="dashed", linewidth=0.45,
+               colour="grey25") +
+    # boxplots
+    geom_boxplot(outliers=outliers, width=0.68, linewidth=0.35, colour="grey20",
+                 alpha=0.85, outlier.size=0.7) +
+    # consistent colours across all panels
+    scale_fill_manual(values=estimator_cols, drop=FALSE) +
+    # faceting
+    facet_grid(
+      rows = vars(exp_theta_f),
+      cols = vars(scenario),
+      labeller = labeller(
+        exp_theta_f = label_parsed,
+        scenario = label_value
+      ),
+      scales="free_y"
+    ) +
+    # some breathing room around the data
+    scale_y_continuous(expand=expansion(mult=c(0.04, 0.08))) +
+    # theme
+    theme_minimal(base_size=9, base_family="sans") +
+    theme(
+      # remove unnecessary elements
+      legend.position = "none",
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_blank(),
+      # subtle horizontal gridlines
+      panel.grid.major.y = element_line(colour="#E3E6E8", linewidth=0.3),
+      # panel separation
+      panel.border = element_rect(colour="#D9DDE1", fill=NA, linewidth=0.35),
+      panel.spacing.x = grid::unit(0.9, "lines"),
+      panel.spacing.y = grid::unit(0.7, "lines"),
+      # facet labels
+      strip.background = element_rect(fill="#F0F2F4", colour=NA),
+      strip.text.x = element_text(size=9, face="bold", colour="#252525",
+                                  margin=margin(t=5, b=5)),
+      strip.text.y.right = element_text(size=8.5, face="bold", angle=0,
+                                        colour="#252525",
+                                        margin=margin(l=5, r=5)),
+      strip.placement="outside",
+      # axis labels
+      axis.text.x = element_text(size=7.5, #angle=40, hjust=1, vjust=1,
+                                 colour="#333333"),
+      axis.text.y = element_text(size=8, colour="#333333"),
+      axis.title.x = element_blank(),
+      axis.title.y = element_text(size=9, colour="#252525", margin=margin(r=8)),
+      axis.ticks.x = element_blank(),
+      # white background and balanced margins
+      panel.background = element_rect(fill="white", colour=NA),
+      plot.background = element_rect(fill="white", colour=NA),
+      plot.margin = margin(8, 10, 8, 8)
+    ) +
     labs(x=NULL, y=expression(hat(theta) - theta))
+  
+  return(p)
 }
 
 ## simple boxplots for each estimator and scenario
 plot_boxplots_beta_L <- function(data, outliers=FALSE) {
-  ggplot(data=data, aes(y=log_bias_i, x=estimator, fill=estimator)) +
-    geom_hline(yintercept=0, linetype="dashed") +
-    geom_boxplot(outliers=outliers, linewidth=0.3) +
-    facet_grid(cols=vars(beta_L_A_f), rows=vars(beta_L_Y_f),
-               labeller = label_parsed) +
-    theme_minimal() +
-    theme(legend.position="none",
-          axis.text.x=element_text(size=7)) +
+  
+  # colourblind-friendly colours (six estimators)
+  estimator_levels <- levels(droplevels(data$estimator))
+  estimator_cols <- setNames(
+    c(
+      "#0072B2",  # Blue
+      "#E69F00",  # Orange
+      "#009E73",  # Bluish green
+      "#D55E00",  # Vermillion
+      "#56B4E9",  # Sky blue
+      "#CC79A7"   # Reddish purple
+    ), estimator_levels
+  )
+
+  p <- ggplot(data=data, aes(y=log_bias_i, x=estimator, fill=estimator)) +
+    # reference line
+    geom_hline(yintercept=0, linetype="dashed", linewidth=0.45,
+               colour="grey25") +
+    # boxplots
+    geom_boxplot(outliers=outliers, width=0.68, linewidth=0.35, colour="grey20",
+                 alpha=0.85, outlier.size=0.7) +
+    # consistent colours across all panels
+    scale_fill_manual(values=estimator_cols, drop=FALSE) +
+    # faceting
+    facet_grid(
+      cols=vars(beta_L_A_f),
+      rows=vars(beta_L_Y_f),
+      labeller = label_parsed,
+      scales="free_y"
+    ) +
+    # some breathing room around the data
+    scale_y_continuous(expand=expansion(mult=c(0.04, 0.08))) +
+    # theme
+    theme_minimal(base_size=9, base_family="sans") +
+    theme(
+      # remove unnecessary elements
+      legend.position = "none",
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_blank(),
+      # subtle horizontal gridlines
+      panel.grid.major.y = element_line(colour="#E3E6E8", linewidth=0.3),
+      # panel separation
+      panel.border = element_rect(colour="#D9DDE1", fill=NA, linewidth=0.35),
+      panel.spacing.x = grid::unit(0.9, "lines"),
+      panel.spacing.y = grid::unit(0.7, "lines"),
+      # facet labels
+      strip.background = element_rect(fill="#F0F2F4", colour=NA),
+      strip.text.x = element_text(size=9, face="bold", colour="#252525",
+                                  margin=margin(t=5, b=5)),
+      strip.text.y.right = element_text(size=8.5, face="bold", angle=0,
+                                        colour="#252525",
+                                        margin=margin(l=5, r=5)),
+      strip.placement="outside",
+      # axis labels
+      axis.text.x = element_text(size=7.5, #angle=40, hjust=1, vjust=1,
+                                 colour="#333333"),
+      axis.text.y = element_text(size=8, colour="#333333"),
+      axis.title.x = element_blank(),
+      axis.title.y = element_text(size=9, colour="#252525", margin=margin(r=8)),
+      axis.ticks.x = element_blank(),
+      # white background and balanced margins
+      panel.background = element_rect(fill="white", colour=NA),
+      plot.background = element_rect(fill="white", colour=NA),
+      plot.margin = margin(8, 10, 8, 8)
+    ) +
     labs(x=NULL, y=expression(hat(theta) - theta))
+  
+  return(p)
 }
 
 ## create a table of bias, MSE and associated MCSE by n / theta / scenario
@@ -232,7 +350,7 @@ d_bias13 <- get_stats_table(d_sim13)
 ## $n = 10000$
 
 ```{r}
-plot_boxplots_n(subset(d_sim1, n==10000), outliers=TRUE)
+plot_boxplots_n(subset(d_sim1, n==10000), outliers=FALSE)
 ggsave("./Plots/sim1_n10000.pdf", width=6.5, height=7)
 ```
 
@@ -254,7 +372,7 @@ print_stats(subset(d_bias1, n==20000)[, -"n"], format="html")
 ## $n = 30000$
 
 ```{r}
-plot_boxplots_n(subset(d_sim1, n==30000), outliers=TRUE)
+plot_boxplots_n(subset(d_sim1, n==30000), outliers=FALSE)
 ggsave("./Plots/sim1_n30000.pdf", width=6.5, height=7)
 ```
 
