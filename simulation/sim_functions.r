@@ -307,6 +307,7 @@ run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
 
   # define the simulation script
   sim %<>% set_script(function() {
+
     batch({
       data <- create_data(n=L$n, scenario=L$scenario, theta=L$theta,
                           multiple_Y=L$multiple_Y, multiple_A=L$multiple_A,
@@ -316,10 +317,34 @@ run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
                           risk_period=L$risk_period, censor=L$censor,
                           max_t=L$max_t, beta_Y_count=L$beta_Y_count)
     })
-    out <- apply_method(data=data, type=L$estimator, conf_int=L$conf_int,
-                        risk_period=L$risk_period,
-                        allow_overlap=L$allow_overlap, pairs=L$pairs,
-                        n_pairs=L$n_pairs)
+
+    # identify the final estimator for this batch
+    last_method <- identical(L$estimator, method[[length(method)]])
+
+    # apply estimator and always clean up after the final estimator,
+    # including when an estimator throws an error.
+    out <- tryCatch(
+      apply_method(data=data, type=L$estimator, conf_int=L$conf_int,
+                   risk_period=L$risk_period,
+                   allow_overlap=L$allow_overlap, pairs=L$pairs,
+                   n_pairs=L$n_pairs),
+
+      finally = {
+        if (last_method) {
+
+          cache <- get("..batch_cache",
+                       envir=get("..env", envir=.GlobalEnv))
+
+          rm(list=as.character(L$batch_id), envir=cache)
+        }
+      }
+    )
+
+    rm(data)
+
+    if (last_method) {
+      gc(verbose=FALSE)
+    }
 
     return(out)
   })
@@ -337,6 +362,19 @@ run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
     n_cores = n_cores,
     seed = seed
   )
+
+  # process all estimators using the same dataset consecutively.
+  # all these simulations share the same batch_id and core_id.
+  uid_grid <- sim$internals$sim_uid_grid
+
+  ord <- order(
+    uid_grid$core_id,
+    uid_grid$batch_id,
+    uid_grid$level_id
+  )
+
+  sim$internals$sim_uid_grid <- uid_grid[ord, , drop=FALSE]
+  attr(sim$internals$sim_uid_grid, "blank") <- attr(uid_grid, "blank")
 
   # run simulation
   sim %<>% run()

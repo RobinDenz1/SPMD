@@ -68,7 +68,7 @@ saveRDS(sim3$results, "./simulation/data/sim3_results.Rds")
 
 ## with time-varying outcome predictor / exposure predictor / confounder
 sim4 <- run_simulation(
-  n_sim = n_sim,
+  n_sim = 40000,
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
@@ -144,7 +144,7 @@ saveRDS(sim8$results, "./simulation/data/sim8_results.Rds")
 
 # varying risk_period
 sim9 <- run_simulation(
-  n_sim = n_sim,
+  n_sim = 40000,
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
@@ -202,10 +202,10 @@ sim12 <- run_simulation(
 )
 saveRDS(sim12$results, "./simulation/data/sim12_results.Rds")
 
-## varying theta with right-censoring dependent on L
+## right-censoring dependent on L
 ## where L may be a sole outcome / exposure predictor or true confounder
 sim13 <- run_simulation(
-  n_sim = n_sim,
+  n_sim = 40000,
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
@@ -215,8 +215,8 @@ sim13 <- run_simulation(
   censor = 3,
   beta_L_Y = log(c(1, 3, 5)),
   beta_L_A = log(c(1, 3, 5)),
-  n_cores = 8,
-  seed = 54
+  n_cores = 7,
+  seed = 543
 )
 saveRDS(sim13$results, "./simulation/data/sim13_results.Rds")
 
@@ -238,7 +238,7 @@ saveRDS(sim14$results, "./simulation/data/sim14_results.Rds")
 
 # exposure depending on count of previous events
 sim15 <- run_simulation(
-  n_sim = 20000,
+  n_sim = n_sim,
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
@@ -250,4 +250,3 @@ sim15 <- run_simulation(
   seed = 56
 )
 saveRDS(sim15$results, "./simulation/data/sim15_results.Rds")
-
