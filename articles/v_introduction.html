@@ -607,13 +607,18 @@ al. 2026).</p>
 <h2 id="some-subtleties">Some subtleties<a class="anchor" aria-label="anchor" href="#some-subtleties"></a>
 </h2>
 <div class="section level3">
-<h3 id="censoring">Censoring<a class="anchor" aria-label="anchor" href="#censoring"></a>
+<h3 id="censoring-and-left-truncation">Censoring and Left-Truncation<a class="anchor" aria-label="anchor" href="#censoring-and-left-truncation"></a>
 </h3>
-<p>Right-censoring is directly supported by this package. The underlying
-algorithm uses pairs in which no observation period is censored, and
-pairs in which the right-censoring occurs after the larger of the two
-exposure times in a pair. In the latter case, both individuals inside
-the pair are censored at the minimum censoring time when calculating
+<p>Individuals may enter and stop observation at different times. The
+former is a form of left-truncation, in which no information before some
+time is known and the latter is a form of right-censoring. This package
+can handle both naturally. By default (<code>allow_partial=TRUE</code>)
+the underlying algorithm uses pairs even if it is not possible to
+compare their entire observation period, as long as parts of it can be
+compared symmetrically. Pairs in which the right-censoring occurs after
+the larger of the two exposure times in a pair are used, for example. In
+this case, both individuals inside the pair are censored at the minimum
+censoring time when calculating
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mrow><mi>a</mi><mn>2</mn><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">X_{a2j}</annotation></semantics></math>
 and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mrow><mi>b</mi><mn>2</mn><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">X_{b2j}</annotation></semantics></math>.
@@ -660,8 +665,8 @@ observation start, possibly delaying the observation start by another
 <div class="section level3">
 <h3 id="overlapping-risk-periods">Overlapping risk periods<a class="anchor" aria-label="anchor" href="#overlapping-risk-periods"></a>
 </h3>
-<p>It is possible to extend the definition of “valid pairs”. Consider
-two individuals,
+<p>It is possible to extend the definition of “valid pairs” further.
+Consider two individuals,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math>
 and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>

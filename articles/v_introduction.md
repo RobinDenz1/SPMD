@@ -537,16 +537,21 @@ al. 2026).
 
 ## Some subtleties
 
-### Censoring
+### Censoring and Left-Truncation
 
-Right-censoring is directly supported by this package. The underlying
-algorithm uses pairs in which no observation period is censored, and
-pairs in which the right-censoring occurs after the larger of the two
-exposure times in a pair. In the latter case, both individuals inside
-the pair are censored at the minimum censoring time when calculating
-$`X_{a2j}`$ and $`X_{b2j}`$. This way, the time effects still cancel
-out. For more information and required assumptions regarding censoring,
-please consult the associated paper (Denz et al. 2026).
+Individuals may enter and stop observation at different times. The
+former is a form of left-truncation, in which no information before some
+time is known and the latter is a form of right-censoring. This package
+can handle both naturally. By default (`allow_partial=TRUE`) the
+underlying algorithm uses pairs even if it is not possible to compare
+their entire observation period, as long as parts of it can be compared
+symmetrically. Pairs in which the right-censoring occurs after the
+larger of the two exposure times in a pair are used, for example. In
+this case, both individuals inside the pair are censored at the minimum
+censoring time when calculating $`X_{a2j}`$ and $`X_{b2j}`$. This way,
+the time effects still cancel out. For more information and required
+assumptions regarding censoring, please consult the associated paper
+(Denz et al. 2026).
 
 ### Bounds of the risk period
 
@@ -583,18 +588,18 @@ observation start, possibly delaying the observation start by another
 
 ### Overlapping risk periods
 
-It is possible to extend the definition of “valid pairs”. Consider two
-individuals, $`a`$ and $`b`$ with one exposure time each at $`t = 100`$
-and $`t = 120`$ respectively. Suppose `risk_period = 40`. Using the
-definition we gave earlier, this pair should not be valid, because the
-periods $`[100, 140]`$ and $`[120, 160]`$ overlap. As long as they don’t
-overlap entirely, however, we still may use the non-overlapping parts by
-setting `allow_overlap=TRUE`. This is described in more detail in the
-appendix of the main article (Denz et al. 2026). Usage of such pairs may
-lead to a gain in efficiency, but also increases computational time. We
-recommend using `allow_overlap=TRUE` whenever `risk_period` is large
-with respect to the total observation time and keeping it at `FALSE`
-whenever `pairs="all"` is infeasible.
+It is possible to extend the definition of “valid pairs” further.
+Consider two individuals, $`a`$ and $`b`$ with one exposure time each at
+$`t = 100`$ and $`t = 120`$ respectively. Suppose `risk_period = 40`.
+Using the definition we gave earlier, this pair should not be valid,
+because the periods $`[100, 140]`$ and $`[120, 160]`$ overlap. As long
+as they don’t overlap entirely, however, we still may use the
+non-overlapping parts by setting `allow_overlap=TRUE`. This is described
+in more detail in the appendix of the main article (Denz et al. 2026).
+Usage of such pairs may lead to a gain in efficiency, but also increases
+computational time. We recommend using `allow_overlap=TRUE` whenever
+`risk_period` is large with respect to the total observation time and
+keeping it at `FALSE` whenever `pairs="all"` is infeasible.
 
 Note that if multiple exposure periods per individual are present, a
 maximum of one overlap is supported, e.g. if two risk periods of
