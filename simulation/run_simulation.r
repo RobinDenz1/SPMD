@@ -38,7 +38,7 @@ saveRDS(sim1$results, "./simulation/data/sim1_results.Rds")
 
 ## varying theta while allowing multiple exposure periods per person
 sim2 <- run_simulation(
-  n_sim = n_sim,
+  n_sim = 40000,
   n_repeats = n_repeats,
   method = all_methods,
   scenario = c(1, 2),
@@ -52,6 +52,7 @@ sim2 <- run_simulation(
 saveRDS(sim2$results, "./simulation/data/sim2_results.Rds")
 
 ## varying theta with a terminal event
+# TODO: check if censoring removes the event too
 sim3 <- run_simulation(
   n_sim = n_sim,
   n_repeats = n_repeats,
@@ -114,19 +115,19 @@ sim6 <- run_simulation(
 saveRDS(sim6$results, "./simulation/data/sim6_results.Rds")
 
 # interaction between time and A
-sim7 <- run_simulation(
-  n_sim = n_sim,
-  n_repeats = n_repeats,
-  method = all_methods,
-  scenario = c(1, 2),
-  theta = log(c(0.7, 1, 2.5)),
-  multiple_A = FALSE,
-  multiple_Y = TRUE,
-  A_time_interact = log(0.5),
-  n_cores = 8,
-  seed = 48
-)
-saveRDS(sim7$results, "./simulation/data/sim7_results.Rds")
+#sim7 <- run_simulation(
+#  n_sim = n_sim,
+#  n_repeats = n_repeats,
+#  method = all_methods,
+#  scenario = c(1, 2),
+#  theta = log(c(0.7, 1, 2.5)),
+#  multiple_A = FALSE,
+#  multiple_Y = TRUE,
+#  A_time_interact = log(0.5),
+#  n_cores = 8,
+#  seed = 48
+#)
+#saveRDS(sim7$results, "./simulation/data/sim7_results.Rds")
 
 # different baseline hazards per person
 sim8 <- run_simulation(

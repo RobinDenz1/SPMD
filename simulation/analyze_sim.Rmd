@@ -252,9 +252,9 @@ get_stats_table <- function(d_sim, n_repeats=1000) {
   
   d_bias <- d_bias[,
     .(bias = mean(log(rr_hat) - theta, na.rm=TRUE),
-      bias_mcse = sd(log(rr_hat) - theta, na.rm=TRUE) / sqrt(n_valid),
+      bias_mcse = sd(log(rr_hat) - theta, na.rm=TRUE) / sqrt(n_valid[1]),
       mse = mean((log(rr_hat) - theta)^2, na.rm=TRUE),
-      mse_mcse = sd((log(rr_hat) - theta)^2, na.rm=TRUE) / sqrt(n_valid),
+      mse_mcse = sd((log(rr_hat) - theta)^2, na.rm=TRUE) / sqrt(n_valid[1]),
       n_events = mean(n_events),
       n_events_exp = mean(n_exposed_and_event),
       n_NA = n_repeats - .N),
@@ -301,11 +301,11 @@ This script takes in the results generated using the Monte-Carlo simulation and 
 
 ```{r}
 # read in simulation results
-d_sim1 <- readRDS("./data/sim1_results.Rds")
-d_sim2 <- readRDS("./data/sim2_results.Rds")
-d_sim3 <- readRDS("./data/sim3_results.Rds")
+d_sim1 <- readRDS("./data/sim1_results.Rds") # TODO: run
+d_sim2 <- readRDS("./data/sim2_results.Rds") # TODO: run
+d_sim3 <- readRDS("./data/sim3_results.Rds") # TODO: run after debug
 d_sim4 <- readRDS("./data/sim4_results.Rds")
-d_sim5 <- readRDS("./data/sim5_results.Rds")
+d_sim5 <- readRDS("./data/sim5_results.Rds") # TODO: run
 d_sim6 <- readRDS("./data/sim6_results.Rds")
 d_sim7 <- readRDS("./data/sim7_results.Rds")
 d_sim8 <- readRDS("./data/sim8_results.Rds")
@@ -313,7 +313,9 @@ d_sim9 <- readRDS("./data/sim9_results.Rds")
 d_sim10 <- readRDS("./data/sim10_results.Rds")
 d_sim11 <- readRDS("./data/sim11_results.Rds")
 d_sim12 <- readRDS("./data/sim12_results.Rds")
-d_sim13 <- readRDS("./data/sim13_results.Rds")
+d_sim13 <- readRDS("./data/sim13_results.Rds") # TODO: run
+d_sim14 <- readRDS("./data/sim14_results.Rds")
+d_sim15 <- readRDS("./data/sim15_results.Rds")
 
 # prepare it for plotting
 d_sim1 <- prepare_sim_results(d_sim1)
@@ -329,6 +331,8 @@ d_sim10 <- prepare_sim_results(d_sim10)
 d_sim11 <- prepare_sim_results(d_sim11)
 d_sim12 <- prepare_sim_results(d_sim12)
 d_sim13 <- prepare_sim_results(d_sim13)
+d_sim14 <- prepare_sim_results(d_sim14)
+d_sim15 <- prepare_sim_results(d_sim15)
 
 # calculate bias tables for all scenarios (where it is needed)
 d_bias1 <- get_stats_table(d_sim1)
@@ -343,6 +347,8 @@ d_bias10 <- get_stats_table(d_sim10)
 d_bias11 <- get_stats_table(d_sim11)
 d_bias12 <- get_stats_table(d_sim12)
 d_bias13 <- get_stats_table(d_sim13)
+d_bias14 <- get_stats_table(d_sim14)
+d_bias15 <- get_stats_table(d_sim15)
 ```
 
 # Varying $n$ and $\theta$
@@ -421,7 +427,7 @@ print_stats(subset(d_bias3, n==30000)[, -"n"], format="html")
 
 ```{r}
 plot_boxplots_beta_L(subset(d_sim4, scenario=="Scenario 1"), outliers=TRUE)
-ggsave("./plots/sim4_scenario1.pdf", width=7.5, height=7)
+ggsave("./plots/sim4_scenario1.pdf", width=8.5, height=7)
 ```
 
 ```{r}
@@ -432,7 +438,7 @@ print_stats(subset(d_bias4, Scenario==1)[, -"Scenario"], format="html")
 
 ```{r}
 plot_boxplots_beta_L(subset(d_sim4, scenario=="Scenario 2"), outliers=TRUE)
-ggsave("./plots/sim4_scenario2.pdf", width=7.5, height=7)
+ggsave("./plots/sim4_scenario2.pdf", width=8.5, height=7)
 ```
 
 ```{r}
@@ -470,30 +476,19 @@ knitr::kable(subset(d_sim5_est, conf_int=="jackknife")[, -c("conf_int", "boot_na
 # Interaction between time and $U$
 
 ```{r}
-plot_boxplots_n(subset(d_sim6, n==30000), outliers=TRUE)
-ggsave("./Plots/sim6_n30000.pdf", width=6, height=6)
+plot_boxplots_n(d_sim6, outliers=TRUE)
+ggsave("./Plots/sim6.pdf", width=6.5, height=7)
 ```
 
 ```{r}
-print_stats(subset(d_bias6, n==30000)[, -"n"], format="html")
-```
-
-# Interaction between time and $A$
-
-```{r}
-plot_boxplots_n(subset(d_sim7, n==30000), outliers=TRUE)
-ggsave("./Plots/sim7_n30000.pdf", width=6, height=6)
-```
-
-```{r}
-print_stats(subset(d_bias7, n==30000)[, -"n"], format="html")
+print_stats(d_bias6, format="html")
 ```
 
 # With independent right-censoring
 
 ```{r}
 plot_boxplots_n(d_sim11, outliers=TRUE)
-ggsave("./Plots/sim11.pdf", width=6, height=6)
+ggsave("./Plots/sim11.pdf", width=6.5, height=7)
 ```
 
 ```{r}
@@ -504,7 +499,7 @@ print_stats(d_bias11, format="html")
 
 ```{r}
 plot_boxplots_n(d_sim12, outliers=TRUE)
-ggsave("./Plots/sim12.pdf", width=6, height=6)
+ggsave("./Plots/sim12.pdf", width=6.5, height=7)
 ```
 
 ```{r}
@@ -538,28 +533,39 @@ print_stats(subset(d_bias13, Scenario==2)[, -"Scenario"], format="html")
 # Different Baseline hazards per person
 
 ```{r}
-ggplot(data=data, aes(y=log_bias_i, x=estimator, fill=estimator)) +
-    geom_hline(yintercept=0, linetype="dashed") +
-    geom_boxplot(outliers=TRUE, linewidth=0.3) +
-    facet_wrap(~ exp_theta_f, ncol=1, labeller="label_parsed") +
-    theme_minimal() +
-    theme(legend.position="none",
-          axis.text.x=element_text(size=8)) +
-    labs(x=NULL, y=expression(hat(theta) - theta))
-ggsave("./Plots/sim8_n30000.pdf", width=6, height=6)
+estimator_levels <- levels(droplevels(d_sim8$estimator))
+estimator_cols <- setNames(c(
+  "#0072B2",  # Blue
+  "#E69F00",  # Orange
+  "#009E73",  # Bluish green
+  "#D55E00",  # Vermillion
+  "#56B4E9",  # Sky blue
+  "#CC79A7"   # Reddish purple
+  ), estimator_levels
+)
+
+ggplot(data=d_sim8, aes(y=log_bias_i, x=estimator, fill=estimator)) +
+  geom_hline(yintercept=0, linetype="dashed") +
+  geom_boxplot(outliers=TRUE, linewidth=0.3) +
+  facet_wrap(~ exp_theta_f, ncol=1, labeller="label_parsed") +
+  theme_minimal() +
+  theme(legend.position="none",
+        axis.text.x=element_text(size=8)) +
+  labs(x=NULL, y=expression(hat(theta) - theta)) +
+  scale_fill_manual(values=estimator_cols, drop=FALSE)
+ggsave("./Plots/sim8.pdf", width=6.5, height=7)
 ```
 
 ```{r}
-print_stats(subset(d_bias8, n==30000)[, -"n"], format="html")
+print_stats(d_bias8, format="html")
 ```
 
 # Varying $\tau$
 
 ```{r}
-ggplot(data=subset(d_sim9, n==30000),
-       aes(y=log_bias_i, x=estimator, fill=estimator)) +
+ggplot(data=d_sim9, aes(y=log_bias_i, x=estimator, fill=estimator)) +
   geom_hline(yintercept=0, linetype="dashed") +
-  geom_boxplot(outliers=TRUE, linewidth=0.3) +
+  geom_boxplot(outliers=TRUE, linewidth=0.3, outlier.size=0.4) +
   facet_grid(cols=vars(scenario), rows=vars(risk_period_f),
                labeller = labeller(
                  risk_period_f = label_parsed,
@@ -568,21 +574,45 @@ ggplot(data=subset(d_sim9, n==30000),
   theme_minimal() +
   theme(legend.position="none",
         axis.text.x=element_text(size=8)) +
-  labs(x=NULL, y=expression(hat(theta) - theta))
-ggsave("./Plots/sim9_n30000.pdf", width=6, height=6)
+  labs(x=NULL, y=expression(hat(theta) - theta)) +
+  scale_fill_manual(values=estimator_cols, drop=FALSE)
+ggsave("./Plots/sim9.pdf", width=6.5, height=7)
 ```
 
 ```{r}
-print_stats(subset(d_bias9, n==30000)[, -"n"], format="html")
+print_stats(d_bias9, format="html")
 ```
 
 # Allowing partial pairs
 
 ```{r}
-plot_boxplots_n(subset(d_sim10, n==30000), outliers=TRUE)
-ggsave("./Plots/sim10_n30000.pdf", width=6, height=6)
+plot_boxplots_n(d_sim10, outliers=TRUE)
+ggsave("./Plots/sim10.pdf", width=6.5, height=7)
 ```
 
 ```{r}
-print_stats(subset(d_bias10, n==30000)[, -"n"], format="html")
+print_stats(d_bias10, format="html")
 ```
+
+# Using a random sample of pairs
+
+```{r}
+plot_boxplots_n(d_sim14, outliers=TRUE)
+ggsave("./Plots/sim14.pdf", width=6.5, height=7)
+```
+
+```{r}
+print_stats(d_bias14, format="html")
+```
+
+# Exposure dependent on Outcome
+
+```{r}
+plot_boxplots_n(d_sim15, outliers=TRUE)
+ggsave("./Plots/sim15.pdf", width=6.5, height=7)
+```
+
+```{r}
+print_stats(d_bias15, format="html")
+```
+
