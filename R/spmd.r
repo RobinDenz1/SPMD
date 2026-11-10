@@ -10,8 +10,7 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                               rand_max_iter=100, allow_partial=TRUE,
                               allow_overlap=FALSE, max_dist=Inf,
                               conf_type="auto", conf_level=0.95, n_boot=1000,
-                              n_cores=1, progressbar=TRUE, convergence=TRUE,
-                              ...) {
+                              n_cores=1, progressbar=TRUE, ...) {
 
   . <- .id <- .max_t <- .time <- .censored <- .had_overlap <- V1 <-
     .id_pair <- NULL
@@ -26,8 +25,8 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                     estimator=estimator, conf_type=conf_type, n_boot=n_boot,
                     conf_level=conf_level, bounds=bounds,
                     rand_max_iter=rand_max_iter, batch_size=batch_size,
-                    convergence=convergence, allow_overlap=allow_overlap,
-                    allow_partial=allow_partial, max_dist=max_dist)
+                    allow_overlap=allow_overlap, allow_partial=allow_partial,
+                    max_dist=max_dist)
 
   # create matched dataset
   l_data <- get_full_data(data=data,
@@ -50,10 +49,10 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
   # set type of confidence interval automatically if conf_type = "auto"
   if (conf_type=="auto") {
     conf_type <- fifelse(estimator=="moments" & l_data$pairs=="all",
-                         "jackknife", "none")
+                         "delta", "none")
   # this is caught in the check_inputs() function, but needs to be here as well
   # in case pairs = "auto" is used
-  } else if (conf_type %in% c("boot.fast", "jackknife") &&
+  } else if (conf_type %in% c("boot.fast", "delta") &&
              !(l_data$pairs=="all" && estimator=="moments")) {
     warning("'conf_type' may only be set to '", conf_type, "' if",
             " pairs='all' and estimator='moments'", call.=FALSE)
@@ -72,7 +71,6 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
                           n_boot=n_boot,
                           rand_max_iter=rand_max_iter,
                           batch_size=batch_size,
-                          convergence=convergence,
                           allow_overlap=allow_overlap,
                           allow_partial=allow_partial,
                           max_dist=max_dist))
@@ -146,13 +144,13 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
   }
 
   # if needed, calculate approximate variance
-  if (conf_type=="jackknife") {
-    jackknife_ci <- get_spm_ci_ijk(out$d_counts, conf_level=conf_level)
+  if (conf_type=="delta") {
+    delta_ci <- get_spm_ci_delta(out$d_counts, conf_level=conf_level)
 
     # multiply by IRR to show SE on IRR scale
-    out$se <- jackknife_ci$se * out$est
-    out$ci <- jackknife_ci$irr_ci
-    out$p_value <- jackknife_ci$p_value
+    out$se <- delta_ci$se * out$est
+    out$ci <- delta_ci$irr_ci
+    out$p_value <- delta_ci$p_value
   }
 
   ## calculate some further statistics
@@ -182,18 +180,8 @@ sym_pair_matching <- function(formula, data, id, risk_period, bounds="[)",
   out$d_matches[, .had_overlap := NULL]
   out$d_matches[, .censored := NULL]
 
-  # convergence stats when re-using pairs
-  if (pairs!="one" && estimator=="moments" && convergence==TRUE) {
-    est_convergence <- get_convergence_stats(out$d_counts)
-  } else if (convergence) {
-    est_convergence <- list(A_n=0, E_n=nrow(out$d_counts), ratio=0)
-  } else {
-    est_convergence <- NULL
-  }
-
   # add to output
   out$d_time_used <- d_time_used
-  out$convergence <- est_convergence
   out$sizes <- list(n_total=n_total,
                     n_exposed=n_exposed,
                     n_exposures=n_exposures,

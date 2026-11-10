@@ -35,12 +35,12 @@ sim_example_data <- function(n, rr=2.5, risk_period=40, max_t=1000) {
 
 ## baseline hazard for A
 fbasehaz_A <- function(t) {
-  0.0001 + t * 0.00001
+  (0.0001 + t * 0.00001) * 2
 }
 
 ## baseline hazard for Y
 fbasehaz_Y <- function(t) {
-  0.00005 + t * 0.000001
+  (0.00005 + t * 0.000001) * 2
 }
 
 ## check inputs for the sim_example_data() function

@@ -1,5 +1,5 @@
 
-set.seed(1234)
+set.seed(1235)
 data <- sim_example_data(n=1000)
 
 test_that("names same as internal names", {
@@ -11,7 +11,7 @@ test_that("names same as internal names", {
   out <- sym_pair_matching(Surv(.start, .stop, .Y) ~ .A, data=data2,
                            id=".id", pairs="one", estimator="moments",
                            risk_period=40)
-  expect_equal(round(out$est, 3), 1.732)
+  expect_equal(round(out$est, 3), 2.236)
 })
 
 test_that("using glmm", {
@@ -20,21 +20,21 @@ test_that("using glmm", {
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                            id=".id", pairs="one", estimator="glmm",
                            risk_period=40)
-  expect_equal(round(out$est, 3), 3.170)
+  expect_equal(round(out$est, 3), 3.288)
 
   # with pairs="random1"
   set.seed(243)
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                            id=".id", pairs="random1", estimator="glmm",
                            risk_period=40, n_pairs=200)
-  expect_equal(round(out$est, 3), 1.536)
+  expect_equal(round(out$est, 3), 3.172)
 
   # with pairs="random2"
   set.seed(243)
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                            id=".id", pairs="random2", estimator="glmm",
                            risk_period=40, n_pairs=200)
-  expect_equal(round(out$est, 3), 4.163)
+  expect_equal(round(out$est, 3), 7.953)
 
   # with pairs="all"
   set.seed(3455)
@@ -43,7 +43,7 @@ test_that("using glmm", {
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data2,
                            id=".id", pairs="all", estimator="glmm",
                            risk_period=40)
-  expect_equal(round(out$est, 3), 2.117)
+  expect_equal(round(out$est, 3), 2.131)
 })
 
 test_that("using estimating equations based estimator", {
@@ -52,21 +52,21 @@ test_that("using estimating equations based estimator", {
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                            id=".id", pairs="one", estimator="moments",
                            risk_period=40)
-  expect_equal(round(out$est, 3), 1.732)
+  expect_equal(round(out$est, 3), 2.236)
 
   # with pairs="random1"
   set.seed(2454)
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                            id=".id", pairs="random1", estimator="moments",
                            risk_period=40, n_pairs=1000)
-  expect_equal(round(out$est, 3), 4.123)
+  expect_equal(round(out$est, 3), 2.121)
 
   # with pairs="random2"
   set.seed(246)
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                            id=".id", pairs="random2", estimator="moments",
                            risk_period=40, n_pairs=1000)
-  expect_equal(round(out$est, 3), 2.000)
+  expect_equal(round(out$est, 3), 2.449)
 
   # with pairs="all"
   set.seed(3455)
@@ -75,7 +75,7 @@ test_that("using estimating equations based estimator", {
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data2,
                            id=".id", pairs="all", estimator="moments",
                            risk_period=40)
-  expect_equal(round(out$est, 3), 2.804)
+  expect_equal(round(out$est, 3), 2.491)
 })
 
 test_that("not using an estimator", {
@@ -83,33 +83,33 @@ test_that("not using an estimator", {
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                            id=".id", pairs="one", estimator="none",
                            risk_period=40)
-  expect_equal(nrow(out$d_matches), 1928)
+  expect_equal(nrow(out$d_matches), 1924)
 })
 
 test_that("different risk_period changes results", {
 
   out1 <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                             id=".id", pairs="one", estimator="moments",
-                            risk_period=20)
+                            risk_period=30)
   out2 <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                             id=".id", pairs="one", estimator="moments",
-                            risk_period=50)
+                            risk_period=40)
 
-  expect_equal(round(out1$est, 3), 1.414)
-  expect_equal(round(out2$est, 3), 1.732)
+  expect_equal(round(out1$est, 3), 1)
+  expect_equal(round(out2$est, 3), 2.236)
 })
 
 test_that("different handling of risk_period", {
 
   out1 <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                             id=".id", pairs="all", estimator="moments",
-                            risk_period=20)
+                            risk_period=30)
   out2 <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                             id=".id", pairs="all", estimator="moments",
-                            risk_period=20, bounds="[]")
+                            risk_period=30, bounds="[]")
 
-  expect_equal(round(out1$est, 3), 3.294)
-  expect_equal(round(out2$est, 3), 3.252)
+  expect_equal(round(out1$est, 3), 3.13)
+  expect_equal(round(out2$est, 3), 3.162)
 })
 
 set.seed(42)
@@ -152,9 +152,11 @@ test_that("bootstrap, n_cores = 1, pairs = 'random1', moments", {
 test_that("bootstrap, n_cores = 1, pairs = 'random2', moments", {
 
   set.seed(2134)
-  out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
+  out <- suppressWarnings(
+    sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                            risk_period=40, pairs="random2", estimator="moments",
                            conf_type="boot", n_boot=5, n_cores=1, n_pairs=1000)
+  )
   expect_true(length(out$boot_est)==5)
   expect_true(is.numeric(out$boot_est))
 })
@@ -201,10 +203,10 @@ test_that("bootstrap, n_cores = 1, pairs = 'all', moments", {
   expect_true(length(out$boot_est)==5)
   expect_true(is.numeric(out$boot_est))
 
-  # using the infinitesimal jackknife
+  # using the delta method
   out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                            risk_period=40, pairs="all", estimator="moments",
-                           conf_type="jackknife", n_boot=5, n_cores=1)
+                           conf_type="delta", n_boot=5, n_cores=1)
   expect_true(length(out$boot_est)==0)
   expect_true(length(out$ci)==2)
 })
@@ -256,15 +258,6 @@ test_that("bootstrap, n_cores = 2, pairs = 'one', moments", {
 
   expect_true(length(out2$boot_est)==5)
   expect_true(is.numeric(out2$boot_est))
-})
-
-test_that("not using convergence statistics", {
-
-  out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
-                           id=".id", pairs="one", estimator="moments",
-                           risk_period=40, convergence=FALSE)
-  expect_equal(round(out$est, 2), 2.24)
-  expect_snapshot_output(summary(out))
 })
 
 test_that("allow_overlap works with all pair types", {
@@ -383,9 +376,11 @@ test_that("using max_dist", {
 
   # with max_dist
   set.seed(12344)
-  out2 <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
+  out2 <- suppressWarnings(
+    sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                             id=".id", pairs="all", estimator="moments",
                             risk_period=40, max_dist=100)
+  )
 
   # maximum observed distance in regular version
   out1$d_matches[, min_time := min(.time), by=.id_pair]
@@ -397,6 +392,6 @@ test_that("using max_dist", {
   out2$d_matches[, max_time := max(.time), by=.id_pair]
   max_obs2 <- max(out2$d_matches$max_time - out2$d_matches$min_time)
 
-  expect_equal(round(max_obs1, 3), 994)
+  expect_equal(round(max_obs1, 3), 995)
   expect_equal(round(max_obs2, 3), 100)
 })

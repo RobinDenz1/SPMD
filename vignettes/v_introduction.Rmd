@@ -259,9 +259,9 @@ Ideally, the distribution should look more or less Gaussian. In any case, it is 
 
 Bootstrapping may become fairly computationally expensive, particularly with large samples and `pairs="all"` or `pairs="random1"` / `pairs="random2"` when using many matches. We have implemented some computational tricks that keep the computation time low, particularly when using `pairs="all"`. In this case, we may use `conf_type="boot.fast"` as shown above. Then, the pair matching is only done once and the bootstrap samples are generated directly from all pairs through re-weighting them. This is possible because repeated inclusion of individuals never generates new samples (individuals cannot match themselves, because the risk periods would overlap). If `pairs!="all"`, this strategy may not be used. Users should then use `conf_type="boot"`. To make this faster, the `n_cores` argument may be used to run the bootstrap calculations on multiple processing cores, potentially saving much more time as well.
 
-## Infinitesimal Jackknife
+## The Delta Method
 
-The best approach that is currently available when using `estimator = "moments` and `pairs = "all"` is to set `conf_type = "jackknife`. This is also the underlying default behavior (e.g. when `conf_type = "auto"`). It uses a first-order taylor approximation of the `conf_type = "boot.fast"` method, which does not require actual re-sampling. This has multiple advantages. First, it is extremly fast because it only uses the existing pair information. Secondly, because no actual samples are created, the issue of infinite or undefined estimates in specific bootstrap samples does not arise. We therefore recommend using this approach, whenever feasible. More information is given in the appendix of the main paper (Denz et al. 2026).
+The best approach that is currently available when using `estimator = "moments` and `pairs = "all"` is to set `conf_type = "delta`. This is also the underlying default behavior (e.g. when `conf_type = "auto"`). It uses a first-order taylor approximation of the `conf_type = "boot.fast"` method, which does not require actual re-sampling. This method is equivalent to the U-statistics based variance estimator given by Schechtmann (1991). This has multiple advantages. First, it is extremly fast because it only uses the existing pair information. Secondly, because no actual samples are created, the issue of infinite or undefined estimates in specific bootstrap samples does not arise. We therefore recommend using this approach, whenever feasible. More information is given in the appendix of the main paper (Denz et al. 2026).
 
 # Some subtleties
 
@@ -292,3 +292,5 @@ Denz, Robin, Filippo Saatkamp, Katharina Meiszl and Nina Timmesfeld (2026). "The
 Farrington, C. Paddy (1995). "Relative Incidence Estimation from Case Series for Vaccine Safety Evaluation". In: Biometrics 51.1, pp. 228–235. doi: 10.2307/2533328.
 
 Denz, Robin and Nina Timmesfeld (2026). "Simulating Complex Cross-Sectional and Longitudinal Data using the simDAG R Package". Journal of Statistical Software 116 (2), doi: 10.18637/jss.v116.i02.
+
+Schechtman, Edna (1991). "On Estimating the Asymptotic Variance of a Function of U-Statistics". In: The American Statistician 45.2, pp. 103–106. doi: 10.1080/00031305.1991.10475778.

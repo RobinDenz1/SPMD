@@ -14,8 +14,7 @@ sym_pair_matching(formula, data, id, risk_period, bounds="[)",
                   rand_max_iter=100, allow_partial=TRUE,
                   allow_overlap=FALSE, max_dist=Inf,
                   conf_type="auto", conf_level=0.95, n_boot=1000,
-                  n_cores=1, progressbar=TRUE, convergence=TRUE,
-                  ...)
+                  n_cores=1, progressbar=TRUE, ...)
 }
 \arguments{
   \item{formula}{
@@ -58,7 +57,7 @@ Either \code{TRUE} or \code{FALSE} (default), specifying whether the use of pair
 A single positive number, specifying the maximum distance of exposure times allowed in a pair. If the distance is larger, the pair is deemed invalid. Defaults to \code{Inf} to make no restrictions on the exposure time distance. May be useful for long observation times.
   }
   \item{conf_type}{
-A single character string, specifying how the standard error, confidence interval and p-value should be estimated. Must be either: \code{"auto"} (default), in which case the method is choosen automatically based on user input, \code{"none"} to not estimate any confidence intervals, \code{"boot"} to use an individual-level bootstrap procedure, \code{"boot.fast"} to use an approximate but much faster version of the individual-level bootstrap or \code{"jackknife"} to use the infinitesimal jackknife, which is a first-order taylor approximation of the individual-level bootstrap variance. Note that both \code{"boot.fast"} and \code{"jackknife"} only work with \code{estimator = "moments"} and \code{pairs = "all"}. See details.
+A single character string, specifying how the standard error, confidence interval and p-value should be estimated. Must be either: \code{"auto"} (default), in which case the method is choosen automatically based on user input, \code{"none"} to not estimate any confidence intervals, \code{"boot"} to use an individual-level bootstrap procedure, \code{"boot.fast"} to use an approximate but much faster version of the individual-level bootstrap or \code{"delta"} to use the delta method based estimator, which is equivalent to a first-order taylor approximation of the individual-level bootstrap variance. Note that both \code{"boot.fast"} and \code{"delta"} only work with \code{estimator = "moments"} and \code{pairs = "all"}. See details.
   }
   \item{conf_level}{
 A single number between 0 and 1, specifying the confidence level that should be used for the confidence interval estimation. Ignored if \code{conf_type = "none"}.
@@ -71,9 +70,6 @@ A single integer, specifying the number of processing cores that should be used 
   }
   \item{progressbar}{
 Either \code{TRUE} or \code{FALSE}, specifying whether a progressbar should be shown when \code{conf_type = "boot"} or \code{conf_type = "boot.fast"}. This currently only works if \code{n_cores > 1}.
-  }
-  \item{convergence}{
-Either \code{TRUE} or \code{FALSE}, specifying whether to calculate convergence related statistics. Those are calculated by default, but may be turned off to save some computation time.
   }
   \item{...}{
 Further arguments passed to \code{\link[lme4]{glmer}} when using \code{estimator="glmm"}, ignored otherwise.
@@ -134,7 +130,7 @@ Because of the non-linear nature of the estimator and the potentially non-indepe
 
 First, a non-parametric bootstrap procedure on the individual level may be used to estimate confidence intervals or p-values. In particular, percentile bootstrap confidence intervals are used. This corresponds to \code{conf_type = "boot"}, in which all aspects of the estimation, including the pair matching, are bootstrapped. This option works for both \code{estimator}s and all specifications of \code{pairs}. Unfortunately, this can be very slow with large sample sizes and large amounts of \code{n_boot}. The \code{n_cores} option may help here, by allowing the usage of multiple processing cores in parallel. The \pkg{doRNG} package is used internally to ensure that the results are still replicable.
 
-When using \code{pairs="all"} and \code{estimator="moments"}, two better options are available. First, \code{conf_type = "boot.fast"} utilizes the fact that bootstrapping cannot create new pairs that are not already included in the set of all valid pairs. Instead of actually performing re-sampling, it simply re-weights existing pairs appropriately and applies a weighter version of the estimator \code{n_boot} times. Even better, \code{conf_type = "jackknife"} uses a first-order taylor approximation of this procedure, which is equivalent to an infinitesimal jackknife, to avoid re-sampling altogether. This is the best and recommended option and is what is being used in this case with \code{conf_type = "auto"} (default). More information is given in the appendix of the main paper (Denz et al. 2026).
+When using \code{pairs="all"} and \code{estimator="moments"}, two better options are available. First, \code{conf_type = "boot.fast"} utilizes the fact that bootstrapping cannot create new pairs that are not already included in the set of all valid pairs. Instead of actually performing re-sampling, it simply re-weights existing pairs appropriately and applies a weighter version of the estimator \code{n_boot} times. Even better, \code{conf_type = "delta"} uses a first-order taylor approximation of this procedure, which is equivalent to an infinitesimal jackknife, to avoid re-sampling altogether. This is the best and recommended option and is what is being used in this case with \code{conf_type = "auto"} (default). More information is given in the appendix of the main paper (Denz et al. 2026).
 
 \strong{\emph{Individuals without Events}}:
 
@@ -156,7 +152,6 @@ Returns a \code{SPMD} object, containing the following objects:
   \item{\code{l_sums}: If \code{estimator="moments"}, a \code{list} containing the two sums used in the estimator.}
   \item{\code{model}: If \code{estimator="glmm"}, an object of class \code{merMod}, which is the generalized linear model used to calculate the estimate.}
   \item{\code{d_time_used}: A \code{data.table} containing the amount of observation time used for each individual included in the matching process.}
-  \item{\code{convergence}: A \code{list} containing three numbers: \code{A_n} (the number of pairs of pairs that contain at least one overlapping individual, if ordered pairs are considered), \code{E_n} (the number of possible pairs of pairs, if ordered pairs are considered) and \code{ratio} (A_n / E_n^2). All of these numbers are estimated with respect to the pairs actually used.}
   \item{\code{sizes}: A \code{list} containing various numbers describing the used sample sizes.}
 }
 

@@ -147,8 +147,8 @@ create_data <- function(n, scenario, theta, multiple_A=FALSE,
     data <- subset(data, C_event_count==0)
   # censor after first event
   } else if (censor == 4) {
-    data[, min_time := if (any(Y)) min(stop[Y]) else Inf, by=.id]
-    data <- subset(data, stop <= min_time)
+    data[, min_time := if (any(Y)) min(stop[Y==TRUE]) + 0.000001 else Inf, by=.id]
+    data <- subset_start_stop(data, last_time=data$min_time)
   }
 
   return(data)
@@ -156,13 +156,11 @@ create_data <- function(n, scenario, theta, multiple_A=FALSE,
 
 # baseline hazards for the event in scenario 3
 fbasehaz_Y3.1 <- function(t) {
-  return(0.000017017292 *
-           (1 + 0.95 * tanh((t - 500) / 100)))
+  return(0.000017017292 * (1 + 0.95 * tanh((t - 500) / 100)))
 }
 
 fbasehaz_Y3.2 <- function(t) {
-  return(0.000017017292 *
-           (1 - 0.95 * tanh((t - 500) / 100)))
+  return(0.000017017292 * (1 - 0.95 * tanh((t - 500) / 100)))
 }
 
 ## data for scenario3, in which individuals have different baseline hazards

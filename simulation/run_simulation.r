@@ -30,7 +30,7 @@ sim1 <- run_simulation(
   theta = log(c(0.7, 1, 2.5, 5)),
   multiple_A = FALSE,
   multiple_Y = TRUE,
-  censor = 1,
+  conf_int = "delta",
   n_cores = 8,
   seed = 42
 )
@@ -52,7 +52,6 @@ sim2 <- run_simulation(
 saveRDS(sim2$results, "./simulation/data/sim2_results.Rds")
 
 ## varying theta with a terminal event
-# TODO: check if censoring removes the event too
 sim3 <- run_simulation(
   n_sim = n_sim,
   n_repeats = n_repeats,
@@ -61,7 +60,6 @@ sim3 <- run_simulation(
   theta = log(c(0.7, 1, 2.5)),
   multiple_A = FALSE,
   multiple_Y = FALSE,
-  censor = 4,
   n_cores = 8,
   seed = 44
 )
@@ -84,20 +82,20 @@ sim4 <- run_simulation(
 saveRDS(sim4$results, "./simulation/data/sim4_results.Rds")
 
 ## CI coverage for actual bootstrap and IJK
-# TODO: don't run yet, wait
-sim5 <- run_simulation(
-  n_sim = c(20000, 30000, 50000),
-  n_repeats = n_repeats,
-  method = all_methods,
-  scenario = c(1, 2),
-  theta = log(c(0.7, 1, 2.5)),
-  multiple_A = FALSE,
-  multiple_Y = TRUE,
-  conf_int = c("boot.fast", "jackknife"),
-  n_cores = 8,
-  seed = 46
-)
-saveRDS(sim5$results, "./simulation/data/sim5_results.Rds")
+# NOTE: not run because it is incorporated in main simulation
+#sim5 <- run_simulation(
+#  n_sim = c(20000, 30000, 50000),
+#  n_repeats = n_repeats,
+#  method = all_methods,
+#  scenario = c(1, 2),
+#  theta = log(c(0.7, 1, 2.5)),
+#  multiple_A = FALSE,
+#  multiple_Y = TRUE,
+#  conf_int = c("boot.fast", "delta"),
+#  n_cores = 8,
+#  seed = 46
+#)
+#saveRDS(sim5$results, "./simulation/data/sim5_results.Rds")
 
 # interaction between time and U
 sim6 <- run_simulation(

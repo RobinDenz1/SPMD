@@ -302,8 +302,8 @@ This script takes in the results generated using the Monte-Carlo simulation and 
 ```{r}
 # read in simulation results
 d_sim1 <- readRDS("./data/sim1_results.Rds") # TODO: run
-d_sim2 <- readRDS("./data/sim2_results.Rds") # TODO: run
-d_sim3 <- readRDS("./data/sim3_results.Rds") # TODO: run after debug
+d_sim2 <- readRDS("./data/sim2_results.Rds")
+d_sim3 <- readRDS("./data/sim3_results.Rds")
 d_sim4 <- readRDS("./data/sim4_results.Rds")
 d_sim5 <- readRDS("./data/sim5_results.Rds") # TODO: run
 d_sim6 <- readRDS("./data/sim6_results.Rds")
@@ -313,7 +313,7 @@ d_sim9 <- readRDS("./data/sim9_results.Rds")
 d_sim10 <- readRDS("./data/sim10_results.Rds")
 d_sim11 <- readRDS("./data/sim11_results.Rds")
 d_sim12 <- readRDS("./data/sim12_results.Rds")
-d_sim13 <- readRDS("./data/sim13_results.Rds") # TODO: run
+d_sim13 <- readRDS("./data/sim13_results.Rds")
 d_sim14 <- readRDS("./data/sim14_results.Rds")
 d_sim15 <- readRDS("./data/sim15_results.Rds")
 
@@ -402,23 +402,23 @@ ggsave("./Plots/sim1_runtime.pdf", width=5, height=6)
 # Multiple exposure periods per person
 
 ```{r}
-plot_boxplots_n(subset(d_sim2, n==30000), outliers=TRUE)
-ggsave("./Plots/sim2_n30000.pdf", width=6, height=6)
+plot_boxplots_n(d_sim2, outliers=TRUE)
+ggsave("./Plots/sim2.pdf", width=6.5, height=7)
 ```
 
 ```{r}
-print_stats(subset(d_bias2, n==30000)[, -"n"], format="html")
+print_stats(d_bias2, format="html")
 ```
 
-# Varying $\theta$ with a terminal event
+# Varying $\theta$ with a non-recurrent event
 
 ```{r}
-plot_boxplots_n(subset(d_sim3, n==30000), outliers=TRUE)
-ggsave("./Plots/sim3_n30000.pdf", width=6, height=6)
+plot_boxplots_n(d_sim3, outliers=TRUE)
+ggsave("./Plots/sim3.pdf", width=6.5, height=7)
 ```
 
 ```{r}
-print_stats(subset(d_bias3, n==30000)[, -"n"], format="html")
+print_stats(d_bias3, format="html")
 ```
 
 ## With time-varying variable $L_t$
@@ -470,7 +470,7 @@ knitr::kable(subset(d_sim5_est, conf_int=="boot.fast")[, -"conf_int"], format="h
 ```
 
 ```{r}
-knitr::kable(subset(d_sim5_est, conf_int=="jackknife")[, -c("conf_int", "boot_na")], format="html")
+knitr::kable(subset(d_sim5_est, conf_int=="delta")[, -c("conf_int", "boot_na")], format="html")
 ```
 
 # Interaction between time and $U$
@@ -512,7 +512,7 @@ print_stats(d_bias12, format="html")
 
 ```{r}
 plot_boxplots_beta_L(subset(d_sim13, scenario=="Scenario 1"), outliers=TRUE)
-ggsave("./plots/sim13_scenario1.pdf", width=7.5, height=7)
+ggsave("./plots/sim13_scenario1.pdf", width=8.5, height=7)
 ```
 
 ```{r}
@@ -523,7 +523,7 @@ print_stats(subset(d_bias13, Scenario==1)[, -"Scenario"], format="html")
 
 ```{r}
 plot_boxplots_beta_L(subset(d_sim13, scenario=="Scenario 2"), outliers=TRUE)
-ggsave("./plots/sim13_scenario2.pdf", width=7.5, height=7)
+ggsave("./plots/sim13_scenario2.pdf", width=8.5, height=7)
 ```
 
 ```{r}

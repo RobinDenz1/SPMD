@@ -25,9 +25,8 @@
         No finite estimate available.
       
       Estimation
-        Estimating equation: exp{1/2 log(2 / 0)}
+        Estimating equation: exp{1/2 log(3 / 0)}
         CI estimation method: 'none'
-        |A_n| / |E_n|^2: 0
       ──────────────────────────────────────────────────────────────
 
 # pairs='one', estimator='none'
@@ -87,7 +86,6 @@
       Estimation
         Estimating equation: exp{1/2 log(12 / 1)}
         CI estimation method: 'none'
-        |A_n| / |E_n|^2: 0.007456
       ──────────────────────────────────────────────────────────────
 
 # pairs='random', estimator='moments', bootstrap=TRUE
@@ -122,7 +120,6 @@
       Estimation
         Estimating equation: exp{1/2 log(12 / 1)}
         CI estimation method: 'boot'
-        |A_n| / |E_n|^2: 0.007456
       ──────────────────────────────────────────────────────────────
 
 # pairs='all', estimator='moments'
@@ -145,17 +142,16 @@
         Individuals with >=1 event       540
         Exposed + event                  535
         Exposure episodes (included)     535
-        Symmetric pairs                  121,412
+        Symmetric pairs                  121,419
         Observation time used            97.91%
       
       Effect estimate
         log(IRR)   IRR        SE(IRR)    95% CI          P-value
-        1.194      3.300      0.483      2.477 – 4.397   <0.001
+        1.189      3.282      0.480      2.464 – 4.372   <0.001
       
       Estimation
-        Estimating equation: exp{1/2 log(1,895 / 174)}
-        CI estimation method: 'jackknife'
-        |A_n| / |E_n|^2: 0.007507649
+        Estimating equation: exp{1/2 log(1,896 / 176)}
+        CI estimation method: 'delta'
       ──────────────────────────────────────────────────────────────
 
 # pairs='one', estimator='glmm'
@@ -207,15 +203,14 @@
         Exposed + event                  535
         Exposure episodes (included)     535
         Symmetric pairs                  300
-        Observation time used            10.46%
+        Observation time used            10.51%
       
       Effect estimate
         No finite estimate available.
       
       Estimation
-        Estimating equation: exp{1/2 log(5 / 0)}
+        Estimating equation: exp{1/2 log(2 / 0)}
         CI estimation method: 'none'
-        |A_n| / |E_n|^2: 0.008044444
       ──────────────────────────────────────────────────────────────
 
 # pairs='all', estimator='moments', with bootstrap
@@ -238,18 +233,17 @@
         Individuals with >=1 event       540
         Exposed + event                  535
         Exposure episodes (included)     535
-        Symmetric pairs                  121,412
+        Symmetric pairs                  121,419
         Observation time used            97.91%
       
       Effect estimate
         log(IRR)   IRR        SE(IRR)    99% CI          P-value
-        1.194      3.300      0.396      2.456 – 3.350   0.25
+        1.189      3.282      0.389      2.455 – 3.339   0.25
       
       Bootstrap: 4 replicates
       
       Estimation
-        Estimating equation: exp{1/2 log(1,895 / 174)}
+        Estimating equation: exp{1/2 log(1,896 / 176)}
         CI estimation method: 'boot'
-        |A_n| / |E_n|^2: 0.007507649
       ──────────────────────────────────────────────────────────────
 

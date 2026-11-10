@@ -178,38 +178,9 @@ get_boot_p_value <- function(boot_samples, null=1) {
   return(p)
 }
 
-## calculate convergence statistics
-# NOTE: A_n as calculated here is actually the ordered pair quantity defined
-#       in the consistency proof divided by 4 and E_n^2 is the ordered pair
-#       denominator divided by 4, so the ratio is correct, but the single
-#       quantities are on a different scale than in the proof
-#' @importFrom data.table :=
-#' @importFrom data.table rbindlist
-get_convergence_stats <- function(d_counts) {
-
-  . <- .id1 <- .id2 <- id <- d1 <- d2 <- i.N <- NULL
-
-  # degree of each individual
-  deg <- rbindlist(list(
-    d_counts[, .(id = .id1)],
-    d_counts[, .(id = .id2)]
-  ))[, .N, by = id]
-
-  # number of pairs of pairs containing the same individual (A_n)
-  A_n <- d_counts[deg, on=c(.id1 = "id"), d1 := i.N][
-                  deg, on=c(.id2 = "id"), d2 := i.N][
-                  , sum((d1 - 1L) + (d2 - 1L))]
-
-  # number of pairs of pairs
-  E_n <- nrow(d_counts)
-  out <- list(A_n=A_n, E_n=E_n, ratio=A_n / (E_n^2))
-
-  return(out)
-}
-
 ## applies the infinitesimal jackknife to obtain an approximation of the
 ## variance and a confidence interval
-get_spm_ci_ijk <- function(d_counts, conf_level=0.95) {
+get_spm_ci_delta <- function(d_counts, conf_level=0.95) {
 
   . <- .id <- NULL
 
@@ -280,7 +251,7 @@ is_date <- function(x) {
 ## input checks for the sym_pair_matching() function
 check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
                               estimator, conf_type, n_boot, conf_level,
-                              bounds, batch_size, rand_max_iter, convergence,
+                              bounds, batch_size, rand_max_iter,
                               allow_overlap, max_dist, allow_partial) {
 
   stopifnotm(is.data.frame(data), "'data' must be a data.frame like ",
@@ -320,8 +291,6 @@ check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
   stopifnotm((length(rand_max_iter)==1 && is.numeric(rand_max_iter) &&
                 round(rand_max_iter)==rand_max_iter && rand_max_iter > 0),
              "'rand_max_iter' must be a single integer > 0.")
-  stopifnotm((length(convergence)==1 && is.logical(convergence)),
-             "'convergence' must be either TRUE or FALSE.")
   stopifnotm((length(allow_overlap)==1 && is.logical(allow_overlap)),
              "'allow_overlap' must be either TRUE or FALSE.")
   stopifnotm((length(allow_partial)==1 && is.logical(allow_partial)),
@@ -330,14 +299,14 @@ check_inputs_spmd <- function(formula, data, id, risk_period, pairs, n_pairs,
              "The intervals coded by 'start' and 'stop' must be numeric.",
              "Date like values are not supported.")
   stopifnotm(length(conf_type)==1 && is.character(conf_type) &&
-             conf_type %in% c("none", "auto", "boot", "boot.fast", "jackknife"),
+             conf_type %in% c("none", "auto", "boot", "boot.fast", "delta"),
              "'conf_type' must be either 'none', 'auto', 'boot', 'boot.fast'",
-             "or 'jackknife'.")
+             "or 'delta'.")
   stopifnotm((length(max_dist)==1 && is.numeric(max_dist) && max_dist > 0),
              "'max_dist' must be a single number > 0.")
 
   # check if conf_type is okay
-  if (conf_type %in% c("boot.fast", "jackknife") &&
+  if (conf_type %in% c("boot.fast", "delta") &&
       (estimator=="glmm" || (estimator=="moments" & pairs!="all"))) {
     stop("conf_type = '", conf_type, "' is only supported with",
          " estimator='moments' and pairs='all'. Use conf_type='boot' instead.",

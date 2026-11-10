@@ -118,7 +118,6 @@ summary.SPMD <- function(object, ...) {
       conf_level = inputs$conf_level,
       p_value = p_value
     ),
-    convergence = object$convergence,
     bootstrap = list(n=boot_n, n_na=object$n_boot_na),
     estimating_equation = estimating_equation,
     object = object
@@ -206,11 +205,6 @@ print.summary.SPMD <- function(x, ...) {
     cat("\nEstimation\n")
     cat("  Estimating equation: ", x$estimating_equation, "\n", sep="")
     cat("  CI estimation method: '", x$estimate$conf_type, "'\n", sep="")
-
-    if (x$object$inputs$estimator=="moments" &&
-        x$object$inputs$convergence==TRUE) {
-      cat("  |A_n| / |E_n|^2: ", x$convergence$ratio, "\n", sep="")
-    }
   }
 
   cat(line, "\n", sep = "")
