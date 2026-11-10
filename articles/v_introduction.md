@@ -123,12 +123,12 @@ head(data)
 #> Key: <.id, start>
 #>      .id start  stop          X      A      Y
 #>    <int> <num> <num>      <num> <lgcl> <lgcl>
-#> 1:     1     0   249 -1.2070657  FALSE  FALSE
-#> 2:     1   249   289 -1.2070657   TRUE  FALSE
-#> 3:     1   289  1000 -1.2070657  FALSE  FALSE
-#> 4:     2     0   221  0.2774292  FALSE  FALSE
-#> 5:     2   221   261  0.2774292   TRUE  FALSE
-#> 6:     2   261   623  0.2774292  FALSE   TRUE
+#> 1:     1     0   173 -1.2070657  FALSE  FALSE
+#> 2:     1   173   213 -1.2070657   TRUE  FALSE
+#> 3:     1   213  1000 -1.2070657  FALSE  FALSE
+#> 4:     2     0   154  0.2774292  FALSE  FALSE
+#> 5:     2   154   190  0.2774292   TRUE   TRUE
+#> 6:     2   190   191  0.2774292   TRUE  FALSE
 ```
 
 This function internally uses the `simDAG` package to simulate this data
@@ -197,22 +197,21 @@ summary(out)
 #> 
 #> Sample
 #>   Individuals                      500
-#>   Exposed individuals (total)      486
-#>   Exposure episodes (total)        486
-#>   Individuals with >=1 event       342
-#>   Exposed + event                  339
-#>   Exposure episodes (included)     339
-#>   Symmetric pairs                  51,233
-#>   Observation time used            94.21%
+#>   Exposed individuals (total)      498
+#>   Exposure episodes (total)        498
+#>   Individuals with >=1 event       427
+#>   Exposed + event                  426
+#>   Exposure episodes (included)     426
+#>   Symmetric pairs                  78,017
+#>   Observation time used            77.90%
 #> 
 #> Effect estimate
 #>   log(IRR)   IRR        SE(IRR)    95% CI          P-value
-#>   0.851      2.343      0.573      1.450 – 3.784   <0.001
+#>   1.048      2.852      0.532      1.978 – 4.112   <0.001
 #> 
 #> Estimation
-#>   Estimating equation: exp{1/2 log(225 / 41)}
-#>   CI estimation method: 'jackknife'
-#>   |A_n| / |E_n|^2: 0.0117922
+#>   Estimating equation: exp{1/2 log(960 / 118)}
+#>   CI estimation method: 'delta'
 #> ──────────────────────────────────────────────────────────────
 ```
 
@@ -249,12 +248,12 @@ head(out$d_matches)
 #> Key: <.id_pair, .group>
 #>      .id .time .min_t .max_t .id_pair     .A .group .end_time .n_events
 #>    <int> <num>  <num>  <num>    <int> <lgcl>  <num>     <num>     <int>
-#> 1:     3    12      0   1000        1  FALSE      1        42         0
-#> 2:   114    12      0   1000        1   TRUE      2        42         0
-#> 3:   114   249      0   1000        1  FALSE      3       279         0
-#> 4:     3   249      0   1000        1   TRUE      4       279         0
-#> 5:   319    12      0   1000        2  FALSE      1        42         0
-#> 6:   493    12      0   1000        2   TRUE      2        42         0
+#> 1:   304     7      0   1000        1  FALSE      1        37         0
+#> 2:   114     7      0   1000        1   TRUE      2        37         0
+#> 3:   114   179      0   1000        1  FALSE      3       209         0
+#> 4:   304   179      0   1000        1   TRUE      4       209         0
+#> 5:   380     7      0   1000        2  FALSE      1        37         0
+#> 6:   493     7      0   1000        2   TRUE      2        37         0
 ```
 
 We can also inspect the used times of the matches visually, using the
@@ -458,24 +457,23 @@ summary(out)
 #> 
 #> Sample
 #>   Individuals                      500
-#>   Exposed individuals (total)      486
-#>   Exposure episodes (total)        486
-#>   Individuals with >=1 event       342
-#>   Exposed + event                  339
-#>   Exposure episodes (included)     339
-#>   Symmetric pairs                  51,233
-#>   Observation time used            94.21%
+#>   Exposed individuals (total)      498
+#>   Exposure episodes (total)        498
+#>   Individuals with >=1 event       427
+#>   Exposed + event                  426
+#>   Exposure episodes (included)     426
+#>   Symmetric pairs                  78,017
+#>   Observation time used            77.90%
 #> 
 #> Effect estimate
 #>   log(IRR)   IRR        SE(IRR)    95% CI          P-value
-#>   0.851      2.343      0.649      1.356 – 3.855   0.006
+#>   1.048      2.852      0.567      1.914 – 4.134   0.001
 #> 
 #> Bootstrap: 1,000 replicates
 #> 
 #> Estimation
-#>   Estimating equation: exp{1/2 log(225 / 41)}
+#>   Estimating equation: exp{1/2 log(960 / 118)}
 #>   CI estimation method: 'boot.fast'
-#>   |A_n| / |E_n|^2: 0.0117922
 #> ──────────────────────────────────────────────────────────────
 ```
 
@@ -520,20 +518,21 @@ match themselves, because the risk periods would overlap). If
 used to run the bootstrap calculations on multiple processing cores,
 potentially saving much more time as well.
 
-### Infinitesimal Jackknife
+### The Delta Method
 
 The best approach that is currently available when using
 `estimator = "moments` and `pairs = "all"` is to set
-`conf_type = "jackknife`. This is also the underlying default behavior
+`conf_type = "delta`. This is also the underlying default behavior
 (e.g. when `conf_type = "auto"`). It uses a first-order taylor
 approximation of the `conf_type = "boot.fast"` method, which does not
-require actual re-sampling. This has multiple advantages. First, it is
-extremly fast because it only uses the existing pair information.
-Secondly, because no actual samples are created, the issue of infinite
-or undefined estimates in specific bootstrap samples does not arise. We
-therefore recommend using this approach, whenever feasible. More
-information is given in the appendix of the main paper (Denz et
-al. 2026).
+require actual re-sampling. This method is equivalent to the
+U-statistics based variance estimator given by Schechtmann (1991). This
+has multiple advantages. First, it is extremly fast because it only uses
+the existing pair information. Secondly, because no actual samples are
+created, the issue of infinite or undefined estimates in specific
+bootstrap samples does not arise. We therefore recommend using this
+approach, whenever feasible. More information is given in the appendix
+of the main paper (Denz et al. 2026).
 
 ## Some subtleties
 
@@ -620,3 +619,7 @@ doi: 10.2307/2533328.
 Denz, Robin and Nina Timmesfeld (2026). “Simulating Complex
 Cross-Sectional and Longitudinal Data using the simDAG R Package”.
 Journal of Statistical Software 116 (2), doi: 10.18637/jss.v116.i02.
+
+Schechtman, Edna (1991). “On Estimating the Asymptotic Variance of a
+Function of U-Statistics”. In: The American Statistician 45.2,
+pp. 103–106. doi: 10.1080/00031305.1991.10475778.

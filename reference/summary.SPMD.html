@@ -89,12 +89,12 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Key: &lt;.id, start&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      .id start  stop          X      A      Y</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;int&gt; &lt;num&gt; &lt;num&gt;      &lt;num&gt; &lt;lgcl&gt; &lt;lgcl&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1:     1     0   386 -1.2070657  FALSE  FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2:     1   386   426 -1.2070657   TRUE  FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3:     1   426  1000 -1.2070657  FALSE  FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4:     2     0    86  0.2774292  FALSE   TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5:     2    86    87  0.2774292  FALSE  FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6:     2    87   188  0.2774292  FALSE  FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:     1     0   270 -1.2070657  FALSE  FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:     1   270   310 -1.2070657   TRUE  FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3:     1   310  1000 -1.2070657  FALSE  FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4:     2     0    53  0.2774292  FALSE   TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5:     2    53    54  0.2774292  FALSE  FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6:     2    54   128  0.2774292  FALSE  FALSE</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="sym_pair_matching.html">sym_pair_matching</a></span><span class="op">(</span><span class="fu">Surv</span><span class="op">(</span><span class="va">start</span>, <span class="va">stop</span>, <span class="va">Y</span><span class="op">)</span> <span class="op">~</span> <span class="va">A</span>, data<span class="op">=</span><span class="va">data</span>, id<span class="op">=</span><span class="st">".id"</span>,</span></span>
 <span class="r-in"><span>                         risk_period<span class="op">=</span><span class="fl">40</span>, pairs<span class="op">=</span><span class="st">"all"</span>, estimator<span class="op">=</span><span class="st">"moments"</span><span class="op">)</span></span></span>
@@ -111,20 +111,19 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Individuals                      100</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Exposed individuals (total)      100</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Exposure episodes (total)        100</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Individuals with &gt;=1 event       68</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Exposed + event                  68</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Exposure episodes (included)     68</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Symmetric pairs                  1,931</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Observation time used            70.45%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Individuals with &gt;=1 event       83</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Exposed + event                  83</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Exposure episodes (included)     83</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Symmetric pairs                  2,759</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Observation time used            55.39%</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Effect estimate</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   log(IRR)   IRR        SE(IRR)    95% CI          P-value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   0.405      1.500      0.930      0.445 – 5.055   0.513</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   1.063      2.894      1.357      1.155 – 7.254   0.0234</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Estimation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Estimating equation: exp{1/2 log(9 / 4)}</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   CI estimation method: 'jackknife'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   |A_n| / |E_n|^2: 0.05827083</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Estimating equation: exp{1/2 log(67 / 8)}</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   CI estimation method: 'delta'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ──────────────────────────────────────────────────────────────</span>
 </code></pre></div>
     </div>

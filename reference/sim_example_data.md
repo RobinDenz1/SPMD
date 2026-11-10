@@ -105,12 +105,12 @@ head(data)
 #> Key: <.id, start>
 #>      .id start  stop          X      A      Y
 #>    <int> <num> <num>      <num> <lgcl> <lgcl>
-#> 1:     1     0   386 -1.2070657  FALSE  FALSE
-#> 2:     1   386   426 -1.2070657   TRUE  FALSE
-#> 3:     1   426  1000 -1.2070657  FALSE  FALSE
-#> 4:     2     0    86  0.2774292  FALSE   TRUE
-#> 5:     2    86    87  0.2774292  FALSE  FALSE
-#> 6:     2    87   188  0.2774292  FALSE  FALSE
+#> 1:     1     0   270 -1.2070657  FALSE  FALSE
+#> 2:     1   270   310 -1.2070657   TRUE  FALSE
+#> 3:     1   310  1000 -1.2070657  FALSE  FALSE
+#> 4:     2     0    53  0.2774292  FALSE   TRUE
+#> 5:     2    53    54  0.2774292  FALSE  FALSE
+#> 6:     2    54   128  0.2774292  FALSE  FALSE
 
 # simulate data where the exposure increases the event probability
 data <- sim_example_data(n=100, rr=2.5)
@@ -118,10 +118,10 @@ head(data)
 #> Key: <.id, start>
 #>      .id start  stop          X      A      Y
 #>    <int> <num> <num>      <num> <lgcl> <lgcl>
-#> 1:     1     0   984 -3.3960635  FALSE   TRUE
-#> 2:     1   984   985 -3.3960635  FALSE  FALSE
-#> 3:     1   985  1000 -3.3960635  FALSE  FALSE
-#> 4:     2     0   302 -0.7813523  FALSE  FALSE
-#> 5:     2   302   342 -0.7813523   TRUE  FALSE
-#> 6:     2   342  1000 -0.7813523  FALSE  FALSE
+#> 1:     1     0   173 -0.6512008  FALSE  FALSE
+#> 2:     1   173   213 -0.6512008   TRUE  FALSE
+#> 3:     1   213   679 -0.6512008  FALSE   TRUE
+#> 4:     1   679   680 -0.6512008  FALSE  FALSE
+#> 5:     1   680  1000 -0.6512008  FALSE  FALSE
+#> 6:     2     0   515 -1.4736558  FALSE  FALSE
 ```

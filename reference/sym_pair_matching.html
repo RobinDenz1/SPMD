@@ -48,8 +48,7 @@
 <span>                  rand_max_iter<span class="op">=</span><span class="fl">100</span>, allow_partial<span class="op">=</span><span class="cn">TRUE</span>,</span>
 <span>                  allow_overlap<span class="op">=</span><span class="cn">FALSE</span>, max_dist<span class="op">=</span><span class="cn">Inf</span>,</span>
 <span>                  conf_type<span class="op">=</span><span class="st">"auto"</span>, conf_level<span class="op">=</span><span class="fl">0.95</span>, n_boot<span class="op">=</span><span class="fl">1000</span>,</span>
-<span>                  n_cores<span class="op">=</span><span class="fl">1</span>, progressbar<span class="op">=</span><span class="cn">TRUE</span>, convergence<span class="op">=</span><span class="cn">TRUE</span>,</span>
-<span>                  <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span>                  n_cores<span class="op">=</span><span class="fl">1</span>, progressbar<span class="op">=</span><span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -95,7 +94,7 @@
 <dd><p>A single positive number, specifying the maximum distance of exposure times allowed in a pair. If the distance is larger, the pair is deemed invalid. Defaults to <code>Inf</code> to make no restrictions on the exposure time distance. May be useful for long observation times.</p></dd>
 
   <dt id="arg-conf-type">conf_type<a class="anchor" aria-label="anchor" href="#arg-conf-type"></a></dt>
-<dd><p>A single character string, specifying how the standard error, confidence interval and p-value should be estimated. Must be either: <code>"auto"</code> (default), in which case the method is choosen automatically based on user input, <code>"none"</code> to not estimate any confidence intervals, <code>"boot"</code> to use an individual-level bootstrap procedure, <code>"boot.fast"</code> to use an approximate but much faster version of the individual-level bootstrap or <code>"jackknife"</code> to use the infinitesimal jackknife, which is a first-order taylor approximation of the individual-level bootstrap variance. Note that both <code>"boot.fast"</code> and <code>"jackknife"</code> only work with <code>estimator = "moments"</code> and <code>pairs = "all"</code>. See details.</p></dd>
+<dd><p>A single character string, specifying how the standard error, confidence interval and p-value should be estimated. Must be either: <code>"auto"</code> (default), in which case the method is choosen automatically based on user input, <code>"none"</code> to not estimate any confidence intervals, <code>"boot"</code> to use an individual-level bootstrap procedure, <code>"boot.fast"</code> to use an approximate but much faster version of the individual-level bootstrap or <code>"delta"</code> to use the delta method based estimator, which is equivalent to a first-order taylor approximation of the individual-level bootstrap variance. Note that both <code>"boot.fast"</code> and <code>"delta"</code> only work with <code>estimator = "moments"</code> and <code>pairs = "all"</code>. See details.</p></dd>
 
   <dt id="arg-conf-level">conf_level<a class="anchor" aria-label="anchor" href="#arg-conf-level"></a></dt>
 <dd><p>A single number between 0 and 1, specifying the confidence level that should be used for the confidence interval estimation. Ignored if <code>conf_type = "none"</code>.</p></dd>
@@ -108,9 +107,6 @@
 
   <dt id="arg-progressbar">progressbar<a class="anchor" aria-label="anchor" href="#arg-progressbar"></a></dt>
 <dd><p>Either <code>TRUE</code> or <code>FALSE</code>, specifying whether a progressbar should be shown when <code>conf_type = "boot"</code> or <code>conf_type = "boot.fast"</code>. This currently only works if <code>n_cores &gt; 1</code>.</p></dd>
-
-  <dt id="arg-convergence">convergence<a class="anchor" aria-label="anchor" href="#arg-convergence"></a></dt>
-<dd><p>Either <code>TRUE</code> or <code>FALSE</code>, specifying whether to calculate convergence related statistics. Those are calculated by default, but may be turned off to save some computation time.</p></dd>
 
   <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Further arguments passed to <code><a href="https://rdrr.io/pkg/lme4/man/glmer.html" class="external-link">glmer</a></code> when using <code>estimator="glmm"</code>, ignored otherwise.</p></dd>
@@ -152,7 +148,7 @@
 <p><strong><em>Confidence Intervals &amp; P-Values</em></strong>:</p>
 <p>Because of the non-linear nature of the estimator and the potentially non-independent pairs, simple standard error calculations ignoring such dependencies are not applicable. However, this package implements multiple valid options for statistical inference. The shown p-value tests whether \(\exp(\hat{\theta}) == 1\) and the shown standard error and confidence interval is on the IRR scale.</p>
 <p>First, a non-parametric bootstrap procedure on the individual level may be used to estimate confidence intervals or p-values. In particular, percentile bootstrap confidence intervals are used. This corresponds to <code>conf_type = "boot"</code>, in which all aspects of the estimation, including the pair matching, are bootstrapped. This option works for both <code>estimator</code>s and all specifications of <code>pairs</code>. Unfortunately, this can be very slow with large sample sizes and large amounts of <code>n_boot</code>. The <code>n_cores</code> option may help here, by allowing the usage of multiple processing cores in parallel. The <span class="pkg">doRNG</span> package is used internally to ensure that the results are still replicable.</p>
-<p>When using <code>pairs="all"</code> and <code>estimator="moments"</code>, two better options are available. First, <code>conf_type = "boot.fast"</code> utilizes the fact that bootstrapping cannot create new pairs that are not already included in the set of all valid pairs. Instead of actually performing re-sampling, it simply re-weights existing pairs appropriately and applies a weighter version of the estimator <code>n_boot</code> times. Even better, <code>conf_type = "jackknife"</code> uses a first-order taylor approximation of this procedure, which is equivalent to an infinitesimal jackknife, to avoid re-sampling altogether. This is the best and recommended option and is what is being used in this case with <code>conf_type = "auto"</code> (default). More information is given in the appendix of the main paper (Denz et al. 2026).</p>
+<p>When using <code>pairs="all"</code> and <code>estimator="moments"</code>, two better options are available. First, <code>conf_type = "boot.fast"</code> utilizes the fact that bootstrapping cannot create new pairs that are not already included in the set of all valid pairs. Instead of actually performing re-sampling, it simply re-weights existing pairs appropriately and applies a weighter version of the estimator <code>n_boot</code> times. Even better, <code>conf_type = "delta"</code> uses a first-order taylor approximation of this procedure, which is equivalent to an infinitesimal jackknife, to avoid re-sampling altogether. This is the best and recommended option and is what is being used in this case with <code>conf_type = "auto"</code> (default). More information is given in the appendix of the main paper (Denz et al. 2026).</p>
 <p><strong><em>Individuals without Events</em></strong>:</p>
 <p>Similar to the self-controlled case series (SCCS) method (Farrington 1995), individuals that never experienced an event do not contribute meaningfully to any pair when using <code>estimator="moments"</code>. The reason for this is that we multiply the number of events of the matched individuals at each of the two points in time. Therefore, if an individual has no events, it will always multiply its paired value by 0, effectively making no contribution to the final ratio. To save computation time, we thus exclude all individuals without any events before creating pairs.</p>
     </div>
@@ -171,7 +167,6 @@
 <li><p><code>l_sums</code>: If <code>estimator="moments"</code>, a <code>list</code> containing the two sums used in the estimator.</p></li>
 <li><p><code>model</code>: If <code>estimator="glmm"</code>, an object of class <code>merMod</code>, which is the generalized linear model used to calculate the estimate.</p></li>
 <li><p><code>d_time_used</code>: A <code>data.table</code> containing the amount of observation time used for each individual included in the matching process.</p></li>
-<li><p><code>convergence</code>: A <code>list</code> containing three numbers: <code>A_n</code> (the number of pairs of pairs that contain at least one overlapping individual, if ordered pairs are considered), <code>E_n</code> (the number of possible pairs of pairs, if ordered pairs are considered) and <code>ratio</code> (A_n / E_n^2). All of these numbers are estimated with respect to the pairs actually used.</p></li>
 <li><p><code>sizes</code>: A <code>list</code> containing various numbers describing the used sample sizes.</p></li>
 </ul><p>If <code>bootstrap=TRUE</code> was used, the output additionally contains:</p>
 <ul><li><p><code>ci</code>: A numeric vector of length 2, containing the confidence interval.</p></li>
@@ -212,22 +207,21 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Sample</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Individuals                      500</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Exposed individuals (total)      484</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Exposure episodes (total)        484</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Individuals with &gt;=1 event       338</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Exposed + event                  334</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Exposure episodes (included)     334</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Symmetric pairs                  47,252</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Observation time used            95.84%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Exposed individuals (total)      493</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Exposure episodes (total)        493</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Individuals with &gt;=1 event       424</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Exposed + event                  422</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Exposure episodes (included)     422</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Symmetric pairs                  71,440</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Observation time used            83.50%</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Effect estimate</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   log(IRR)   IRR        SE(IRR)    95% CI          P-value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   0.903      2.468      0.488      1.675 – 3.636   &lt;0.001</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   0.939      2.558      0.402      1.880 – 3.480   &lt;0.001</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Estimation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Estimating equation: exp{1/2 log(676 / 111)}</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   CI estimation method: 'jackknife'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   |A_n| / |E_n|^2: 0.01203079</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Estimating equation: exp{1/2 log(1,636 / 250)}</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   CI estimation method: 'delta'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ──────────────────────────────────────────────────────────────</span>
 </code></pre></div>
     </div>

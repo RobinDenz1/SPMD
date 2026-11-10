@@ -15,8 +15,7 @@ sym_pair_matching(formula, data, id, risk_period, bounds="[)",
                   rand_max_iter=100, allow_partial=TRUE,
                   allow_overlap=FALSE, max_dist=Inf,
                   conf_type="auto", conf_level=0.95, n_boot=1000,
-                  n_cores=1, progressbar=TRUE, convergence=TRUE,
-                  ...)
+                  n_cores=1, progressbar=TRUE, ...)
 ```
 
 ## Arguments
@@ -151,10 +150,10 @@ sym_pair_matching(formula, data, id, risk_period, bounds="[)",
   based on user input, `"none"` to not estimate any confidence
   intervals, `"boot"` to use an individual-level bootstrap procedure,
   `"boot.fast"` to use an approximate but much faster version of the
-  individual-level bootstrap or `"jackknife"` to use the infinitesimal
-  jackknife, which is a first-order taylor approximation of the
-  individual-level bootstrap variance. Note that both `"boot.fast"` and
-  `"jackknife"` only work with `estimator = "moments"` and
+  individual-level bootstrap or `"delta"` to use the delta method based
+  estimator, which is equivalent to a first-order taylor approximation
+  of the individual-level bootstrap variance. Note that both
+  `"boot.fast"` and `"delta"` only work with `estimator = "moments"` and
   `pairs = "all"`. See details.
 
 - conf_level:
@@ -180,12 +179,6 @@ sym_pair_matching(formula, data, id, risk_period, bounds="[)",
   Either `TRUE` or `FALSE`, specifying whether a progressbar should be
   shown when `conf_type = "boot"` or `conf_type = "boot.fast"`. This
   currently only works if `n_cores > 1`.
-
-- convergence:
-
-  Either `TRUE` or `FALSE`, specifying whether to calculate convergence
-  related statistics. Those are calculated by default, but may be turned
-  off to save some computation time.
 
 - ...:
 
@@ -360,12 +353,12 @@ bootstrapping cannot create new pairs that are not already included in
 the set of all valid pairs. Instead of actually performing re-sampling,
 it simply re-weights existing pairs appropriately and applies a weighter
 version of the estimator `n_boot` times. Even better,
-`conf_type = "jackknife"` uses a first-order taylor approximation of
-this procedure, which is equivalent to an infinitesimal jackknife, to
-avoid re-sampling altogether. This is the best and recommended option
-and is what is being used in this case with `conf_type = "auto"`
-(default). More information is given in the appendix of the main paper
-(Denz et al. 2026).
+`conf_type = "delta"` uses a first-order taylor approximation of this
+procedure, which is equivalent to an infinitesimal jackknife, to avoid
+re-sampling altogether. This is the best and recommended option and is
+what is being used in this case with `conf_type = "auto"` (default).
+More information is given in the appendix of the main paper (Denz et al.
+2026).
 
 ***Individuals without Events***:
 
@@ -407,13 +400,6 @@ Returns a `SPMD` object, containing the following objects:
 
 - `d_time_used`: A `data.table` containing the amount of observation
   time used for each individual included in the matching process.
-
-- `convergence`: A `list` containing three numbers: `A_n` (the number of
-  pairs of pairs that contain at least one overlapping individual, if
-  ordered pairs are considered), `E_n` (the number of possible pairs of
-  pairs, if ordered pairs are considered) and `ratio` (A_n / E_n^2). All
-  of these numbers are estimated with respect to the pairs actually
-  used.
 
 - `sizes`: A `list` containing various numbers describing the used
   sample sizes.
@@ -472,21 +458,20 @@ summary(out)
 #> 
 #> Sample
 #>   Individuals                      500
-#>   Exposed individuals (total)      484
-#>   Exposure episodes (total)        484
-#>   Individuals with >=1 event       338
-#>   Exposed + event                  334
-#>   Exposure episodes (included)     334
-#>   Symmetric pairs                  47,252
-#>   Observation time used            95.84%
+#>   Exposed individuals (total)      493
+#>   Exposure episodes (total)        493
+#>   Individuals with >=1 event       424
+#>   Exposed + event                  422
+#>   Exposure episodes (included)     422
+#>   Symmetric pairs                  71,440
+#>   Observation time used            83.50%
 #> 
 #> Effect estimate
 #>   log(IRR)   IRR        SE(IRR)    95% CI          P-value
-#>   0.903      2.468      0.488      1.675 – 3.636   <0.001
+#>   0.939      2.558      0.402      1.880 – 3.480   <0.001
 #> 
 #> Estimation
-#>   Estimating equation: exp{1/2 log(676 / 111)}
-#>   CI estimation method: 'jackknife'
-#>   |A_n| / |E_n|^2: 0.01203079
+#>   Estimating equation: exp{1/2 log(1,636 / 250)}
+#>   CI estimation method: 'delta'
 #> ──────────────────────────────────────────────────────────────
 ```

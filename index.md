@@ -76,7 +76,7 @@ on `Y` adjusting for both, we could use:
 
 spmd <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data,
                           id=".id", risk_period=40, pairs="all",
-                          estimator="moments", conf_type="jackknife")
+                          estimator="moments", conf_type="delta")
 summary(spmd)
 #> ──────────────────────────────────────────────────────────────
 #> Symmetric Pair Matching Design
@@ -93,8 +93,8 @@ summary(spmd)
 #>   Individuals with >=1 event       342
 #>   Exposed + event                  339
 #>   Exposure episodes (included)     339
-#>   Symmetric pairs                  49,247
-#>   Observation time used            96.57%
+#>   Symmetric pairs                  49,258
+#>   Observation time used            96.66%
 #> 
 #> Effect estimate
 #>   log(IRR)   IRR        SE(IRR)    95% CI          P-value
@@ -102,8 +102,7 @@ summary(spmd)
 #> 
 #> Estimation
 #>   Estimating equation: exp{1/2 log(489 / 81)}
-#>   CI estimation method: 'jackknife'
-#>   |A_n| / |E_n|^2: 0.0118183
+#>   CI estimation method: 'delta'
 #> ──────────────────────────────────────────────────────────────
 ```
 

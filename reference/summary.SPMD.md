@@ -86,12 +86,12 @@ head(data)
 #> Key: <.id, start>
 #>      .id start  stop          X      A      Y
 #>    <int> <num> <num>      <num> <lgcl> <lgcl>
-#> 1:     1     0   386 -1.2070657  FALSE  FALSE
-#> 2:     1   386   426 -1.2070657   TRUE  FALSE
-#> 3:     1   426  1000 -1.2070657  FALSE  FALSE
-#> 4:     2     0    86  0.2774292  FALSE   TRUE
-#> 5:     2    86    87  0.2774292  FALSE  FALSE
-#> 6:     2    87   188  0.2774292  FALSE  FALSE
+#> 1:     1     0   270 -1.2070657  FALSE  FALSE
+#> 2:     1   270   310 -1.2070657   TRUE  FALSE
+#> 3:     1   310  1000 -1.2070657  FALSE  FALSE
+#> 4:     2     0    53  0.2774292  FALSE   TRUE
+#> 5:     2    53    54  0.2774292  FALSE  FALSE
+#> 6:     2    54   128  0.2774292  FALSE  FALSE
 
 out <- sym_pair_matching(Surv(start, stop, Y) ~ A, data=data, id=".id",
                          risk_period=40, pairs="all", estimator="moments")
@@ -108,19 +108,18 @@ summary(out)
 #>   Individuals                      100
 #>   Exposed individuals (total)      100
 #>   Exposure episodes (total)        100
-#>   Individuals with >=1 event       68
-#>   Exposed + event                  68
-#>   Exposure episodes (included)     68
-#>   Symmetric pairs                  1,931
-#>   Observation time used            70.45%
+#>   Individuals with >=1 event       83
+#>   Exposed + event                  83
+#>   Exposure episodes (included)     83
+#>   Symmetric pairs                  2,759
+#>   Observation time used            55.39%
 #> 
 #> Effect estimate
 #>   log(IRR)   IRR        SE(IRR)    95% CI          P-value
-#>   0.405      1.500      0.930      0.445 – 5.055   0.513
+#>   1.063      2.894      1.357      1.155 – 7.254   0.0234
 #> 
 #> Estimation
-#>   Estimating equation: exp{1/2 log(9 / 4)}
-#>   CI estimation method: 'jackknife'
-#>   |A_n| / |E_n|^2: 0.05827083
+#>   Estimating equation: exp{1/2 log(67 / 8)}
+#>   CI estimation method: 'delta'
 #> ──────────────────────────────────────────────────────────────
 ```

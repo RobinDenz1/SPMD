@@ -108,7 +108,7 @@
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spmd</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sym_pair_matching.html">sym_pair_matching</a></span><span class="op">(</span><span class="fu">Surv</span><span class="op">(</span><span class="va">start</span>, <span class="va">stop</span>, <span class="va">Y</span><span class="op">)</span> <span class="op">~</span> <span class="va">A</span>, data<span class="op">=</span><span class="va">data</span>,</span>
 <span>                          id<span class="op">=</span><span class="st">".id"</span>, risk_period<span class="op">=</span><span class="fl">40</span>, pairs<span class="op">=</span><span class="st">"all"</span>,</span>
-<span>                          estimator<span class="op">=</span><span class="st">"moments"</span>, conf_type<span class="op">=</span><span class="st">"jackknife"</span><span class="op">)</span></span>
+<span>                          estimator<span class="op">=</span><span class="st">"moments"</span>, conf_type<span class="op">=</span><span class="st">"delta"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spmd</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ──────────────────────────────────────────────────────────────</span></span>
 <span><span class="co">#&gt; Symmetric Pair Matching Design</span></span>
@@ -125,8 +125,8 @@
 <span><span class="co">#&gt;   Individuals with &gt;=1 event       342</span></span>
 <span><span class="co">#&gt;   Exposed + event                  339</span></span>
 <span><span class="co">#&gt;   Exposure episodes (included)     339</span></span>
-<span><span class="co">#&gt;   Symmetric pairs                  49,247</span></span>
-<span><span class="co">#&gt;   Observation time used            96.57%</span></span>
+<span><span class="co">#&gt;   Symmetric pairs                  49,258</span></span>
+<span><span class="co">#&gt;   Observation time used            96.66%</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Effect estimate</span></span>
 <span><span class="co">#&gt;   log(IRR)   IRR        SE(IRR)    95% CI          P-value</span></span>
@@ -134,8 +134,7 @@
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Estimation</span></span>
 <span><span class="co">#&gt;   Estimating equation: exp{1/2 log(489 / 81)}</span></span>
-<span><span class="co">#&gt;   CI estimation method: 'jackknife'</span></span>
-<span><span class="co">#&gt;   |A_n| / |E_n|^2: 0.0118183</span></span>
+<span><span class="co">#&gt;   CI estimation method: 'delta'</span></span>
 <span><span class="co">#&gt; ──────────────────────────────────────────────────────────────</span></span></code></pre></div>
 <p>The true effect is 2.5 (see <code><a href="reference/sim_example_data.html">?sim_example_data</a></code>), so the estimate is actually very close.</p>
 </div>

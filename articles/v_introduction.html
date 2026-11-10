@@ -215,12 +215,12 @@ function of this package:</p>
 <span><span class="co">#&gt; Key: &lt;.id, start&gt;</span></span>
 <span><span class="co">#&gt;      .id start  stop          X      A      Y</span></span>
 <span><span class="co">#&gt;    &lt;int&gt; &lt;num&gt; &lt;num&gt;      &lt;num&gt; &lt;lgcl&gt; &lt;lgcl&gt;</span></span>
-<span><span class="co">#&gt; 1:     1     0   249 -1.2070657  FALSE  FALSE</span></span>
-<span><span class="co">#&gt; 2:     1   249   289 -1.2070657   TRUE  FALSE</span></span>
-<span><span class="co">#&gt; 3:     1   289  1000 -1.2070657  FALSE  FALSE</span></span>
-<span><span class="co">#&gt; 4:     2     0   221  0.2774292  FALSE  FALSE</span></span>
-<span><span class="co">#&gt; 5:     2   221   261  0.2774292   TRUE  FALSE</span></span>
-<span><span class="co">#&gt; 6:     2   261   623  0.2774292  FALSE   TRUE</span></span></code></pre></div>
+<span><span class="co">#&gt; 1:     1     0   173 -1.2070657  FALSE  FALSE</span></span>
+<span><span class="co">#&gt; 2:     1   173   213 -1.2070657   TRUE  FALSE</span></span>
+<span><span class="co">#&gt; 3:     1   213  1000 -1.2070657  FALSE  FALSE</span></span>
+<span><span class="co">#&gt; 4:     2     0   154  0.2774292  FALSE  FALSE</span></span>
+<span><span class="co">#&gt; 5:     2   154   190  0.2774292   TRUE   TRUE</span></span>
+<span><span class="co">#&gt; 6:     2   190   191  0.2774292   TRUE  FALSE</span></span></code></pre></div>
 <p>This function internally uses the <code>simDAG</code> package to
 simulate this data (Denz &amp; Timmesfeld 2026). Here, each person is
 identified by a unique person identifier contained in the
@@ -287,22 +287,21 @@ method:</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Sample</span></span>
 <span><span class="co">#&gt;   Individuals                      500</span></span>
-<span><span class="co">#&gt;   Exposed individuals (total)      486</span></span>
-<span><span class="co">#&gt;   Exposure episodes (total)        486</span></span>
-<span><span class="co">#&gt;   Individuals with &gt;=1 event       342</span></span>
-<span><span class="co">#&gt;   Exposed + event                  339</span></span>
-<span><span class="co">#&gt;   Exposure episodes (included)     339</span></span>
-<span><span class="co">#&gt;   Symmetric pairs                  51,233</span></span>
-<span><span class="co">#&gt;   Observation time used            94.21%</span></span>
+<span><span class="co">#&gt;   Exposed individuals (total)      498</span></span>
+<span><span class="co">#&gt;   Exposure episodes (total)        498</span></span>
+<span><span class="co">#&gt;   Individuals with &gt;=1 event       427</span></span>
+<span><span class="co">#&gt;   Exposed + event                  426</span></span>
+<span><span class="co">#&gt;   Exposure episodes (included)     426</span></span>
+<span><span class="co">#&gt;   Symmetric pairs                  78,017</span></span>
+<span><span class="co">#&gt;   Observation time used            77.90%</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Effect estimate</span></span>
 <span><span class="co">#&gt;   log(IRR)   IRR        SE(IRR)    95% CI          P-value</span></span>
-<span><span class="co">#&gt;   0.851      2.343      0.573      1.450 – 3.784   &lt;0.001</span></span>
+<span><span class="co">#&gt;   1.048      2.852      0.532      1.978 – 4.112   &lt;0.001</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Estimation</span></span>
-<span><span class="co">#&gt;   Estimating equation: exp{1/2 log(225 / 41)}</span></span>
-<span><span class="co">#&gt;   CI estimation method: 'jackknife'</span></span>
-<span><span class="co">#&gt;   |A_n| / |E_n|^2: 0.0117922</span></span>
+<span><span class="co">#&gt;   Estimating equation: exp{1/2 log(960 / 118)}</span></span>
+<span><span class="co">#&gt;   CI estimation method: 'delta'</span></span>
 <span><span class="co">#&gt; ──────────────────────────────────────────────────────────────</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -330,12 +329,12 @@ which can be inspected directly using:</p>
 <span><span class="co">#&gt; Key: &lt;.id_pair, .group&gt;</span></span>
 <span><span class="co">#&gt;      .id .time .min_t .max_t .id_pair     .A .group .end_time .n_events</span></span>
 <span><span class="co">#&gt;    &lt;int&gt; &lt;num&gt;  &lt;num&gt;  &lt;num&gt;    &lt;int&gt; &lt;lgcl&gt;  &lt;num&gt;     &lt;num&gt;     &lt;int&gt;</span></span>
-<span><span class="co">#&gt; 1:     3    12      0   1000        1  FALSE      1        42         0</span></span>
-<span><span class="co">#&gt; 2:   114    12      0   1000        1   TRUE      2        42         0</span></span>
-<span><span class="co">#&gt; 3:   114   249      0   1000        1  FALSE      3       279         0</span></span>
-<span><span class="co">#&gt; 4:     3   249      0   1000        1   TRUE      4       279         0</span></span>
-<span><span class="co">#&gt; 5:   319    12      0   1000        2  FALSE      1        42         0</span></span>
-<span><span class="co">#&gt; 6:   493    12      0   1000        2   TRUE      2        42         0</span></span></code></pre></div>
+<span><span class="co">#&gt; 1:   304     7      0   1000        1  FALSE      1        37         0</span></span>
+<span><span class="co">#&gt; 2:   114     7      0   1000        1   TRUE      2        37         0</span></span>
+<span><span class="co">#&gt; 3:   114   179      0   1000        1  FALSE      3       209         0</span></span>
+<span><span class="co">#&gt; 4:   304   179      0   1000        1   TRUE      4       209         0</span></span>
+<span><span class="co">#&gt; 5:   380     7      0   1000        2  FALSE      1        37         0</span></span>
+<span><span class="co">#&gt; 6:   493     7      0   1000        2   TRUE      2        37         0</span></span></code></pre></div>
 <p>We can also inspect the used times of the matches visually, using the
 associated <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
@@ -529,24 +528,23 @@ into the <code><a href="../reference/sym_pair_matching.html">sym_pair_matching()
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Sample</span></span>
 <span><span class="co">#&gt;   Individuals                      500</span></span>
-<span><span class="co">#&gt;   Exposed individuals (total)      486</span></span>
-<span><span class="co">#&gt;   Exposure episodes (total)        486</span></span>
-<span><span class="co">#&gt;   Individuals with &gt;=1 event       342</span></span>
-<span><span class="co">#&gt;   Exposed + event                  339</span></span>
-<span><span class="co">#&gt;   Exposure episodes (included)     339</span></span>
-<span><span class="co">#&gt;   Symmetric pairs                  51,233</span></span>
-<span><span class="co">#&gt;   Observation time used            94.21%</span></span>
+<span><span class="co">#&gt;   Exposed individuals (total)      498</span></span>
+<span><span class="co">#&gt;   Exposure episodes (total)        498</span></span>
+<span><span class="co">#&gt;   Individuals with &gt;=1 event       427</span></span>
+<span><span class="co">#&gt;   Exposed + event                  426</span></span>
+<span><span class="co">#&gt;   Exposure episodes (included)     426</span></span>
+<span><span class="co">#&gt;   Symmetric pairs                  78,017</span></span>
+<span><span class="co">#&gt;   Observation time used            77.90%</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Effect estimate</span></span>
 <span><span class="co">#&gt;   log(IRR)   IRR        SE(IRR)    95% CI          P-value</span></span>
-<span><span class="co">#&gt;   0.851      2.343      0.649      1.356 – 3.855   0.006</span></span>
+<span><span class="co">#&gt;   1.048      2.852      0.567      1.914 – 4.134   0.001</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Bootstrap: 1,000 replicates</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Estimation</span></span>
-<span><span class="co">#&gt;   Estimating equation: exp{1/2 log(225 / 41)}</span></span>
+<span><span class="co">#&gt;   Estimating equation: exp{1/2 log(960 / 118)}</span></span>
 <span><span class="co">#&gt;   CI estimation method: 'boot.fast'</span></span>
-<span><span class="co">#&gt;   |A_n| / |E_n|^2: 0.0117922</span></span>
 <span><span class="co">#&gt; ──────────────────────────────────────────────────────────────</span></span></code></pre></div>
 <p>Here, we first draw <code>n_boot</code> random samples with
 replacement from all individuals, where the size of the samples is equal
@@ -586,21 +584,22 @@ bootstrap calculations on multiple processing cores, potentially saving
 much more time as well.</p>
 </div>
 <div class="section level3">
-<h3 id="infinitesimal-jackknife">Infinitesimal Jackknife<a class="anchor" aria-label="anchor" href="#infinitesimal-jackknife"></a>
+<h3 id="the-delta-method">The Delta Method<a class="anchor" aria-label="anchor" href="#the-delta-method"></a>
 </h3>
 <p>The best approach that is currently available when using
 <code>estimator = "moments</code> and <code>pairs = "all"</code> is to
-set <code>conf_type = "jackknife</code>. This is also the underlying
-default behavior (e.g. when <code>conf_type = "auto"</code>). It uses a
+set <code>conf_type = "delta</code>. This is also the underlying default
+behavior (e.g. when <code>conf_type = "auto"</code>). It uses a
 first-order taylor approximation of the
 <code>conf_type = "boot.fast"</code> method, which does not require
-actual re-sampling. This has multiple advantages. First, it is extremly
-fast because it only uses the existing pair information. Secondly,
-because no actual samples are created, the issue of infinite or
-undefined estimates in specific bootstrap samples does not arise. We
-therefore recommend using this approach, whenever feasible. More
-information is given in the appendix of the main paper (Denz et
-al. 2026).</p>
+actual re-sampling. This method is equivalent to the U-statistics based
+variance estimator given by Schechtmann (1991). This has multiple
+advantages. First, it is extremly fast because it only uses the existing
+pair information. Secondly, because no actual samples are created, the
+issue of infinite or undefined estimates in specific bootstrap samples
+does not arise. We therefore recommend using this approach, whenever
+feasible. More information is given in the appendix of the main paper
+(Denz et al. 2026).</p>
 </div>
 </div>
 <div class="section level2">
@@ -711,6 +710,9 @@ doi: 10.2307/2533328.</p>
 <p>Denz, Robin and Nina Timmesfeld (2026). “Simulating Complex
 Cross-Sectional and Longitudinal Data using the simDAG R Package”.
 Journal of Statistical Software 116 (2), doi: 10.18637/jss.v116.i02.</p>
+<p>Schechtman, Edna (1991). “On Estimating the Asymptotic Variance of a
+Function of U-Statistics”. In: The American Statistician 45.2,
+pp. 103–106. doi: 10.1080/00031305.1991.10475778.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
