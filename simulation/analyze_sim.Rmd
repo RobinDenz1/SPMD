@@ -301,11 +301,11 @@ This script takes in the results generated using the Monte-Carlo simulation and 
 
 ```{r}
 # read in simulation results
-d_sim1 <- readRDS("./data/sim1_results.Rds") # TODO: run
+d_sim1 <- readRDS("./data/sim1_results.Rds")
 d_sim2 <- readRDS("./data/sim2_results.Rds")
 d_sim3 <- readRDS("./data/sim3_results.Rds")
 d_sim4 <- readRDS("./data/sim4_results.Rds")
-d_sim5 <- readRDS("./data/sim5_results.Rds") # TODO: run
+d_sim5 <- readRDS("./data/sim5_results.Rds") # TODO: run after basehaz update?
 d_sim6 <- readRDS("./data/sim6_results.Rds")
 d_sim7 <- readRDS("./data/sim7_results.Rds")
 d_sim8 <- readRDS("./data/sim8_results.Rds")
@@ -353,21 +353,46 @@ d_bias15 <- get_stats_table(d_sim15)
 
 # Varying $n$ and $\theta$
 
-## $n = 10000$
-
 ```{r}
-plot_boxplots_n(subset(d_sim1, n==10000), outliers=FALSE)
-ggsave("./Plots/sim1_n10000.pdf", width=6.5, height=7)
-```
+### calculate power and CI coverage
+d_sim1[, in_ci := exp_theta >= ci_lower & exp_theta <= ci_upper]
+d_sim1[, ci_length := ci_upper - ci_lower]
+d_sim1[, signif := (ci_lower < 1 & ci_upper < 1) | (ci_lower > 1 & ci_upper > 1)]
 
-```{r}
-print_stats(subset(d_bias1, n==10000)[, -"n"], format="html")
+d_sim1_est <- d_sim1[, .(
+  coverage = sum(in_ci) / .N,
+  coverage_lower = binom.confint(x=sum(in_ci), n=.N, methods="exact")$lower,
+  coverage_upper = binom.confint(x=sum(in_ci), n=.N, methods="exact")$upper,
+  power = mean(signif),
+  power_lower = binom.confint(x=sum(signif), n=.N, methods="exact")$lower,
+  power_upper = binom.confint(x=sum(signif), n=.N, methods="exact")$upper,
+  mean_boot_na = mean(boot_na),
+  n_NA = 1000 - .N
+), by=c("n", "scenario_num", "estimator", "exp_theta")  
+]
+
+d_sim1_est[, cov_out := paste0(sprintf("%.3f", coverage), " [",
+                               sprintf("%.3f", coverage_lower), ", ",
+                               sprintf("%.3f", coverage_upper), "]")]
+d_sim1_est[, power_out := paste0(sprintf("%.3f", power), " [",
+                                 sprintf("%.3f", power_lower), ", ",
+                                 sprintf("%.3f", power_upper), "]")]
+d_sim1_est <- d_sim1_est[, c("n", "scenario_num", "estimator", "exp_theta",
+                             "cov_out", "power_out")]
+d_sim1_est[estimator=="SCCS\nSpline\n(5)", estimator := "SCCS Spline (5)"]
+d_sim1_est[estimator=="SCCS\nSpline\n(15)", estimator := "SCCS Spline (15)"]
+d_sim1_est[, estimator := factor(estimator,
+                                 levels=c("CCO", "CTC", "SCCS",
+                                          "SCCS Spline (5)", "SCCS Spline (15)",
+                                          "SPM"))]
+
+setkey(d_sim1_est, n, scenario_num, estimator)
 ```
 
 ## $n = 20000$
 
 ```{r}
-plot_boxplots_n(subset(d_sim1, n==20000), outliers=TRUE)
+plot_boxplots_n(subset(d_sim1, n==20000), outliers=FALSE)
 ggsave("./Plots/sim1_n20000.pdf", width=6.5, height=7)
 ```
 
@@ -375,15 +400,38 @@ ggsave("./Plots/sim1_n20000.pdf", width=6.5, height=7)
 print_stats(subset(d_bias1, n==20000)[, -"n"], format="html")
 ```
 
-## $n = 30000$
+```{r}
+knitr::kable(subset(d_sim1_est, n==20000)[, -"n"], format="html", linesep="")
+```
+
+## $n = 50000$
 
 ```{r}
-plot_boxplots_n(subset(d_sim1, n==30000), outliers=FALSE)
-ggsave("./Plots/sim1_n30000.pdf", width=6.5, height=7)
+plot_boxplots_n(subset(d_sim1, n==50000), outliers=TRUE)
+ggsave("./Plots/sim1_n50000.pdf", width=6.5, height=7)
 ```
 
 ```{r}
-print_stats(subset(d_bias1, n==30000)[, -"n"], format="html")
+print_stats(subset(d_bias1, n==50000)[, -"n"], format="html")
+```
+
+```{r}
+knitr::kable(subset(d_sim1_est, n==50000)[, -"n"], format="html", linesep="")
+```
+
+## $n = 80000$
+
+```{r}
+plot_boxplots_n(subset(d_sim1, n==80000), outliers=TRUE)
+ggsave("./Plots/sim1_n80000.pdf", width=6.5, height=7)
+```
+
+```{r}
+print_stats(subset(d_bias1, n==80000)[, -"n"], format="html")
+```
+
+```{r}
+knitr::kable(subset(d_sim1_est, n==80000)[, -"n"], format="html", linesep="")
 ```
 
 ## Runtime
@@ -398,6 +446,7 @@ ggplot(subset(d_sim1, estimator=="SPM"),
   labs(x="n", y="Runtime in seconds", fill=expression(exp(theta)))
 ggsave("./Plots/sim1_runtime.pdf", width=5, height=6)
 ```
+
 
 # Multiple exposure periods per person
 

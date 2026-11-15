@@ -203,7 +203,8 @@ create_data_scenario3 <- function(n, theta, risk_period, max_t) {
 
 ## get RR estimate using different methods
 apply_method <- function(data, type, conf_int="none", risk_period=30,
-                         allow_overlap=FALSE, pairs="all", n_pairs=100000) {
+                         allow_overlap=FALSE, pairs="all", n_pairs=100000,
+                         max_t=1000) {
 
   if (type=="cox") {
     mod <- coxph(Surv(start, stop, Y) ~ A + U, data=data)
@@ -242,10 +243,10 @@ apply_method <- function(data, type, conf_int="none", risk_period=30,
   } else if (type=="sccs") {
     out <- estimate_sccs(data, conf_int=conf_int!="none")
   } else if (type=="sccs_spline_5") {
-    out <- estimate_sccs(data, spline=TRUE, cuts=seq(0, 1000, 50), df=6,
+    out <- estimate_sccs(data, spline=TRUE, cuts=seq(0, max_t, 50), df=6,
                          conf_int=conf_int!="none")
   } else if (type=="sccs_spline_15") {
-    out <- estimate_sccs(data, spline=TRUE, cuts=seq(0, 1000, 50), df=16,
+    out <- estimate_sccs(data, spline=TRUE, cuts=seq(0, max_t, 50), df=16,
                          conf_int=conf_int!="none")
   } else if (type=="cco") {
     out <- estimate_cco(data, risk_period=risk_period,
@@ -325,7 +326,7 @@ run_simulation <- function(n_sim, n_repeats, method, scenario, theta,
       apply_method(data=data, type=L$estimator, conf_int=L$conf_int,
                    risk_period=L$risk_period,
                    allow_overlap=L$allow_overlap, pairs=L$pairs,
-                   n_pairs=L$n_pairs),
+                   n_pairs=L$n_pairs, max_t=L$max_t),
 
       finally = {
         if (last_method) {
