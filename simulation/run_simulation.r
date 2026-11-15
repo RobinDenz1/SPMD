@@ -249,3 +249,18 @@ sim15 <- run_simulation(
   seed = 56
 )
 saveRDS(sim15$results, "./simulation/data/sim15_results.Rds")
+
+# very rugged outcome baseline hazard
+sim16 <- run_simulation(
+  n_sim = 40000,
+  n_repeats = n_repeats,
+  method = all_methods,
+  scenario = 4,
+  theta = log(c(0.7, 1, 2.5)),
+  multiple_A = FALSE,
+  multiple_Y = TRUE,
+  conf_int = "delta",
+  n_cores = 8,
+  seed = 42
+)
+saveRDS(sim16$results, "./simulation/data/sim16_results.Rds")
