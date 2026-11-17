@@ -49,6 +49,32 @@ ggplot(plotdata, aes(x=time, y=p, color=half)) +
   )
 ggsave("./simulation/plots/time_trends_scenario3.pdf", width=6, height=4)
 
+## time trend plot appendix with rugged basehazards
+plotdata <- data.frame(
+  time = rep(seq(0, 1000, 0.5), 2),
+  p = c(fbasehaz_Y4(seq(0, 1000, 0.5)),
+        fbasehaz_A4(seq(0, 1000, 0.5))),
+  kind = rep(c("h_Y(t)", "h_A(t)"), each=2001)
+)
+
+ggplot(plotdata, aes(x=time, y=p, color=kind)) +
+  geom_line(linewidth=0.85) +
+  theme_minimal() +
+  theme(legend.position="bottom") +
+  labs(x="t", y="Baseline Hazard", color=NULL, linetype=NULL) +
+  scale_y_continuous(labels=label_number()) +
+  scale_color_manual(
+    values = c("h_Y(t)" = "#C46A50", "h_A(t)" = "#35658A"),
+    breaks = c("h_Y(t)", "h_A(t)"),
+    labels = c(expression(h[Y0](t)), expression(h[A0](t)))
+  ) +
+  facet_wrap(~ kind, ncol=1, scales="free_y") +
+  theme(
+    strip.background = element_blank(),
+    strip.text.x = element_blank()
+  )
+ggsave("./simulation/plots/time_trends_rugged.pdf", width=6, height=4)
+
 ## main symmetric pair illustration plot
 plotdata <- data.table(id=factor(c(2,1,1,2), levels=c(2, 1),
                                  labels=c("Individual a", "Individual b")),

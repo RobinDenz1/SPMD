@@ -305,7 +305,7 @@ d_sim1 <- readRDS("./data/sim1_results.Rds")
 d_sim2 <- readRDS("./data/sim2_results.Rds")
 d_sim3 <- readRDS("./data/sim3_results.Rds")
 d_sim4 <- readRDS("./data/sim4_results.Rds")
-d_sim5 <- readRDS("./data/sim5_results.Rds") # TODO: run after basehaz update?
+d_sim5 <- readRDS("./data/sim5_results.Rds")
 d_sim6 <- readRDS("./data/sim6_results.Rds")
 d_sim7 <- readRDS("./data/sim7_results.Rds")
 d_sim8 <- readRDS("./data/sim8_results.Rds")
@@ -316,6 +316,7 @@ d_sim12 <- readRDS("./data/sim12_results.Rds")
 d_sim13 <- readRDS("./data/sim13_results.Rds")
 d_sim14 <- readRDS("./data/sim14_results.Rds")
 d_sim15 <- readRDS("./data/sim15_results.Rds")
+d_sim16 <- readRDS("./data/sim16_results.Rds")
 
 # prepare it for plotting
 d_sim1 <- prepare_sim_results(d_sim1)
@@ -333,6 +334,7 @@ d_sim12 <- prepare_sim_results(d_sim12)
 d_sim13 <- prepare_sim_results(d_sim13)
 d_sim14 <- prepare_sim_results(d_sim14)
 d_sim15 <- prepare_sim_results(d_sim15)
+d_sim16 <- prepare_sim_results(d_sim16)
 
 # calculate bias tables for all scenarios (where it is needed)
 d_bias1 <- get_stats_table(d_sim1)
@@ -349,6 +351,7 @@ d_bias12 <- get_stats_table(d_sim12)
 d_bias13 <- get_stats_table(d_sim13)
 d_bias14 <- get_stats_table(d_sim14)
 d_bias15 <- get_stats_table(d_sim15)
+d_bias16 <- get_stats_table(d_sim16)
 ```
 
 # Varying $n$ and $\theta$
@@ -665,3 +668,21 @@ ggsave("./Plots/sim15.pdf", width=6.5, height=7)
 print_stats(d_bias15, format="html")
 ```
 
+# Rugged Baseline Hazard
+
+```{r}
+ggplot(data=d_sim16, aes(y=log_bias_i, x=estimator, fill=estimator)) +
+  geom_hline(yintercept=0, linetype="dashed") +
+  geom_boxplot(outliers=FALSE, linewidth=0.3) +
+  facet_wrap(~ exp_theta_f, ncol=1, labeller="label_parsed") +
+  theme_minimal() +
+  theme(legend.position="none",
+        axis.text.x=element_text(size=8)) +
+  labs(x=NULL, y=expression(hat(theta) - theta)) +
+  scale_fill_manual(values=estimator_cols, drop=FALSE)
+ggsave("./Plots/sim16.pdf", width=6.5, height=7)
+```
+
+```{r}
+print_stats(d_bias16, format="html")
+```

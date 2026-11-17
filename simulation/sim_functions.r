@@ -151,7 +151,8 @@ create_data <- function(n, scenario, theta, multiple_A=FALSE,
     data <- subset(data, C_event_count==0)
   # censor after first event
   } else if (censor == 4) {
-    data[, min_time := if (any(Y)) min(stop[Y==TRUE]) + 0.000001 else Inf, by=.id]
+    data[, min_time := if (any(Y)) min(stop[Y==TRUE]) + 0.000001 else Inf,
+         by=.id]
     data <- subset_start_stop(data, last_time=data$min_time)
   }
 
@@ -169,43 +170,55 @@ fbasehaz_Y3.2 <- function(t) {
 
 ## outcome baseline hazard for scenario 4
 fbasehaz_Y4 <- local({
-  a <- 2e-6; b <- 4e-5; sdev <- 30; k <- 0:5
-  step_edges <- c(225, 560, 780); step_mult <- c(1, 0.35, 2.6, 0.5)
-  p_start <- c(79, 279, 481, 679, 884); p_width <- 12; p_extra <- 12
+  a <- 2e-6
+  b <- 4e-5
+  sdev <- 30
+  k <- 0:5
+  step_edges <- c(225, 560, 780)
+  step_mult <- c(1, 0.35, 2.6, 0.5)
+  p_start <- c(79, 279, 481, 679, 884)
+  p_width <- 12
+  p_extra <- 12
 
-  base <- function(t) a + b * rowSums(exp(-outer(t, 200 * k, "-")^2 / (2 * sdev^2)))
+  base <- function(t) {
+    a + b * rowSums(exp(-outer(t, 200 * k, "-")^2 / (2 * sdev^2)))
+  }
+
   mult <- function(t) {
     m    <- step_mult[findInterval(t, step_edges) + 1]
     in_p <- Reduce(`|`, lapply(p_start, function(s) t >= s & t < s + p_width))
     m * (1 + p_extra * in_p)
   }
 
-  ## normalising constant: integrate piecewise (multiplier is constant per segment)
-  edges    <- sort(unique(c(0, step_edges, p_start, p_start + p_width, 1000)))
-  lo       <- head(edges, -1); hi <- tail(edges, -1)
+  # normalizing constant: integrate piecewise (multiplier is constant per segment)
+  edges <- sort(unique(c(0, step_edges, p_start, p_start + p_width, 1000)))
+  lo <- head(edges, -1); hi <- tail(edges, -1)
   seg_mult <- mult((lo + hi) / 2)
-  area     <- sum(mapply(function(l, u, m) m * integrate(base, l, u)$value,
+  area <- sum(mapply(function(l, u, m) m * integrate(base, l, u)$value,
                          lo, hi, seg_mult))
-  kappa    <- 1.701729e-5 * 1000 / area
+  kappa <- 1.701729e-5 * 1000 / area
 
   function(t) {
     kappa * base(t) * mult(t)
   }
 })
 
+## exposure baseline hazard for scenario 4
 fbasehaz_A4 <- local({
   starts <- c(93, 291, 497, 689, 897)   # campaign onsets (days)
-  decay  <- 8                           # e-folding time after onset (days)
-  bg     <- 1e-4                        # background hazard
+  decay <- 8                           # e-folding time after onset (days)
+  bg <- 1e-4                        # background hazard
 
-  ## integral of the summed decay shape over [0, 1000] -> calibrate to the
-  ## mean exposure hazard of your scenarios (0.0005006436)
+  # integral of the summed decay shape over [0, 1000] -> calibrate to the
+  # mean exposure hazard of other scenarios (0.0005006436)
   area <- sum(decay * (1 - exp(-(1000 - starts) / decay)))
   rate <- (0.0005006436 - bg) * 1000 / area
 
   function(t) {
     shape <- numeric(length(t))
-    for (s in starts) shape <- shape + ifelse(t >= s, exp(-(t - s) / decay), 0)
+    for (s in starts) {
+      shape <- shape + ifelse(t >= s, exp(-(t - s) / decay), 0)
+    }
     bg + rate * shape
   }
 })

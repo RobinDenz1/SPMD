@@ -8,6 +8,7 @@ library(survival)
 library(splines)
 library(scales)
 library(beepr)
+library(MatchTime)
 
 # code for all other methods used in the simulation
 source("./simulation/sim_methods.r")
@@ -252,7 +253,7 @@ saveRDS(sim15$results, "./simulation/data/sim15_results.Rds")
 
 # very rugged outcome baseline hazard
 sim16 <- run_simulation(
-  n_sim = 40000,
+  n_sim = n_sim,
   n_repeats = n_repeats,
   method = all_methods,
   scenario = 4,
